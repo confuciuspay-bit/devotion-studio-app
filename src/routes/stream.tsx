@@ -173,6 +173,7 @@ function StreamPage() {
           </div>
         )}
       </DetailSheet>
+      <AllHistorySheet open={allHistory} scope="stream" onClose={() => setAllHistory(false)} title="Stream history" />
     </div>
   );
 }
