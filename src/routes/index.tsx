@@ -115,7 +115,7 @@ function WalletHome() {
   const total = assets.reduce((s, a) => s + a.value, 0);
 
   return (
-    <div className="relative">
+    <div className="relative animate-fade-in">
       <AppHeader subtitle="Wallet" />
 
       <section className="px-5 pt-2">
@@ -130,7 +130,7 @@ function WalletHome() {
           </div>
           <div className="mt-1 h-4" aria-hidden />
 
-          <div className="mt-6 grid grid-cols-4 gap-2">
+          <div className="mt-6 grid grid-cols-4 gap-2 stagger">
             {([
               { i: ArrowDownLeft, l: "Receive", k: "receive" as const },
               { i: ArrowUpRight, l: "Send", k: "send" as const },
