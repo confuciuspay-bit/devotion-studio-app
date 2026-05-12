@@ -260,6 +260,8 @@ function WalletHome() {
           </div>
         )}
       </DetailSheet>
+
+      <WalletFlow open={!!flow} kind={flow} onClose={() => setFlow(null)} />
     </div>
   );
 }
