@@ -164,6 +164,65 @@ export function fmtUsd(n: number, opts: Intl.NumberFormatOptions = {}) {
   }).format(n);
 }
 
+export const SUPPORTED_CURRENCIES = [
+  "USD", "EUR", "GBP", "JPY", "CHF", "CAD", "AUD", "CNY", "HKD", "SGD",
+  "INR", "KRW", "BRL", "MXN", "ZAR", "AED", "SEK", "NOK", "DKK", "PLN",
+  "TRY", "RUB", "THB", "IDR", "NZD", "ILS",
+] as const;
+
+const FX_FALLBACK: Record<string, number> = {
+  USD: 1, EUR: 0.92, GBP: 0.79, JPY: 149, CHF: 0.88, CAD: 1.36, AUD: 1.51,
+  CNY: 7.24, HKD: 7.82, SGD: 1.34, INR: 83.2, KRW: 1335, BRL: 4.95, MXN: 17.1,
+  ZAR: 18.7, AED: 3.67, SEK: 10.5, NOK: 10.6, DKK: 6.85, PLN: 4.0, TRY: 32.5,
+  RUB: 92, THB: 35.5, IDR: 15600, NZD: 1.65, ILS: 3.7,
+};
+
+export function useFxRate(target: string) {
+  return useQuery({
+    queryKey: ["fx", target],
+    enabled: target !== "USD",
+    queryFn: async (): Promise<number> => {
+      try {
+        const url = `${CG}/simple/price?ids=tether&vs_currencies=${target.toLowerCase()}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("fx failed");
+        const j = await res.json();
+        const rate = j?.tether?.[target.toLowerCase()];
+        return typeof rate === "number" && rate > 0 ? rate : (FX_FALLBACK[target] ?? 1);
+      } catch {
+        return FX_FALLBACK[target] ?? 1;
+      }
+    },
+    staleTime: 5 * 60_000,
+    refetchInterval: 5 * 60_000,
+  });
+}
+
+export function fmtMoney(usd: number, ccy: string, rate: number, opts: Intl.NumberFormatOptions = {}) {
+  const v = usd * rate;
+  const abs = Math.abs(v);
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: ccy,
+    maximumFractionDigits: abs >= 1000 ? 0 : abs >= 1 ? 2 : 6,
+    ...opts,
+  }).format(v);
+}
+
+export function fmtSigned(usd: number, ccy: string, rate: number, opts: Intl.NumberFormatOptions = {}) {
+  const v = usd * rate;
+  const sign = v >= 0 ? "+" : "-";
+  const abs = Math.abs(v);
+  const formatted = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: ccy,
+    maximumFractionDigits: abs >= 1000 ? 2 : abs >= 1 ? 2 : 6,
+    minimumFractionDigits: 2,
+    ...opts,
+  }).format(abs);
+  return `${sign}${formatted}`;
+}
+
 export function maskValue(s: string) {
   return s.replace(/[\d.,]/g, "•");
 }

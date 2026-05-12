@@ -6,7 +6,8 @@ import { WalletFlow } from "@/components/flows/WalletFlow";
 import { VaultFlow, type VaultFlowKind } from "@/components/flows/VaultFlow";
 import { Shield, ArrowRight, Lock, ChevronRight, Plus, Settings, KeyRound, ExternalLink } from "lucide-react";
 import { useApp, type VaultActivity } from "@/lib/store";
-import { fmtUsd, fmtTime, maskValue } from "@/lib/markets";
+import { fmtTime } from "@/lib/markets";
+import { useMoney } from "@/lib/useMoney";
 import { getChain } from "@/lib/chains";
 
 export const Route = createFileRoute("/vault")({ component: VaultPage });
@@ -25,13 +26,13 @@ function VaultPage() {
   const [open, setOpen] = useState<VaultActivity | null>(null);
   const [vfk, setVfk] = useState<VaultFlowKind | null>(null);
   const [shieldFlow, setShieldFlow] = useState(false);
+  const { fmt } = useMoney();
 
   const hidden = hideBalances;
   const balanceUsd = vaultZec * ZEC_PRICE;
-  const fmt = (s: string) => (hidden ? maskValue(s) : s);
 
   return (
-    <div>
+    <div className="animate-fade-in">
       <AppHeader subtitle="UmbraVault" />
       <section className="px-5">
         <div className="relative rounded-3xl border border-shield/30 p-6 bg-[image:var(--gradient-shield)] grain overflow-hidden">
@@ -56,10 +57,10 @@ function VaultPage() {
             <span className="text-muted-foreground text-2xl">ZEC</span>
           </h1>
           <p className="text-xs text-muted-foreground mt-1 font-mono">
-            ≈ {fmt(fmtUsd(balanceUsd))} · 2.00% all-in
+            ≈ {fmt(balanceUsd)} · 2.00% all-in
           </p>
 
-          <div className="mt-6 grid grid-cols-3 gap-2">
+          <div className="mt-6 grid grid-cols-3 gap-2 stagger">
             <button
               onClick={() => setShieldFlow(true)}
               className="pressable rounded-2xl bg-foreground/5 border border-border py-3 text-sm font-medium flex flex-col items-center gap-1"
@@ -102,7 +103,7 @@ function VaultPage() {
 
       <section className="px-5 mt-6">
         <h2 className="text-sm font-semibold mb-3">Activity</h2>
-        <div className="space-y-2">
+        <div className="space-y-2 stagger">
           {vaultActivity.length === 0 && (
             <div className="rounded-2xl border border-dashed border-border bg-card/50 p-8 text-center text-sm text-muted-foreground">
               No vault activity yet.
@@ -121,7 +122,7 @@ function VaultPage() {
                 </span>
               </div>
               <div className="mt-2 flex items-center gap-2 text-sm font-mono">
-                <span>{fmt(fmtUsd(s.fromAmountUsd))}</span>
+                <span>{fmt(s.fromAmountUsd)}</span>
                 <ArrowRight className="size-3.5 text-muted-foreground" />
                 <span className="text-shield">
                   {s.kind === "shield"
@@ -130,7 +131,7 @@ function VaultPage() {
                 </span>
               </div>
               <div className="mt-1 flex items-center justify-between">
-                <p className="text-[11px] text-muted-foreground font-mono">Fee {fmtUsd(s.fee)}</p>
+                <p className="text-[11px] text-muted-foreground font-mono">Fee {fmt(s.fee)}</p>
                 <ChevronRight className="size-4 text-muted-foreground" />
               </div>
             </button>
@@ -146,7 +147,7 @@ function VaultPage() {
           <div className="space-y-4">
             <div className="rounded-2xl bg-foreground/5 border border-border p-5 space-y-3">
               <div className="flex items-center justify-between text-sm font-mono">
-                <span>{fmtUsd(open.fromAmountUsd)}</span>
+                <span>{fmt(open.fromAmountUsd)}</span>
                 <ArrowRight className="size-4 text-muted-foreground" />
                 <span className="text-shield">
                   {open.kind === "shield" ? `ⓩ ${open.zecAmount.toFixed(2)} ZEC` : (getChain(open.toChainId ?? "")?.shortName ?? "")}
@@ -159,7 +160,7 @@ function VaultPage() {
             <div className="rounded-2xl border border-border divide-y divide-border">
               <Row l="Time" v={fmtTime(open.ts)} />
               <Row l="Kind" v={open.kind} />
-              <Row l="All-in fee" v={`${fmtUsd(open.fee)} · 2.00%`} />
+              <Row l="All-in fee" v={`${fmt(open.fee)} · 2.00%`} />
               <Row l="Tx hash" v={short(open.hash)} mono />
               {open.toAddress && <Row l="To" v={short(open.toAddress)} mono />}
             </div>
