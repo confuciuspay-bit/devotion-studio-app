@@ -272,6 +272,7 @@ function WalletHome() {
       </DetailSheet>
 
       <WalletFlow open={!!flow} kind={flow} onClose={() => setFlow(null)} />
+      <AllHistorySheet open={allHistory} scope="wallet" onClose={() => setAllHistory(false)} title="Wallet history" />
     </div>
   );
 }
