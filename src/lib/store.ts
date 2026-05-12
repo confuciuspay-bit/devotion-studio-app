@@ -193,6 +193,11 @@ interface AppState {
   toggleHideBalances: () => void;
   setDisplayCurrency: (c: string) => void;
 
+  setMerchant: (m: Partial<MerchantProfile>) => void;
+  setPinHashStored: (h: string | null) => void;
+  setSecurity: (patch: { biometricsEnabled?: boolean; autoLockMinutes?: AutoLock; torEnabled?: boolean; network?: "mainnet" | "testnet" }) => void;
+  setLocked: (locked: boolean) => void;
+
   resetAll: () => void;
 }
 
