@@ -321,6 +321,7 @@ export function WalletFlow({ open, kind, onClose }: { open: boolean; kind: FlowK
     if (step === 1) {
       return (
         <ChainPicker
+          coinId={coin?.id}
           filter={(c) => c.toVault !== "bridge" || c.id === "tron"}
           onPick={(c) => { setChain(c); setStep(2); }}
         />
