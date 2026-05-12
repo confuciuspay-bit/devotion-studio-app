@@ -60,6 +60,7 @@ function PayPage() {
   const [filter, setFilter] = useState<"all" | PaymentStatus>("all");
   const [showSettings, setShowSettings] = useState(false);
   const [subs, setSubs] = useState<Subscription[]>(SEED_SUBS);
+  const [allHistory, setAllHistory] = useState(false);
 
   const list = useMemo(
     () => (filter === "all" ? payments : payments.filter((p) => p.status === filter)),
