@@ -510,16 +510,47 @@ function RecurringTab({
   setSubs: (s: Subscription[]) => void;
   fmt: (n: number, o?: Intl.NumberFormatOptions) => string;
 }) {
+  const [open, setOpen] = useState(false);
+  const [customer, setCustomer] = useState("");
+  const [amount, setAmount] = useState("");
+  const [cadence, setCadence] = useState<Subscription["cadence"]>("monthly");
+  const [token, setToken] = useState("USDC");
+
+  const reset = () => { setCustomer(""); setAmount(""); setCadence("monthly"); setToken("USDC"); };
+  const create = () => {
+    const amt = parseFloat(amount);
+    if (!customer.trim() || !amt || amt <= 0) {
+      toast.error("Customer and amount required");
+      return;
+    }
+    const next: Subscription = {
+      id: "sub_" + Math.random().toString(36).slice(2, 8),
+      customer: customer.trim(),
+      amountUsd: amt,
+      cadence,
+      token,
+      active: true,
+      nextRun: Date.now() + (cadence === "weekly" ? 7 : cadence === "monthly" ? 30 : 365) * 86_400_000,
+    };
+    setSubs([next, ...subs]);
+    toast.success("Subscription created");
+    reset();
+    setOpen(false);
+  };
+
   const toggle = (id: string) =>
     setSubs(subs.map((s) => (s.id === id ? { ...s, active: !s.active } : s)));
-  const remove = (id: string) => setSubs(subs.filter((s) => s.id !== id));
+  const remove = (id: string) => {
+    setSubs(subs.filter((s) => s.id !== id));
+    toast("Subscription removed");
+  };
 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold">Recurring</h2>
         <button
-          onClick={() => toast("Subscription wizard — coming soon")}
+          onClick={() => setOpen(true)}
           className="pressable inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold"
         >
           <Plus className="size-3.5" /> New
@@ -546,7 +577,7 @@ function RecurringTab({
               </p>
             </div>
             <button
-              onClick={() => toggle(s.id)}
+              onClick={() => { toggle(s.id); toast(s.active ? "Paused" : "Resumed"); }}
               className="pressable size-8 grid place-items-center rounded-full bg-foreground/5 border border-border"
               aria-label={s.active ? "Pause" : "Resume"}
             >
@@ -562,6 +593,63 @@ function RecurringTab({
           </div>
         ))}
       </div>
+
+      <DetailSheet open={open} onClose={() => setOpen(false)} title="New subscription">
+        <div className="space-y-3">
+          <Field label="Customer" value={customer} onChange={setCustomer} placeholder="name, email or 0x…" />
+          <Field label="Amount (USD)" value={amount} onChange={setAmount} placeholder="49" />
+          <div>
+            <p className="text-[11px] text-muted-foreground mb-1.5">Cadence</p>
+            <div className="grid grid-cols-3 gap-2">
+              {(["weekly", "monthly", "yearly"] as const).map((c) => (
+                <button
+                  key={c}
+                  onClick={() => setCadence(c)}
+                  className={`pressable rounded-xl border py-2 text-xs font-medium capitalize ${cadence === c ? "bg-primary text-primary-foreground border-primary" : "bg-foreground/5 border-border"}`}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <p className="text-[11px] text-muted-foreground mb-1.5">Settlement token</p>
+            <div className="grid grid-cols-4 gap-2">
+              {["USDC", "USDT", "ZEC", "ETH"].map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setToken(t)}
+                  className={`pressable rounded-xl border py-2 text-xs font-mono ${token === t ? "bg-primary text-primary-foreground border-primary" : "bg-foreground/5 border-border"}`}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+          </div>
+          <button
+            onClick={create}
+            className="w-full pressable rounded-2xl bg-primary text-primary-foreground py-3.5 text-sm font-semibold"
+          >
+            Create subscription
+          </button>
+        </div>
+      </DetailSheet>
+    </div>
+  );
+}
+
+function Field({
+  label, value, onChange, placeholder,
+}: { label: string; value: string; onChange: (v: string) => void; placeholder?: string }) {
+  return (
+    <div>
+      <label className="text-[11px] text-muted-foreground">{label}</label>
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="mt-1 w-full rounded-2xl bg-foreground/5 border border-border px-4 py-3 text-sm outline-none focus:border-primary"
+      />
     </div>
   );
 }
