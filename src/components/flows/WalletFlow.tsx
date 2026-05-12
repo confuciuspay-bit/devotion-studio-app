@@ -61,7 +61,7 @@ export function WalletFlow({ open, kind, onClose }: { open: boolean; kind: FlowK
   };
 
   if (!kind) {
-    return <Sheet open={open} onClose={onClose} title="" />;
+    return <Sheet open={open} onClose={onClose} title=""><div /></Sheet>;
   }
   const title = titles[kind][step] ?? "";
 
