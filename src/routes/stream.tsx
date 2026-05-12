@@ -53,6 +53,7 @@ const batches: Batch[] = [
 
 function StreamPage() {
   const [open, setOpen] = useState<Batch | null>(null);
+  const [allHistory, setAllHistory] = useState(false);
   return (
     <div>
       <AppHeader subtitle="UmbraStream · Payroll" />
