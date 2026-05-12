@@ -114,11 +114,32 @@ export interface Invoice {
   ts: number;
 }
 
+export interface MerchantProfile {
+  businessName: string;
+  legalName?: string;
+  country?: string;          // ISO-3166 alpha-2
+  website?: string;
+  brandColor?: string;       // CSS color (oklch / hex / rgb)
+  logoDataUrl?: string;      // square logo as data URL
+  createdAt: number;
+}
+
+export type AutoLock = 1 | 5 | 15 | "never";
+
 interface AppState {
   // Identity
   seed: string[] | null;
   seedHex: string | null;
   initialised: boolean;
+  merchant: MerchantProfile | null;
+
+  // Security
+  pinHashStored: string | null;
+  biometricsEnabled: boolean;
+  autoLockMinutes: AutoLock;
+  torEnabled: boolean;
+  network: "mainnet" | "testnet";
+  locked: boolean;
 
   // Wallet
   holdings: Holding[];
