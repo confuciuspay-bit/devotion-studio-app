@@ -229,6 +229,7 @@ function SpendPage() {
           </p>
         </div>
       </DetailSheet>
+      <AllHistorySheet open={allHistory} scope="spend" onClose={() => setAllHistory(false)} title="Card history" />
     </div>
   );
 }
