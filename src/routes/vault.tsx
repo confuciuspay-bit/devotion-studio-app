@@ -3,6 +3,7 @@ import { useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { DetailSheet } from "@/components/DetailSheet";
 import { AllHistorySheet } from "@/components/AllHistorySheet";
+import { PinGate } from "@/components/PinGate";
 import { WalletFlow } from "@/components/flows/WalletFlow";
 import { VaultFlow, type VaultFlowKind } from "@/components/flows/VaultFlow";
 import { Shield, ArrowRight, Lock, ChevronRight, Plus, Settings, KeyRound, ExternalLink } from "lucide-react";
@@ -23,11 +24,12 @@ const flow = [
 const ZEC_PRICE = 35;
 
 function VaultPage() {
-  const { vaultZec, vaultActivity, hideBalances } = useApp();
+  const { vaultZec, vaultActivity, hideBalances, pinHashStored } = useApp();
   const [open, setOpen] = useState<VaultActivity | null>(null);
   const [vfk, setVfk] = useState<VaultFlowKind | null>(null);
   const [shieldFlow, setShieldFlow] = useState(false);
   const [allHistory, setAllHistory] = useState(false);
+  const [pinGate, setPinGate] = useState(false);
   const { fmt } = useMoney();
 
   const hidden = hideBalances;
@@ -47,7 +49,7 @@ function VaultPage() {
                 Shielded balance
               </p>
               <button
-                onClick={() => setVfk("address")}
+                onClick={() => (pinHashStored ? setPinGate(true) : setVfk("address"))}
                 className="text-xs text-shield font-mono flex items-center gap-1"
               >
                 z-addr · per-merchant <KeyRound className="size-3" />
@@ -149,6 +151,13 @@ function VaultPage() {
       <VaultFlow open={!!vfk} kind={vfk} onClose={() => setVfk(null)} />
       <WalletFlow open={shieldFlow} kind={shieldFlow ? "shield" : null} onClose={() => setShieldFlow(false)} />
       <AllHistorySheet open={allHistory} scope="vault" onClose={() => setAllHistory(false)} title="Vault history" />
+      <DetailSheet open={pinGate} onClose={() => setPinGate(false)} title="Reveal z-address">
+        <PinGate
+          subtitle="PIN required to reveal shielded address"
+          onPass={() => { setPinGate(false); setVfk("address"); }}
+          onCancel={() => setPinGate(false)}
+        />
+      </DetailSheet>
 
       <DetailSheet open={!!open} onClose={() => setOpen(null)} title="Vault entry">
         {open && (

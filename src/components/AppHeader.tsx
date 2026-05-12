@@ -1,5 +1,6 @@
-import { Eye, EyeOff, Bell, ChevronDown } from "lucide-react";
+import { Eye, EyeOff, Bell, ChevronDown, Settings } from "lucide-react";
 import { useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { useApp } from "@/lib/store";
 import { SUPPORTED_CURRENCIES } from "@/lib/markets";
 
@@ -55,6 +56,13 @@ export function AppHeader({ subtitle: _subtitle }: { subtitle?: string }) {
         >
           {hidden ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
         </button>
+        <Link
+          to="/settings"
+          className="size-9 grid place-items-center rounded-full bg-card border border-border text-muted-foreground active:scale-95 transition pressable"
+          aria-label="Settings"
+        >
+          <Settings className="size-4" />
+        </Link>
         <button className="size-9 grid place-items-center rounded-full bg-card border border-border text-muted-foreground relative">
           <Bell className="size-4" />
           <span className="absolute top-2 right-2 size-1.5 rounded-full bg-primary" />
