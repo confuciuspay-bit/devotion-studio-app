@@ -6,7 +6,7 @@ import type { Chain } from "./chains";
 
 async function sha256(data: string | Uint8Array): Promise<Uint8Array> {
   const bytes = typeof data === "string" ? new TextEncoder().encode(data) : data;
-  const buf = await crypto.subtle.digest("SHA-256", bytes);
+  const buf = await crypto.subtle.digest("SHA-256", bytes as BufferSource);
   return new Uint8Array(buf);
 }
 
