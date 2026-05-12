@@ -80,6 +80,8 @@ function WalletHome() {
   const { data } = useMarkets();
   const [openTx, setOpenTx] = useState<Activity | null>(null);
   const [flow, setFlow] = useState<"receive" | "send" | "swap" | "shield" | null>(null);
+  const hidden = useApp((s) => s.hideBalances);
+  const mask = (s: string) => (hidden ? maskValue(s) : s);
 
   const assets = useMemo(() => {
     if (!data) return [];
