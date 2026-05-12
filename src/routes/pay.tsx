@@ -3,6 +3,7 @@ import { useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { DetailSheet } from "@/components/DetailSheet";
 import { QrCode, Copy, Link2, Plus, Check, ChevronRight, Download, Share2 } from "lucide-react";
+import { useApp } from "@/lib/store";
 
 export const Route = createFileRoute("/pay")({ component: PayPage });
 
@@ -56,6 +57,7 @@ const payments: Invoice[] = [
 
 function PayPage() {
   const [open, setOpen] = useState<Invoice | null>(null);
+  const hidden = useApp((s) => s.hideBalances);
 
   return (
     <div>
@@ -66,7 +68,7 @@ function PayPage() {
             This month · gross
           </div>
           <h1 className="text-4xl font-display font-semibold mt-2 tabular-nums">
-            $184,290<span className="text-muted-foreground">.00</span>
+            {hidden ? "•••••••" : <>$184,290<span className="text-muted-foreground">.00</span></>}
           </h1>
           <div className="mt-1 flex items-center gap-2 text-xs">
             <span className="text-shield font-mono">FREE</span>

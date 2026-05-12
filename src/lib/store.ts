@@ -144,6 +144,9 @@ interface AppState {
   cardTxs: CardTx[];
   cardBalanceUsd: number;
 
+  // UX
+  hideBalances: boolean;
+
   // actions
   init: (seed: string[], seedHex: string, zAddr: string) => void;
   setHolding: (h: Holding) => void;
@@ -165,6 +168,7 @@ interface AppState {
   setCardSettings: (s: Partial<CardSettings>) => void;
   addCardTx: (t: CardTx) => void;
   topupCard: (usd: number) => void;
+  toggleHideBalances: () => void;
 
   resetAll: () => void;
 }
@@ -240,8 +244,10 @@ export const useApp = create<AppState>()(
           ts: Date.now() - 3 * 86400000, status: "settled", funding: "wallet" },
       ],
       cardBalanceUsd: 2184.30,
+      hideBalances: false,
 
       init: (seed, seedHex, zAddr) => set({ seed, seedHex, zAddr, initialised: true }),
+      toggleHideBalances: () => set((s) => ({ hideBalances: !s.hideBalances })),
       setHolding: (h) =>
         set((s) => {
           const idx = s.holdings.findIndex((x) => x.coinId === h.coinId);
@@ -311,6 +317,7 @@ export const useApp = create<AppState>()(
         batches: s.batches, invoices: s.invoices,
         vaultZec: s.vaultZec, vaultActivity: s.vaultActivity, zAddr: s.zAddr,
         cardSettings: s.cardSettings, cardTxs: s.cardTxs, cardBalanceUsd: s.cardBalanceUsd,
+        hideBalances: s.hideBalances,
       }),
     },
   ),

@@ -4,7 +4,8 @@ import { CoinIcon } from "@/components/CoinIcon";
 import { Sparkline } from "@/components/Sparkline";
 import { DetailSheet } from "@/components/DetailSheet";
 import { WalletFlow } from "@/components/flows/WalletFlow";
-import { useMarkets, fmtUsd, fmtPct } from "@/lib/markets";
+import { useMarkets, fmtUsd, fmtPct, maskValue } from "@/lib/markets";
+import { useApp } from "@/lib/store";
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -79,6 +80,8 @@ function WalletHome() {
   const { data } = useMarkets();
   const [openTx, setOpenTx] = useState<Activity | null>(null);
   const [flow, setFlow] = useState<"receive" | "send" | "swap" | "shield" | null>(null);
+  const hidden = useApp((s) => s.hideBalances);
+  const mask = (s: string) => (hidden ? maskValue(s) : s);
 
   const assets = useMemo(() => {
     if (!data) return [];
@@ -122,7 +125,7 @@ function WalletHome() {
           </div>
           <div className="mt-3 flex items-baseline gap-2">
             <h1 className="text-5xl font-semibold text-gradient-eclipse font-display tabular-nums">
-              {total ? fmtUsd(total, { maximumFractionDigits: 0 }) : "—"}
+              {total ? mask(fmtUsd(total, { maximumFractionDigits: 0 })) : "—"}
             </h1>
           </div>
           <div className="mt-1 text-xs text-shield font-mono">live · CoinGecko</div>
@@ -182,12 +185,12 @@ function WalletHome() {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{a.symbol}</p>
                   <p className="text-[11px] text-muted-foreground truncate">
-                    {a.qty.toLocaleString()} · {a.name}
+                    {hidden ? "•••" : a.qty.toLocaleString()} · {a.name}
                   </p>
                 </div>
                 <Sparkline data={a.spark} positive={up} width={56} height={22} />
                 <div className="text-right w-[78px]">
-                  <p className="text-sm font-mono tabular-nums">{fmtUsd(a.value)}</p>
+                  <p className="text-sm font-mono tabular-nums">{mask(fmtUsd(a.value))}</p>
                   <p className={`text-[11px] font-mono ${up ? "text-shield" : "text-destructive"}`}>
                     {fmtPct(a.chg)}
                   </p>
@@ -224,7 +227,7 @@ function WalletHome() {
                   {a.s} · {a.time}
                 </p>
               </div>
-              <p className="text-sm font-mono tabular-nums">{a.v}</p>
+              <p className="text-sm font-mono tabular-nums">{mask(a.v)}</p>
               <ChevronRight className="size-4 text-muted-foreground" />
             </button>
           ))}

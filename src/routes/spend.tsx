@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { DetailSheet } from "@/components/DetailSheet";
+import { useApp } from "@/lib/store";
 import {
   Snowflake,
   Wifi,
@@ -74,6 +75,7 @@ function SpendPage() {
   const [revealed, setRevealed] = useState(false);
   const [openTx, setOpenTx] = useState<Tx | null>(null);
   const [openWallet, setOpenWallet] = useState(false);
+  const hidden = useApp((s) => s.hideBalances);
   const fullPan = "4291 7702 4118 8842";
   const masked = "•••• •••• •••• 8842";
 
@@ -153,7 +155,7 @@ function SpendPage() {
               Available
             </p>
             <p className="text-3xl font-display font-semibold mt-1 tabular-nums">
-              $2,184<span className="text-muted-foreground">.30</span>
+              {hidden ? "•••••" : <>$2,184<span className="text-muted-foreground">.30</span></>}
             </p>
           </div>
           <div className="flex gap-2">

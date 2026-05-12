@@ -3,6 +3,8 @@ import { useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { DetailSheet } from "@/components/DetailSheet";
 import { Shield, ArrowRight, Lock, ChevronRight } from "lucide-react";
+import { useApp } from "@/lib/store";
+import { maskValue } from "@/lib/markets";
 
 export const Route = createFileRoute("/vault")({ component: VaultPage });
 
@@ -59,6 +61,7 @@ const settled: Settled[] = [
 
 function VaultPage() {
   const [open, setOpen] = useState<Settled | null>(null);
+  const hidden = useApp((s) => s.hideBalances);
 
   return (
     <div>
@@ -77,10 +80,10 @@ function VaultPage() {
             </div>
           </div>
           <h1 className="mt-4 text-4xl font-display font-semibold tabular-nums">
-            <span className="text-shield">ⓩ</span> 1,284.62{" "}
+            <span className="text-shield">ⓩ</span> {hidden ? "••••••" : "1,284.62"}{" "}
             <span className="text-muted-foreground text-2xl">ZEC</span>
           </h1>
-          <p className="text-xs text-muted-foreground mt-1 font-mono">≈ $43,617.49 · 2.00% all-in</p>
+          <p className="text-xs text-muted-foreground mt-1 font-mono">≈ {hidden ? maskValue("$43,617.49") : "$43,617.49"} · 2.00% all-in</p>
 
           <div className="mt-6 grid grid-cols-2 gap-2">
             <button className="pressable rounded-2xl bg-shield text-background py-3 text-sm font-semibold">
