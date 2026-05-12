@@ -32,18 +32,19 @@ const TABS: { id: Tab; label: string; icon: React.ComponentType<{ className?: st
 
 interface Subscription {
   id: string;
-  customer: string;
+  name: string;          // plan name (e.g. "Pro plan")
   amountUsd: number;
   cadence: "weekly" | "monthly" | "yearly";
   token: string;
   active: boolean;
-  nextRun: number;
+  subscribers: number;   // count of customers signed up via the link
+  createdAt: number;
 }
 
 const SEED_SUBS: Subscription[] = [
-  { id: "sub_001", customer: "acme.eth", amountUsd: 49, cadence: "monthly", token: "USDC", active: true, nextRun: Date.now() + 4 * 86_400_000 },
-  { id: "sub_002", customer: "globex@umbra.id", amountUsd: 1200, cadence: "monthly", token: "ZEC", active: true, nextRun: Date.now() + 12 * 86_400_000 },
-  { id: "sub_003", customer: "soylent.corp", amountUsd: 19, cadence: "weekly", token: "USDT", active: false, nextRun: Date.now() + 2 * 86_400_000 },
+  { id: "sub_001", name: "Pro plan", amountUsd: 49, cadence: "monthly", token: "USDC", active: true, subscribers: 128, createdAt: Date.now() - 21 * 86_400_000 },
+  { id: "sub_002", name: "Enterprise", amountUsd: 1200, cadence: "monthly", token: "ZEC", active: true, subscribers: 6, createdAt: Date.now() - 60 * 86_400_000 },
+  { id: "sub_003", name: "Newsletter", amountUsd: 19, cadence: "weekly", token: "USDT", active: false, subscribers: 42, createdAt: Date.now() - 90 * 86_400_000 },
 ];
 
 function PayPage() {
