@@ -148,6 +148,7 @@ function VaultPage() {
 
       <VaultFlow open={!!vfk} kind={vfk} onClose={() => setVfk(null)} />
       <WalletFlow open={shieldFlow} kind={shieldFlow ? "shield" : null} onClose={() => setShieldFlow(false)} />
+      <AllHistorySheet open={allHistory} scope="vault" onClose={() => setAllHistory(false)} title="Vault history" />
 
       <DetailSheet open={!!open} onClose={() => setOpen(null)} title="Vault entry">
         {open && (
