@@ -27,6 +27,7 @@ function VaultPage() {
   const [open, setOpen] = useState<VaultActivity | null>(null);
   const [vfk, setVfk] = useState<VaultFlowKind | null>(null);
   const [shieldFlow, setShieldFlow] = useState(false);
+  const [allHistory, setAllHistory] = useState(false);
   const { fmt } = useMoney();
 
   const hidden = hideBalances;
