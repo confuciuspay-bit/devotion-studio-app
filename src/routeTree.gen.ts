@@ -12,7 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as VaultRouteImport } from './routes/vault'
 import { Route as StreamRouteImport } from './routes/stream'
 import { Route as SpendRouteImport } from './routes/spend'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as PayRouteImport } from './routes/pay'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as MarketsRouteImport } from './routes/markets'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CoinIdRouteImport } from './routes/coin.$id'
@@ -32,9 +34,19 @@ const SpendRoute = SpendRouteImport.update({
   path: '/spend',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PayRoute = PayRouteImport.update({
   id: '/pay',
   path: '/pay',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MarketsRoute = MarketsRouteImport.update({
@@ -56,7 +68,9 @@ const CoinIdRoute = CoinIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/markets': typeof MarketsRoute
+  '/onboarding': typeof OnboardingRoute
   '/pay': typeof PayRoute
+  '/settings': typeof SettingsRoute
   '/spend': typeof SpendRoute
   '/stream': typeof StreamRoute
   '/vault': typeof VaultRoute
@@ -65,7 +79,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/markets': typeof MarketsRoute
+  '/onboarding': typeof OnboardingRoute
   '/pay': typeof PayRoute
+  '/settings': typeof SettingsRoute
   '/spend': typeof SpendRoute
   '/stream': typeof StreamRoute
   '/vault': typeof VaultRoute
@@ -75,7 +91,9 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/markets': typeof MarketsRoute
+  '/onboarding': typeof OnboardingRoute
   '/pay': typeof PayRoute
+  '/settings': typeof SettingsRoute
   '/spend': typeof SpendRoute
   '/stream': typeof StreamRoute
   '/vault': typeof VaultRoute
@@ -86,18 +104,31 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/markets'
+    | '/onboarding'
     | '/pay'
+    | '/settings'
     | '/spend'
     | '/stream'
     | '/vault'
     | '/coin/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/markets' | '/pay' | '/spend' | '/stream' | '/vault' | '/coin/$id'
+  to:
+    | '/'
+    | '/markets'
+    | '/onboarding'
+    | '/pay'
+    | '/settings'
+    | '/spend'
+    | '/stream'
+    | '/vault'
+    | '/coin/$id'
   id:
     | '__root__'
     | '/'
     | '/markets'
+    | '/onboarding'
     | '/pay'
+    | '/settings'
     | '/spend'
     | '/stream'
     | '/vault'
@@ -107,7 +138,9 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   MarketsRoute: typeof MarketsRoute
+  OnboardingRoute: typeof OnboardingRoute
   PayRoute: typeof PayRoute
+  SettingsRoute: typeof SettingsRoute
   SpendRoute: typeof SpendRoute
   StreamRoute: typeof StreamRoute
   VaultRoute: typeof VaultRoute
@@ -137,11 +170,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SpendRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pay': {
       id: '/pay'
       path: '/pay'
       fullPath: '/pay'
       preLoaderRoute: typeof PayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/markets': {
@@ -171,7 +218,9 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   MarketsRoute: MarketsRoute,
+  OnboardingRoute: OnboardingRoute,
   PayRoute: PayRoute,
+  SettingsRoute: SettingsRoute,
   SpendRoute: SpendRoute,
   StreamRoute: StreamRoute,
   VaultRoute: VaultRoute,

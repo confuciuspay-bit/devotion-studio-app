@@ -111,16 +111,57 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 import { BottomNav } from "@/components/BottomNav";
+import { LockScreen } from "@/components/LockScreen";
+import { MerchantBrand } from "@/components/MerchantBrand";
+import { useApp } from "@/lib/store";
+import { useMounted } from "@/lib/useMounted";
+import { useEffect } from "react";
+import { useRouterState, useNavigate } from "@tanstack/react-router";
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const mounted = useMounted();
+  const initialised = useApp((s) => s.initialised);
+  const locked = useApp((s) => s.locked);
+  const setLocked = useApp((s) => s.setLocked);
+  const autoLock = useApp((s) => s.autoLockMinutes);
+  const navigate = useNavigate();
+  const location = useRouterState({ select: (s) => s.location });
+
+  // Onboarding gate
+  useEffect(() => {
+    if (!mounted) return;
+    if (!initialised && location.pathname !== "/onboarding") {
+      navigate({ to: "/onboarding" });
+    }
+  }, [mounted, initialised, location.pathname, navigate]);
+
+  // Auto-lock timer
+  useEffect(() => {
+    if (!mounted || !initialised || autoLock === "never") return;
+    let last = Date.now();
+    const bump = () => { last = Date.now(); };
+    const events: (keyof DocumentEventMap)[] = ["pointerdown", "keydown", "touchstart"];
+    events.forEach((e) => document.addEventListener(e, bump));
+    const id = window.setInterval(() => {
+      if (Date.now() - last > (autoLock as number) * 60_000) setLocked(true);
+    }, 5_000);
+    return () => {
+      events.forEach((e) => document.removeEventListener(e, bump));
+      window.clearInterval(id);
+    };
+  }, [mounted, initialised, autoLock, setLocked]);
+
+  const isOnboarding = location.pathname === "/onboarding";
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="mx-auto max-w-md min-h-dvh pb-28 relative">
-        <Outlet />
+      <MerchantBrand />
+      <div className={`mx-auto max-w-md min-h-dvh relative ${isOnboarding ? "" : "pb-28"}`}>
+        {mounted ? <Outlet /> : <div className="min-h-dvh" />}
       </div>
-      <BottomNav />
+      {mounted && !isOnboarding && initialised && <BottomNav />}
+      {mounted && initialised && <LockScreen />}
     </QueryClientProvider>
   );
 }

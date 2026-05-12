@@ -114,11 +114,32 @@ export interface Invoice {
   ts: number;
 }
 
+export interface MerchantProfile {
+  businessName: string;
+  legalName?: string;
+  country?: string;          // ISO-3166 alpha-2
+  website?: string;
+  brandColor?: string;       // CSS color (oklch / hex / rgb)
+  logoDataUrl?: string;      // square logo as data URL
+  createdAt: number;
+}
+
+export type AutoLock = 1 | 5 | 15 | "never";
+
 interface AppState {
   // Identity
   seed: string[] | null;
   seedHex: string | null;
   initialised: boolean;
+  merchant: MerchantProfile | null;
+
+  // Security
+  pinHashStored: string | null;
+  biometricsEnabled: boolean;
+  autoLockMinutes: AutoLock;
+  torEnabled: boolean;
+  network: "mainnet" | "testnet";
+  locked: boolean;
 
   // Wallet
   holdings: Holding[];
@@ -172,6 +193,11 @@ interface AppState {
   toggleHideBalances: () => void;
   setDisplayCurrency: (c: string) => void;
 
+  setMerchant: (m: Partial<MerchantProfile>) => void;
+  setPinHashStored: (h: string | null) => void;
+  setSecurity: (patch: { biometricsEnabled?: boolean; autoLockMinutes?: AutoLock; torEnabled?: boolean; network?: "mainnet" | "testnet" }) => void;
+  setLocked: (locked: boolean) => void;
+
   resetAll: () => void;
 }
 
@@ -190,6 +216,13 @@ export const useApp = create<AppState>()(
       seed: null,
       seedHex: null,
       initialised: false,
+      merchant: null,
+      pinHashStored: null,
+      biometricsEnabled: false,
+      autoLockMinutes: 5 as AutoLock,
+      torEnabled: false,
+      network: "mainnet" as const,
+      locked: false,
       holdings: DEFAULT_HOLDINGS,
       watchlist: ["zcash", "bitcoin", "ethereum", "monero"],
       contacts: [
@@ -302,9 +335,24 @@ export const useApp = create<AppState>()(
         set((s) => ({ cardTxs: [t, ...s.cardTxs], cardBalanceUsd: s.cardBalanceUsd - t.amountUsd })),
       topupCard: (usd) => set((s) => ({ cardBalanceUsd: s.cardBalanceUsd + usd })),
 
+      setMerchant: (patch) =>
+        set((s) => ({
+          merchant: {
+            businessName: s.merchant?.businessName ?? "",
+            createdAt: s.merchant?.createdAt ?? Date.now(),
+            ...s.merchant,
+            ...patch,
+          },
+        })),
+      setPinHashStored: (h) => set({ pinHashStored: h }),
+      setSecurity: (patch) => set((s) => ({ ...s, ...patch })),
+      setLocked: (locked) => set({ locked }),
+
       resetAll: () =>
         set({
           seed: null, seedHex: null, initialised: false,
+          merchant: null, pinHashStored: null, biometricsEnabled: false,
+          autoLockMinutes: 5 as AutoLock, torEnabled: false, network: "mainnet" as const, locked: false,
           holdings: DEFAULT_HOLDINGS, watchlist: ["zcash", "bitcoin", "ethereum"],
           payments: [], batches: [], invoices: [], vaultActivity: [], cardTxs: [],
           monthlyVolumeUsd: 0, vaultZec: 0, cardBalanceUsd: 0,
@@ -316,6 +364,9 @@ export const useApp = create<AppState>()(
       name: "umbra-app-v1",
       partialize: (s) => ({
         seed: s.seed, seedHex: s.seedHex, initialised: s.initialised,
+        merchant: s.merchant, pinHashStored: s.pinHashStored,
+        biometricsEnabled: s.biometricsEnabled, autoLockMinutes: s.autoLockMinutes,
+        torEnabled: s.torEnabled, network: s.network,
         holdings: s.holdings, watchlist: s.watchlist, contacts: s.contacts,
         payments: s.payments, monthlyVolumeUsd: s.monthlyVolumeUsd, vaultEnabled: s.vaultEnabled,
         batches: s.batches, invoices: s.invoices,

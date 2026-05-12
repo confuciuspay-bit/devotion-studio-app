@@ -1,110 +1,131 @@
 
-# Umbra Mobile — Make Everything Functional
+# Merchant identity stack — full sweep
 
-Goal: turn the existing visual shell into a fully interactive iPhone-optimized PWA where every button opens a real flow. Frontend-only with `localStorage` persistence; CoinGecko for live data. No real on-chain broadcast (the spec needs Tor RPC, zebrad, smart contracts — impossible inside a web app), but every flow simulates the spec lifecycle (`INITIATED → FUNDED → LOCKED → RELEASED`, fee math from `11_fees.md`, vault states, batch states).
+Goal: turn Umbra from a personal wallet shell into a merchant-operable app. Every sensitive surface gates behind a PIN, every merchant-facing screen carries the merchant's brand, and a real first-launch flow seeds an identity instead of pre-filled mock data.
 
----
+## 1. First-launch onboarding (`/onboarding`)
 
-## 1. Foundation
+A 5-step full-screen flow shown when `useApp.initialised === false`:
 
-**Persistent store** — `src/lib/store.ts` (Zustand + localStorage)
-- `wallets[]` (per chain, derived from one BIP39 seed generated on first launch via `@scure/bip39` + `@scure/bip32`)
-- `watchlist[]`, `payments[]`, `invoices[]`, `batches[]`, `vaultBalance`, `vaultPayouts[]`, `cardSettings`, `merchant` (mock UBO profile)
-- Actions update state and trigger simulated lifecycle transitions on timers (e.g. `INITIATED→FUNDED` after 8s).
+1. **Welcome** — Umbra brand, "Set up your merchant account" CTA.
+2. **Generate seed** — 12-word BIP39 mnemonic via `@scure/bip39` (already in deps if present, else add). Show words in a 3×4 grid, "I've written them down" gate.
+3. **Confirm seed** — pick 3 random word indices, fail-closed retry.
+4. **Set 4-digit PIN** — uses existing `PinPad`. Confirm by re-entry. Hash with `pinHash()` already in `store.ts`, persist as `pinHashStored`.
+5. **Merchant profile** — business name, legal name, country, website (optional), brand color picker (sets `--primary-merchant`), logo upload (data URL, optional → falls back to monogram). All optional except business name.
 
-**Coin universe** — `src/lib/markets.ts`
-- New `useCoinSearch(q)` → CoinGecko `/search` (covers all ~14k coins).
-- New `useTopMarkets(n=250, page)` → `/coins/markets` with pagination + infinite scroll.
-- Cache logos by id; chain logos from CoinGecko `/asset_platforms`.
+On finish: `init(seed, seedHex, zAddr)` + `setMerchant(...)` + `setPinHash(...)`. Redirect to `/`.
 
-**Chain registry** — `src/lib/chains.ts`
-Mirrors `01_architecture.md` table (EVM×10, Solana, BTC, TRON, TON, XMR, ZEC, Cosmos, XRP, LTC/BCH/DOGE) with: id, name, logo, native symbol, BIP44 path, address generator, explorer URL, required confirmations, fixed fee from `11_fees.md`.
+Routing: `__root.tsx` checks `initialised`; if false and current path isn't `/onboarding`, redirect there. Bottom nav hidden during onboarding.
 
-**Fee engine** — `src/lib/fees.ts`
-Implements `11_fees.md` exactly: PSP marginal tiers, vault 2% flat, stream 0.25/0.30% + per-recipient, swap 0.08–0.45% spread, card blended.
+## 2. Settings (`/settings`)
 
-**UI primitives** — extend `DetailSheet` into a full sheet/router pattern (`AmountInput`, `ChainPicker`, `CoinPicker`, `AddressInput` with QR scan placeholder, `ConfirmStep`, `StatusStep`).
+Reachable from a gear in `AppHeader` (currently absent — add). Sections:
 
----
+- **Merchant** — edit business name, legal name, country, website, brand color, logo. Live preview chip.
+- **Security** — Change PIN (PIN-gated), Biometric unlock toggle (uses WebAuthn if available, else simulated), Auto-lock timer (1m/5m/15m/never).
+- **Backup** — Reveal seed (PIN-gated, blurred until tap-and-hold), Export encrypted JSON.
+- **Privacy** — Tor routing toggle (visual), Hide balances toggle (already exists, surface here), Display currency (already exists, move here).
+- **Network** — Mainnet / Testnet stub.
+- **Danger zone** — Clear all data (PIN-gated → calls `resetAll`).
 
-## 2. Wallet (`/`)
+## 3. Merchant profile data model
 
-Every action button opens a multi-step sheet:
+Add to `src/lib/store.ts`:
 
-- **Receive** — pick coin → pick chain → generate fresh address (CREATE2-style deterministic for EVM, BIP44 derivation for non-EVM via `@scure/bip32`) → show QR (`qrcode` lib) + copy + share + "set amount". Address is real and chain-valid format.
-- **Send** — coin → chain → recipient (paste/scan/contacts) → amount (with USD toggle, MAX, balance check) → fee preview from chain fixed-fee table → confirm → simulated broadcast with hash, lifecycle states, explorer link.
-- **Swap** — from coin → to coin → amount → live CoinGecko quote + 0.50% spread (UmbraWallet rate) → route shown (Maya / THORChain / NEAR Intents per spec) → confirm → simulated streaming swap progress bar.
-- **Shield** — pick asset → amount → quote (Maya `SWAP:ZEC.ZEC:...`) → "Send to Vault" → adds to vault balance, creates `vaultPayouts` history row.
+```ts
+interface MerchantProfile {
+  businessName: string;
+  legalName?: string;
+  country?: string;          // ISO-3166
+  website?: string;
+  brandColor?: string;       // oklch or hex
+  logoDataUrl?: string;
+  createdAt: number;
+}
 
-Asset rows already clickable → coin detail page (already built, will be enriched with extra ranges 24h/7d/30d/1y already partially done).
+// new state fields
+merchant: MerchantProfile | null;
+pinHashStored: string | null;
+biometricsEnabled: boolean;
+autoLockMinutes: number | "never";
+torEnabled: boolean;
+network: "mainnet" | "testnet";
 
-Activity row sheet stays but now reads from real `payments[]` store with real hash + status transitions.
+// new actions
+setMerchant(patch): void
+setPinHash(hash): void
+setSecurity(patch): void
+```
 
----
+Persist all of these in `partialize`.
 
-## 3. Markets (`/markets`)
+## 4. Brand application
 
-- Replace fixed `DEFAULT_IDS` with **paginated top-250** infinite scroll.
-- Search input debounced → CoinGecko `/search` → results with logo, then resolved to live price via `/simple/price`.
-- Tabs: All · Watchlist · Gainers · Losers · New listings · DeFi · L2.
-- Featured carousel rotates ZEC/BTC/ETH + top 24h gainer.
-- Star toggle persists to store (already does, but global now).
-- Tap row → coin detail (existing) with Buy/Swap/Send/Receive shortcuts wired to wallet sheets.
+A `MerchantBrand` provider mounted in `__root.tsx`:
+- Injects `--brand` CSS var from `merchant.brandColor` (falls back to current `--primary`).
+- Replaces hard `--primary` use in merchant-facing surfaces (Pay header card, Stream header, Vault header, invoice/checkout) with `--brand`.
+- `AppHeader` shows the merchant logo (or monogram from initials) + business name as the active subtitle's prefix.
 
----
+Personal pages (Wallet, Markets, coin detail) keep the default Umbra violet.
 
-## 4. Pay (`/pay`) — UmbraPay PSP merchant view
+## 5. PIN-gated reveal primitive
 
-- **Create payment** FAB → sheet: amount (USD or token) → coin/chain picker → expiry (1h/24h/7d) → vault toggle (shows fee breakdown 2% flat vs 0.50% PSP) → "Create" → returns payment with deterministic address + QR + share link → status auto-progresses INITIATED→FUNDED→LOCKED→RELEASED.
-- Payment list shows real `payments[]`, filter chips (All/Active/Completed/Refunded/Expired), tap → detail sheet with full lifecycle timeline, hash, fee breakdown, refund button (manual REFUNDED), copy address, view on explorer.
-- Header KPIs computed live (volume today, fees, active count).
-- "Refund", "Resend webhook", "Copy link" buttons all wired.
+New `<PinGate onPass={...}>` component wrapping `PinPad`:
+- Verifies entered PIN against `pinHashStored` via `pinHash()`.
+- 5-attempt rate limit with cooldown (stored in memory).
+- Shake animation on failure (`animate-shake` keyframe added to `styles.css`).
 
----
+Wire it into:
+- Vault → reveal z-addr (currently just shown).
+- Spend → reveal PAN/CVV (PIN gate already partially exists; consolidate).
+- Settings → Reveal seed.
+- Settings → Change PIN, Clear all data.
 
-## 5. Stream (`/stream`) — UmbraStream payroll/batch
+If `biometricsEnabled` and WebAuthn available, attempt `navigator.credentials.get` first, fall back to PIN.
 
-- **New batch** sheet: choose mode (Standard batch / Standard payroll / **Enhanced ZEC vault**) → add recipients (paste CSV or add manually: address, chain, output token, amount, label) → fee math live (0.25 + $0.02·N or 1.75% enhanced per spec) → invoice anchoring toggle → review → "Execute" → status timeline (Hash v1 → Swapping → Shielded → Hash v2 → Distributed).
-- Batch detail sheet: per-recipient status, copy hash, download payslip PDF (jsPDF, generated client-side with dual-hash proof).
-- Invoice anchoring page: paste invoice → SHA-256 hash → "Anchor" → fake tx hash + verifiable URL.
+## 6. Auto-lock
 
----
+`useAutoLock()` hook in `__root.tsx`:
+- Tracks last user interaction (`pointerdown`, `keydown`, route change).
+- After `autoLockMinutes`, sets `locked: true` in store.
+- A `<LockScreen />` overlay (PIN entry) renders when locked. Solves "phone left on counter" merchant case.
 
-## 6. Vault (`/vault`) — UmbraVault ZEC shielded
+## 7. Header gear + merchant chip
 
-- Header: anonymity set (live ZEC shielded supply via CoinGecko), merchant z-addr (masked, reveal on biometric prompt), shielded balance.
-- **Payout** sheet: pick output coin/chain → amount → recipient address → privacy delay (None/1h/24h/random) → fee 2% flat shown → confirm → simulated z_sendmany with progress (Quote → Streaming swap → Sent).
-- **Add funds** opens Wallet → Shield flow.
-- Transit log: list of recent shield-ins + payouts, each with detail sheet showing one-time t-addr, swap route, ZEC amount, payout details.
+Update `src/components/AppHeader.tsx`:
+- Left: merchant logo/monogram (tap → `/settings`).
+- Center: existing subtitle.
+- Right: existing currency/hide actions + new gear icon to `/settings`.
 
----
+## 8. Hydration bug fix (Wallet `Recent activity`)
 
-## 7. Spend (`/spend`) — UmbraSpend card
+Root cause: `index.tsx` activity entries hardcode strings like `"2m"`, `"1h"`, `"Yesterday"` — fine — but `AllHistorySheet` and other timestamp renderers use `toLocaleDateString()` / relative-from-`Date.now()`, which differ between SSR (UTC, en-US) and client (locale + later tick). The error trace shows `04/05/2026` vs `5/4/2026` and `2m` vs `3m/4m`.
 
-- Card flip animation; **Reveal** button uses a 4-digit PIN gate (set on first reveal, stored hashed in localStorage) to show PAN/CVV/exp.
-- **Add to Apple Wallet** — generate a `.pkpass`-styled link (real `web+pkpass:` href + `apple-wallet-add` button styled). Since we can't sign a real .pkpass, button shows a sheet explaining provisioning + opens `https://wallet.apple.com/add` deep link with mock data.
-- Controls: Freeze, Limits (daily/monthly sliders → persisted), Online/Contactless/ATM toggles, Region whitelist multi-select, Replace card, Report lost.
-- Top-up sheet: pick funding source (Vault / Wallet asset) → amount → fee blended per spec → confirm.
-- Transactions list: clickable, detail sheet with merchant, MCC, FX rate, dispute button.
+Fix:
+- Replace all `new Date(ts).toLocaleDateString()` calls in `AllHistorySheet`, `pay.tsx`, `stream.tsx`, `vault.tsx`, `spend.tsx` with a stable `fmtAbs(ts)` helper that outputs `YYYY-MM-DD HH:mm` (locale-independent, deterministic).
+- For relative times (`"2m"`, `"3h"`), gate behind a `useMounted()` hook so SSR renders an empty placeholder and client renders the value after hydration. Add `useMounted` to `src/lib/utils.ts`.
 
----
+## 9. Files touched / created
 
-## 8. Cross-cutting
+Created:
+- `src/routes/onboarding.tsx`
+- `src/routes/settings.tsx`
+- `src/components/PinGate.tsx`
+- `src/components/LockScreen.tsx`
+- `src/components/MerchantBrand.tsx`
+- `src/lib/useMounted.ts`
+- `src/lib/time.ts` (`fmtAbs`, `fmtRelative`)
 
-- **Bottom nav**: 5 tabs — Wallet · Markets · Pay · Stream · Vault. Spend moved to a swipe-in "More" drawer accessible from Wallet header (keeps 5 visible per iOS HIG).
-- **Haptic feedback** on every press via `navigator.vibrate(8)`.
-- **Toasts** via existing `sonner`.
-- **Onboarding** (first launch): generate seed → "Back up your 12 words" → confirm 3 random words → set 4-digit PIN → land on Wallet.
-- **Settings** route (gear icon in header): seed export (PIN-gated), PIN change, network (mainnet/testnet stub), Tor toggle (visual), language, clear data.
+Edited:
+- `src/lib/store.ts` — merchant + security state and actions
+- `src/routes/__root.tsx` — onboarding redirect, brand provider, lock screen, auto-lock
+- `src/components/AppHeader.tsx` — logo + gear
+- `src/components/AllHistorySheet.tsx` — `fmtAbs` + `useMounted`
+- `src/routes/index.tsx` — relative-time hydration guard
+- `src/routes/vault.tsx` — z-addr behind `PinGate`
+- `src/routes/spend.tsx` — consolidate PAN reveal under `PinGate`
+- `src/styles.css` — `--brand` token, `animate-shake` keyframe
 
----
+## 10. Out of scope (future passes)
 
-## Technical notes
-
-New deps: `zustand`, `qrcode`, `@scure/bip39`, `@scure/bip32`, `@noble/secp256k1`, `bs58`, `jspdf`, `framer-motion` (sheet transitions). All run in browser, no Node-only deps.
-
-No smart contract calls, no Tor, no zebrad — every "broadcast" is a setTimeout state machine matching the spec's lifecycle exactly. UI/UX is indistinguishable from a real client.
-
-Files added (~25): `lib/{store,chains,fees,addresses,qr,pdf}.ts`, `components/sheets/{AmountInput,ChainPicker,CoinPicker,AddressInput,Confirm,StatusTimeline,PinPad}.tsx`, `components/flows/{Send,Receive,Swap,Shield,CreatePayment,NewBatch,Payout,Topup,RevealCard}.tsx`, `routes/{settings,onboarding}.tsx`, plus refactors to all 5 existing routes.
-
-Estimated complexity: large (~3500 LOC). Worth implementing in one pass since flows share primitives.
+UmbraPay merchant-grade (refunds/webhooks/invoice PDF), CSV import & payslip PDFs, Apple Wallet provisioning, region whitelist, top-up funding picker. Tracked for a follow-up sweep.
