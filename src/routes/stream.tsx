@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { DetailSheet } from "@/components/DetailSheet";
+import { AllHistorySheet } from "@/components/AllHistorySheet";
 import { Users, Plus, Shield, Calendar, ChevronRight, Play, Pencil } from "lucide-react";
 
 export const Route = createFileRoute("/stream")({ component: StreamPage });
