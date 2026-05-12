@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { DetailSheet } from "@/components/DetailSheet";
+import { AllHistorySheet } from "@/components/AllHistorySheet";
 import { PayFlow, type PayFlowKind } from "@/components/flows/PayFlow";
 import {
   QrCode, Copy, Link2, Plus, Check, ChevronRight, Download, Share2,
