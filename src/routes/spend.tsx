@@ -78,7 +78,7 @@ function SpendPage() {
           </div>
           <div className="absolute inset-x-6 bottom-6">
             <button
-              onClick={() => setRevealed((v) => !v)}
+              onClick={() => tryReveal()}
               className="font-mono text-lg tracking-[0.18em] block w-full text-left pressable"
             >
               {revealed ? fullPan : masked}
@@ -101,7 +101,7 @@ function SpendPage() {
 
         <div className="mt-3 flex items-center justify-between text-[11px]">
           <button
-            onClick={() => setRevealed((v) => !v)}
+            onClick={() => tryReveal()}
             className="flex items-center gap-1.5 text-muted-foreground pressable"
           >
             {revealed ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
@@ -238,6 +238,13 @@ function SpendPage() {
         </div>
       </DetailSheet>
       <AllHistorySheet open={allHistory} scope="spend" onClose={() => setAllHistory(false)} title="Card history" />
+      <DetailSheet open={pinGate} onClose={() => setPinGate(false)} title="Reveal card details">
+        <PinGate
+          subtitle="PIN required to reveal PAN & CVV"
+          onPass={() => { setPinGate(false); setRevealed(true); }}
+          onCancel={() => setPinGate(false)}
+        />
+      </DetailSheet>
     </div>
   );
 }
