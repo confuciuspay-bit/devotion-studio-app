@@ -3,8 +3,11 @@ import { useMemo, useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { DetailSheet } from "@/components/DetailSheet";
 import { PayFlow, type PayFlowKind } from "@/components/flows/PayFlow";
-import { QrCode, Copy, Link2, Plus, Check, ChevronRight, Download, Share2, Settings2, Filter } from "lucide-react";
-import { useApp, type PaymentRecord, type PaymentStatus } from "@/lib/store";
+import {
+  QrCode, Copy, Link2, Plus, Check, ChevronRight, Download, Share2,
+  Settings2, Filter, Repeat, FileText, Receipt, LayoutGrid, Pause, Play, Trash2,
+} from "lucide-react";
+import { useApp, type PaymentRecord, type PaymentStatus, type Invoice } from "@/lib/store";
 import { fmtTime } from "@/lib/markets";
 import { useMoney } from "@/lib/useMoney";
 import { getChain } from "@/lib/chains";
@@ -17,24 +20,65 @@ const STATUS_LABEL: Record<PaymentStatus, string> = {
   RELEASED: "Released", REFUNDED: "Refunded", EXPIRED: "Expired",
 };
 
+type Tab = "overview" | "payments" | "invoices" | "recurring" | "links";
+
+const TABS: { id: Tab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+  { id: "overview", label: "Overview", icon: LayoutGrid },
+  { id: "payments", label: "Payments", icon: Receipt },
+  { id: "invoices", label: "Invoices", icon: FileText },
+  { id: "recurring", label: "Recurring", icon: Repeat },
+  { id: "links", label: "Links", icon: Link2 },
+];
+
+interface Subscription {
+  id: string;
+  customer: string;
+  amountUsd: number;
+  cadence: "weekly" | "monthly" | "yearly";
+  token: string;
+  active: boolean;
+  nextRun: number;
+}
+
+const SEED_SUBS: Subscription[] = [
+  { id: "sub_001", customer: "acme.eth", amountUsd: 49, cadence: "monthly", token: "USDC", active: true, nextRun: Date.now() + 4 * 86_400_000 },
+  { id: "sub_002", customer: "globex@umbra.id", amountUsd: 1200, cadence: "monthly", token: "ZEC", active: true, nextRun: Date.now() + 12 * 86_400_000 },
+  { id: "sub_003", customer: "soylent.corp", amountUsd: 19, cadence: "weekly", token: "USDT", active: false, nextRun: Date.now() + 2 * 86_400_000 },
+];
+
 function PayPage() {
-  const { payments, monthlyVolumeUsd, vaultEnabled, updatePayment } = useApp((s) => s);
+  const { payments, monthlyVolumeUsd, vaultEnabled, updatePayment, invoices } = useApp((s) => s);
   const setVault = (b: boolean) => useApp.setState({ vaultEnabled: b });
   const { fmt } = useMoney();
 
+  const [tab, setTab] = useState<Tab>("overview");
   const [open, setOpen] = useState<PaymentRecord | null>(null);
+  const [openInvoice, setOpenInvoice] = useState<Invoice | null>(null);
   const [flow, setFlow] = useState<PayFlowKind | null>(null);
   const [filter, setFilter] = useState<"all" | PaymentStatus>("all");
   const [showSettings, setShowSettings] = useState(false);
+  const [subs, setSubs] = useState<Subscription[]>(SEED_SUBS);
 
   const list = useMemo(
     () => (filter === "all" ? payments : payments.filter((p) => p.status === filter)),
     [payments, filter],
   );
 
+  const stats = useMemo(() => {
+    const released = payments.filter((p) => p.status === "RELEASED");
+    const pending = payments.filter((p) => p.status === "INITIATED" || p.status === "FUNDED");
+    return {
+      releasedCount: released.length,
+      releasedSum: released.reduce((s, p) => s + p.amountUsd, 0),
+      pendingCount: pending.length,
+      pendingSum: pending.reduce((s, p) => s + p.amountUsd, 0),
+    };
+  }, [payments]);
+
   return (
     <div className="animate-fade-in">
       <AppHeader subtitle="UmbraPay" />
+
       <section className="px-5">
         <div className="rounded-3xl border border-border p-6 bg-[image:var(--gradient-card)] grain relative overflow-hidden">
           <div className="flex items-center justify-between">
@@ -81,63 +125,82 @@ function PayPage() {
         </div>
       </section>
 
-      <section className="px-5 mt-6">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold">Payments</h2>
-          <div className="flex gap-1.5 text-[10px] uppercase tracking-wider">
-            {(["all", "INITIATED", "FUNDED", "RELEASED"] as const).map((k) => (
-              <button
-                key={k}
-                onClick={() => setFilter(k)}
-                className={`px-2 py-1 rounded-full border ${filter === k ? "bg-foreground text-background border-foreground" : "bg-foreground/5 border-border text-muted-foreground"}`}
-              >
-                {k === "all" ? "All" : STATUS_LABEL[k]}
-              </button>
-            ))}
-            <button className="px-2 py-1 rounded-full bg-foreground/5 border border-border text-muted-foreground">
-              <Filter className="size-3" />
-            </button>
-          </div>
-        </div>
-        <div className="space-y-2 stagger">
-          {list.length === 0 && (
-            <div className="rounded-2xl border border-dashed border-border bg-card/50 p-8 text-center text-sm text-muted-foreground">
-              No payments yet. Tap <b>+ New</b> to create one.
-            </div>
-          )}
-          {list.map((p) => {
-            const ch = getChain(p.chainId);
+      {/* Sub-tabs */}
+      <section className="px-5 mt-5">
+        <div className="flex gap-1.5 overflow-x-auto scrollbar-none -mx-1 px-1">
+          {TABS.map((t) => {
+            const Icon = t.icon;
+            const active = tab === t.id;
             return (
               <button
-                key={p.id}
-                onClick={() => setOpen(p)}
-                className="w-full text-left pressable rounded-2xl border border-border bg-card px-4 py-3 flex items-center gap-3 active:bg-foreground/5"
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                className={`pressable shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-full border text-xs font-medium ${
+                  active
+                    ? "bg-foreground text-background border-foreground"
+                    : "bg-foreground/5 border-border text-muted-foreground"
+                }`}
               >
-                <div className={`size-9 rounded-xl grid place-items-center ${
-                  p.status === "RELEASED" ? "bg-shield/15 text-shield"
-                  : p.status === "FUNDED" ? "bg-primary/15 text-primary"
-                  : p.status === "EXPIRED" || p.status === "REFUNDED" ? "bg-destructive/15 text-destructive"
-                  : "bg-foreground/5 text-muted-foreground"
-                }`}>
-                  <Check className="size-4" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{p.reference || p.customer || p.id}</p>
-                  <p className="text-[11px] text-muted-foreground font-mono truncate">
-                    {p.id} · {p.token} · {ch?.shortName ?? p.chainId}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-mono">{fmt(p.amountUsd)}</p>
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                    {STATUS_LABEL[p.status]}
-                  </p>
-                </div>
-                <ChevronRight className="size-4 text-muted-foreground" />
+                <Icon className="size-3.5" />
+                {t.label}
               </button>
             );
           })}
         </div>
+      </section>
+
+      {/* Tab content */}
+      <section className="px-5 mt-5 pb-32 animate-fade-in" key={tab}>
+        {tab === "overview" && (
+          <OverviewTab
+            stats={stats}
+            payments={payments.slice(0, 5)}
+            invoiceCount={invoices.length}
+            subCount={subs.filter((s) => s.active).length}
+            onOpenPayment={setOpen}
+            goTo={setTab}
+            fmt={fmt}
+          />
+        )}
+
+        {tab === "payments" && (
+          <>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-semibold">All payments</h2>
+              <div className="flex gap-1.5 text-[10px] uppercase tracking-wider">
+                {(["all", "INITIATED", "FUNDED", "RELEASED"] as const).map((k) => (
+                  <button
+                    key={k}
+                    onClick={() => setFilter(k)}
+                    className={`px-2 py-1 rounded-full border ${
+                      filter === k
+                        ? "bg-foreground text-background border-foreground"
+                        : "bg-foreground/5 border-border text-muted-foreground"
+                    }`}
+                  >
+                    {k === "all" ? "All" : STATUS_LABEL[k]}
+                  </button>
+                ))}
+                <button className="px-2 py-1 rounded-full bg-foreground/5 border border-border text-muted-foreground">
+                  <Filter className="size-3" />
+                </button>
+              </div>
+            </div>
+            <PaymentList list={list} onOpen={setOpen} fmt={fmt} />
+          </>
+        )}
+
+        {tab === "invoices" && (
+          <InvoicesTab invoices={invoices} fmt={fmt} onOpen={setOpenInvoice} onNew={() => setFlow("new")} />
+        )}
+
+        {tab === "recurring" && (
+          <RecurringTab subs={subs} setSubs={setSubs} fmt={fmt} />
+        )}
+
+        {tab === "links" && (
+          <LinksTab payments={payments} fmt={fmt} onNew={() => setFlow("link")} />
+        )}
       </section>
 
       <PayFlow open={!!flow} kind={flow} onClose={() => setFlow(null)} />
@@ -216,6 +279,39 @@ function PayPage() {
         )}
       </DetailSheet>
 
+      {/* Invoice detail */}
+      <DetailSheet open={!!openInvoice} onClose={() => setOpenInvoice(null)} title={openInvoice?.number}>
+        {openInvoice && (
+          <div className="space-y-4">
+            <div className="rounded-2xl bg-foreground/5 border border-border p-5 text-center">
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">Invoice</p>
+              <p className="text-3xl font-display font-semibold mt-1 tabular-nums">{fmt(openInvoice.amountUsd)}</p>
+              <p className="text-xs text-muted-foreground mt-1 font-mono">{openInvoice.recipient}</p>
+            </div>
+            <div className="rounded-2xl border border-border divide-y divide-border">
+              <Row l="Issued" v={fmtTime(openInvoice.ts)} />
+              <Row l="Hash v1" v={shortAddrLocal(openInvoice.hashV1)} mono />
+              {openInvoice.hashV2 && <Row l="Hash v2" v={shortAddrLocal(openInvoice.hashV2)} mono />}
+              {openInvoice.anchorTx && <Row l="Anchor" v={shortAddrLocal(openInvoice.anchorTx)} mono />}
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => { navigator.clipboard?.writeText(openInvoice.hashV1); toast.success("Hash copied"); }}
+                className="pressable rounded-2xl bg-foreground/5 border border-border py-3 text-sm font-medium flex items-center justify-center gap-2"
+              >
+                <Copy className="size-4" /> Copy hash
+              </button>
+              <button
+                onClick={() => toast.success("Invoice PDF ready")}
+                className="pressable rounded-2xl bg-primary text-primary-foreground py-3 text-sm font-semibold flex items-center justify-center gap-2"
+              >
+                <Download className="size-4" /> PDF
+              </button>
+            </div>
+          </div>
+        )}
+      </DetailSheet>
+
       {/* PSP settings */}
       <DetailSheet open={showSettings} onClose={() => setShowSettings(false)} title="PSP settings">
         <div className="space-y-4">
@@ -249,6 +345,280 @@ function PayPage() {
           </div>
         </div>
       </DetailSheet>
+    </div>
+  );
+}
+
+/* ─────────────── Tab views ─────────────── */
+
+function OverviewTab({
+  stats, payments, invoiceCount, subCount, onOpenPayment, goTo, fmt,
+}: {
+  stats: { releasedCount: number; releasedSum: number; pendingCount: number; pendingSum: number };
+  payments: PaymentRecord[];
+  invoiceCount: number;
+  subCount: number;
+  onOpenPayment: (p: PaymentRecord) => void;
+  goTo: (t: Tab) => void;
+  fmt: (n: number, o?: Intl.NumberFormatOptions) => string;
+}) {
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 gap-2 stagger">
+        <StatCard label="Released" value={fmt(stats.releasedSum, { maximumFractionDigits: 0 })} sub={`${stats.releasedCount} payments`} tone="shield" />
+        <StatCard label="Pending" value={fmt(stats.pendingSum, { maximumFractionDigits: 0 })} sub={`${stats.pendingCount} awaiting`} />
+        <StatCard label="Invoices" value={String(invoiceCount)} sub="anchored on-chain" onClick={() => goTo("invoices")} />
+        <StatCard label="Recurring" value={String(subCount)} sub="active subs" onClick={() => goTo("recurring")} />
+      </div>
+
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold">Recent payments</h2>
+          <button onClick={() => goTo("payments")} className="text-xs text-muted-foreground inline-flex items-center">
+            See all <ChevronRight className="size-3" />
+          </button>
+        </div>
+        <PaymentList list={payments} onOpen={onOpenPayment} fmt={fmt} compact />
+      </div>
+    </div>
+  );
+}
+
+function StatCard({
+  label, value, sub, tone, onClick,
+}: { label: string; value: string; sub?: string; tone?: "shield"; onClick?: () => void }) {
+  const Comp = onClick ? "button" : "div";
+  return (
+    <Comp
+      onClick={onClick}
+      className={`pressable text-left rounded-2xl border border-border bg-card p-4 ${onClick ? "active:bg-foreground/5" : ""}`}
+    >
+      <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
+      <p className={`text-xl font-display font-semibold mt-1 tabular-nums ${tone === "shield" ? "text-shield" : ""}`}>{value}</p>
+      {sub && <p className="text-[11px] text-muted-foreground mt-0.5 font-mono">{sub}</p>}
+    </Comp>
+  );
+}
+
+function PaymentList({
+  list, onOpen, fmt, compact,
+}: {
+  list: PaymentRecord[];
+  onOpen: (p: PaymentRecord) => void;
+  fmt: (n: number, o?: Intl.NumberFormatOptions) => string;
+  compact?: boolean;
+}) {
+  if (list.length === 0) {
+    return (
+      <div className="rounded-2xl border border-dashed border-border bg-card/50 p-8 text-center text-sm text-muted-foreground">
+        No payments yet.
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-2 stagger">
+      {list.map((p) => {
+        const ch = getChain(p.chainId);
+        return (
+          <button
+            key={p.id}
+            onClick={() => onOpen(p)}
+            className="w-full text-left pressable rounded-2xl border border-border bg-card px-4 py-3 flex items-center gap-3 active:bg-foreground/5"
+          >
+            <div className={`size-9 rounded-xl grid place-items-center ${
+              p.status === "RELEASED" ? "bg-shield/15 text-shield"
+              : p.status === "FUNDED" ? "bg-primary/15 text-primary"
+              : p.status === "EXPIRED" || p.status === "REFUNDED" ? "bg-destructive/15 text-destructive"
+              : "bg-foreground/5 text-muted-foreground"
+            }`}>
+              <Check className="size-4" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">{p.reference || p.customer || p.id}</p>
+              <p className="text-[11px] text-muted-foreground font-mono truncate">
+                {p.id} · {p.token} · {ch?.shortName ?? p.chainId}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-sm font-mono">{fmt(p.amountUsd)}</p>
+              {!compact && (
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                  {STATUS_LABEL[p.status]}
+                </p>
+              )}
+            </div>
+            <ChevronRight className="size-4 text-muted-foreground" />
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function InvoicesTab({
+  invoices, fmt, onOpen, onNew,
+}: {
+  invoices: Invoice[];
+  fmt: (n: number, o?: Intl.NumberFormatOptions) => string;
+  onOpen: (i: Invoice) => void;
+  onNew: () => void;
+}) {
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-semibold">Invoices</h2>
+        <button
+          onClick={onNew}
+          className="pressable inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold"
+        >
+          <Plus className="size-3.5" /> New
+        </button>
+      </div>
+      {invoices.length === 0 && (
+        <div className="rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center text-sm text-muted-foreground">
+          <FileText className="size-6 mx-auto mb-2 opacity-60" />
+          No invoices yet. Anchored invoices appear here with on-chain hash proof.
+        </div>
+      )}
+      <div className="space-y-2 stagger">
+        {invoices.map((i) => (
+          <button
+            key={i.id}
+            onClick={() => onOpen(i)}
+            className="w-full text-left pressable rounded-2xl border border-border bg-card px-4 py-3 flex items-center gap-3"
+          >
+            <div className="size-9 rounded-xl grid place-items-center bg-foreground/5 text-muted-foreground">
+              <FileText className="size-4" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">{i.number}</p>
+              <p className="text-[11px] text-muted-foreground font-mono truncate">{i.recipient} · {fmtTime(i.ts)}</p>
+            </div>
+            <p className="text-sm font-mono">{fmt(i.amountUsd)}</p>
+            <ChevronRight className="size-4 text-muted-foreground" />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function RecurringTab({
+  subs, setSubs, fmt,
+}: {
+  subs: Subscription[];
+  setSubs: (s: Subscription[]) => void;
+  fmt: (n: number, o?: Intl.NumberFormatOptions) => string;
+}) {
+  const toggle = (id: string) =>
+    setSubs(subs.map((s) => (s.id === id ? { ...s, active: !s.active } : s)));
+  const remove = (id: string) => setSubs(subs.filter((s) => s.id !== id));
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-semibold">Recurring</h2>
+        <button
+          onClick={() => toast("Subscription wizard — coming soon")}
+          className="pressable inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold"
+        >
+          <Plus className="size-3.5" /> New
+        </button>
+      </div>
+      {subs.length === 0 && (
+        <div className="rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center text-sm text-muted-foreground">
+          No subscriptions.
+        </div>
+      )}
+      <div className="space-y-2 stagger">
+        {subs.map((s) => (
+          <div
+            key={s.id}
+            className="rounded-2xl border border-border bg-card px-4 py-3 flex items-center gap-3"
+          >
+            <div className={`size-9 rounded-xl grid place-items-center ${s.active ? "bg-shield/15 text-shield" : "bg-foreground/5 text-muted-foreground"}`}>
+              <Repeat className="size-4" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">{s.customer}</p>
+              <p className="text-[11px] text-muted-foreground font-mono truncate">
+                {fmt(s.amountUsd)} · {s.cadence} · {s.token} · next {fmtTime(s.nextRun)}
+              </p>
+            </div>
+            <button
+              onClick={() => toggle(s.id)}
+              className="pressable size-8 grid place-items-center rounded-full bg-foreground/5 border border-border"
+              aria-label={s.active ? "Pause" : "Resume"}
+            >
+              {s.active ? <Pause className="size-3.5" /> : <Play className="size-3.5" />}
+            </button>
+            <button
+              onClick={() => remove(s.id)}
+              className="pressable size-8 grid place-items-center rounded-full bg-foreground/5 border border-border text-destructive"
+              aria-label="Remove"
+            >
+              <Trash2 className="size-3.5" />
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function LinksTab({
+  payments, fmt, onNew,
+}: {
+  payments: PaymentRecord[];
+  fmt: (n: number, o?: Intl.NumberFormatOptions) => string;
+  onNew: () => void;
+}) {
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-semibold">Hosted checkout links</h2>
+        <button
+          onClick={onNew}
+          className="pressable inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold"
+        >
+          <Plus className="size-3.5" /> New
+        </button>
+      </div>
+      {payments.length === 0 && (
+        <div className="rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center text-sm text-muted-foreground">
+          <Link2 className="size-6 mx-auto mb-2 opacity-60" />
+          Generate a payment to share its hosted link.
+        </div>
+      )}
+      <div className="space-y-2 stagger">
+        {payments.map((p) => {
+          const link = `${origin}/pay/${p.id}`;
+          return (
+            <div key={p.id} className="rounded-2xl border border-border bg-card p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium">{p.reference || p.id}</p>
+                <p className="text-sm font-mono">{fmt(p.amountUsd)}</p>
+              </div>
+              <p className="font-mono text-[11px] text-muted-foreground break-all">{link}</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => { navigator.clipboard?.writeText(link); toast.success("Link copied"); }}
+                  className="pressable flex-1 rounded-xl bg-foreground/5 border border-border py-2 text-xs font-medium inline-flex items-center justify-center gap-1"
+                >
+                  <Copy className="size-3.5" /> Copy
+                </button>
+                <button
+                  onClick={() => navigator.share?.({ title: p.id, text: link }).catch(() => {})}
+                  className="pressable flex-1 rounded-xl bg-primary text-primary-foreground py-2 text-xs font-semibold inline-flex items-center justify-center gap-1"
+                >
+                  <Share2 className="size-3.5" /> Share
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
