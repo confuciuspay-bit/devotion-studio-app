@@ -10,12 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VaultRouteImport } from './routes/vault'
+import { Route as StreamRouteImport } from './routes/stream'
 import { Route as PayRouteImport } from './routes/pay'
 import { Route as IndexRouteImport } from './routes/index'
 
 const VaultRoute = VaultRouteImport.update({
   id: '/vault',
   path: '/vault',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StreamRoute = StreamRouteImport.update({
+  id: '/stream',
+  path: '/stream',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PayRoute = PayRouteImport.update({
@@ -32,30 +38,34 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/pay': typeof PayRoute
+  '/stream': typeof StreamRoute
   '/vault': typeof VaultRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/pay': typeof PayRoute
+  '/stream': typeof StreamRoute
   '/vault': typeof VaultRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/pay': typeof PayRoute
+  '/stream': typeof StreamRoute
   '/vault': typeof VaultRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/pay' | '/vault'
+  fullPaths: '/' | '/pay' | '/stream' | '/vault'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/pay' | '/vault'
-  id: '__root__' | '/' | '/pay' | '/vault'
+  to: '/' | '/pay' | '/stream' | '/vault'
+  id: '__root__' | '/' | '/pay' | '/stream' | '/vault'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   PayRoute: typeof PayRoute
+  StreamRoute: typeof StreamRoute
   VaultRoute: typeof VaultRoute
 }
 
@@ -66,6 +76,13 @@ declare module '@tanstack/react-router' {
       path: '/vault'
       fullPath: '/vault'
       preLoaderRoute: typeof VaultRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/stream': {
+      id: '/stream'
+      path: '/stream'
+      fullPath: '/stream'
+      preLoaderRoute: typeof StreamRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pay': {
@@ -88,6 +105,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   PayRoute: PayRoute,
+  StreamRoute: StreamRoute,
   VaultRoute: VaultRoute,
 }
 export const routeTree = rootRouteImport
