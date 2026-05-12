@@ -13,6 +13,7 @@ import {
   Repeat,
   Shield,
   ChevronRight,
+  Lock,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 
@@ -118,68 +119,60 @@ function WalletHome() {
     <div className="animate-fade-in">
       <AppHeader subtitle="Wallet" />
 
-      {/* Balance */}
-      <section className="px-4 pt-6 pb-4" style={{ borderBottom: "1px solid var(--border-dim)" }}>
-        <p className="label mb-2">total balance</p>
-        <p
-          style={{
-            fontFamily: "'JetBrains Mono', monospace",
-            fontWeight: 400,
-            fontSize: 28,
-            color: "var(--text-primary)",
-            letterSpacing: "0.02em",
-          }}
-        >
-          {total ? fmt(total, { maximumFractionDigits: 0 }) : <span className="animate-pulse text-[var(--accent)]">_</span>}
-        </p>
+      {/* Balance card */}
+      <section className="px-5 pt-2">
+        <div className="rounded-lg border border-[rgba(255,255,255,0.06)] bg-card p-6">
+          <p className="text-[11px] uppercase tracking-widest text-muted-foreground">
+            Total balance
+          </p>
+          <h1 className="mt-2 text-4xl font-semibold text-foreground font-mono tabular-nums">
+            {total ? fmt(total, { maximumFractionDigits: 0 }) : "—"}
+          </h1>
 
-        {/* Status indicator */}
-        <div className="mt-3 flex items-center gap-1.5">
-          <span className="dot dot-ok" />
-          <span className="text-[12px] text-[var(--text-secondary)] font-light">
-            anonymity set 4.9M ZEC · link broken
-          </span>
+          {/* Actions */}
+          <div className="mt-6 grid grid-cols-4 gap-2">
+            {([
+              { i: ArrowDownLeft, l: "Receive", k: "receive" as const },
+              { i: ArrowUpRight, l: "Send", k: "send" as const },
+              { i: Repeat, l: "Swap", k: "swap" as const },
+              { i: Shield, l: "Shield", k: "shield" as const },
+            ]).map(({ i: Icon, l, k }) => (
+              <button
+                key={l}
+                onClick={() => setFlow(k)}
+                className="pressable flex flex-col items-center gap-1.5 rounded-md bg-[rgba(255,255,255,0.04)] hover:bg-[rgba(255,255,255,0.07)] border border-[rgba(255,255,255,0.06)] py-3 transition"
+              >
+                <Icon className="size-4 text-primary" />
+                <span className="text-[11px] font-medium text-foreground">{l}</span>
+              </button>
+            ))}
+          </div>
         </div>
+      </section>
 
-        {/* Actions */}
-        <div className="mt-5 flex items-center gap-2">
-          {([
-            { i: ArrowDownLeft, l: "receive", k: "receive" as const },
-            { i: ArrowUpRight, l: "send", k: "send" as const },
-            { i: Repeat, l: "swap", k: "swap" as const },
-            { i: Shield, l: "shield", k: "shield" as const },
-          ]).map(({ i: Icon, l, k }) => (
-            <button
-              key={l}
-              onClick={() => setFlow(k)}
-              className="pressable flex-1 flex flex-col items-center gap-1.5 py-3 transition-colors"
-              style={{
-                background: "var(--bg-surface)",
-                border: "1px solid var(--border-default)",
-                borderRadius: 4,
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--border-focus)")}
-              onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--border-default)")}
-            >
-              <Icon className="size-3.5" style={{ color: "var(--accent)" }} />
-              <span className="label" style={{ textTransform: "lowercase", letterSpacing: "0.04em" }}>{l}</span>
-            </button>
-          ))}
+      {/* Shielded status */}
+      <section className="px-5 mt-3">
+        <div className="rounded-lg border border-[rgba(16,185,129,0.2)] bg-[rgba(16,185,129,0.04)] p-4 flex items-center gap-3">
+          <div className="size-1.5 rounded-full bg-success shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-medium text-foreground">Anonymity set: 4.9M ZEC</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Last 7 receives transited the shielded pool. On-chain link broken.
+            </p>
+          </div>
+          <Lock className="size-3.5 text-success shrink-0" />
         </div>
       </section>
 
       {/* Assets */}
-      <section className="px-4 py-4">
+      <section className="px-5 mt-6">
         <div className="flex items-center justify-between mb-3">
-          <p className="label">assets</p>
-          <Link
-            to="/markets"
-            className="pressable flex items-center gap-0.5 text-[11px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
-          >
-            markets <ChevronRight className="size-3" />
+          <p className="text-[11px] uppercase tracking-widest text-muted-foreground">Assets</p>
+          <Link to="/markets" className="text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition pressable">
+            Markets <ChevronRight className="size-3" />
           </Link>
         </div>
-        <div style={{ borderTop: "1px solid var(--border-dim)" }}>
+        <div className="rounded-lg border border-[rgba(255,255,255,0.06)] bg-card divide-y divide-[rgba(255,255,255,0.04)] overflow-hidden">
           {assets.map((a) => {
             const up = a.chg >= 0;
             return (
@@ -187,23 +180,19 @@ function WalletHome() {
                 key={a.id}
                 to="/coin/$id"
                 params={{ id: a.id }}
-                className="pressable flex items-center gap-3 py-3 transition-colors hover:bg-[rgba(255,255,255,0.02)]"
-                style={{ borderBottom: "1px solid var(--border-dim)", height: 44 }}
+                className="flex items-center gap-3 px-4 py-3 hover:bg-[rgba(255,255,255,0.02)] transition"
               >
-                <CoinIcon src={a.image} symbol={a.symbol} size={24} />
+                <CoinIcon src={a.image} symbol={a.symbol} size={34} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] text-[var(--text-primary)]">{a.symbol}</p>
-                  <p className="text-[11px] text-[var(--text-secondary)] font-light">
+                  <p className="text-sm font-medium text-foreground">{a.symbol}</p>
+                  <p className="text-[11px] text-muted-foreground">
                     {hidden ? "•••" : a.qty.toLocaleString()} · {a.name}
                   </p>
                 </div>
-                <Sparkline data={a.spark} positive={up} width={52} height={18} />
-                <div className="text-right w-[72px]">
-                  <p className="text-[13px] text-[var(--text-primary)]">{fmt(a.value)}</p>
-                  <p
-                    className="text-[11px]"
-                    style={{ color: up ? "var(--status-ok)" : "var(--status-err)" }}
-                  >
+                <Sparkline data={a.spark} positive={up} width={52} height={20} />
+                <div className="text-right w-[76px]">
+                  <p className="text-sm font-mono tabular-nums text-foreground">{fmt(a.value)}</p>
+                  <p className={`text-[11px] font-mono ${up ? "text-success" : "text-destructive"}`}>
                     {fmtPct(a.chg)}
                   </p>
                 </div>
@@ -212,59 +201,49 @@ function WalletHome() {
           })}
           {!assets.length &&
             [0, 1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="flex items-center gap-3 py-3"
-                style={{ borderBottom: "1px solid var(--border-dim)", height: 44 }}
-              >
-                <div className="size-6 rounded-full bg-[rgba(255,255,255,0.04)] animate-pulse" />
+              <div key={i} className="h-[58px] px-4 py-3 flex items-center gap-3">
+                <div className="size-[34px] rounded-full bg-[rgba(255,255,255,0.05)] animate-pulse" />
                 <div className="flex-1 space-y-1.5">
-                  <div className="h-2.5 w-14 bg-[rgba(255,255,255,0.04)] rounded animate-pulse" />
-                  <div className="h-2 w-20 bg-[rgba(255,255,255,0.03)] rounded animate-pulse" />
+                  <div className="h-3 w-16 bg-[rgba(255,255,255,0.05)] rounded animate-pulse" />
+                  <div className="h-2.5 w-24 bg-[rgba(255,255,255,0.03)] rounded animate-pulse" />
                 </div>
-                <div className="h-2.5 w-12 bg-[rgba(255,255,255,0.04)] rounded animate-pulse" />
+                <div className="h-3 w-14 bg-[rgba(255,255,255,0.05)] rounded animate-pulse" />
               </div>
             ))}
         </div>
       </section>
 
       {/* Activity */}
-      <section className="px-4 pb-4" style={{ borderTop: "1px solid var(--border-dim)" }}>
-        <div className="flex items-center justify-between py-3">
-          <p className="label">recent activity</p>
-          <button
-            onClick={() => setAllHistory(true)}
-            className="pressable flex items-center gap-0.5 text-[11px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
-          >
-            all history <ChevronRight className="size-3" />
+      <section className="px-5 mt-6">
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-[11px] uppercase tracking-widest text-muted-foreground">Recent activity</p>
+          <button onClick={() => setAllHistory(true)} className="text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition pressable">
+            All history <ChevronRight className="size-3" />
           </button>
         </div>
-        <div style={{ borderTop: "1px solid var(--border-dim)" }}>
+        <div className="rounded-lg border border-[rgba(255,255,255,0.06)] bg-card divide-y divide-[rgba(255,255,255,0.04)] overflow-hidden">
           {activity.map((a) => (
             <button
               key={a.id}
               onClick={() => setOpenTx(a)}
-              className="pressable w-full text-left flex items-center gap-3 py-3 transition-colors hover:bg-[rgba(255,255,255,0.02)]"
-              style={{ borderBottom: "1px solid var(--border-dim)", height: 44 }}
+              className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-[rgba(255,255,255,0.02)] transition pressable"
             >
-              <span
-                className="dot shrink-0"
-                style={{
-                  background: a.shield ? "var(--status-ok)" : "var(--text-tertiary)",
-                  width: 4,
-                  height: 4,
-                }}
-              />
+              <div
+                className={`size-8 rounded-md grid place-items-center shrink-0 ${
+                  a.shield
+                    ? "bg-[rgba(16,185,129,0.12)] text-success"
+                    : "bg-[rgba(255,255,255,0.05)] text-muted-foreground"
+                }`}
+              >
+                {a.shield ? <Shield className="size-3.5" /> : <Repeat className="size-3.5" />}
+              </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] text-[var(--text-primary)] truncate">{a.t}</p>
-                <p className="text-[11px] text-[var(--text-secondary)] font-light">
+                <p className="text-sm text-foreground truncate">{a.t}</p>
+                <p className="text-[11px] text-muted-foreground">
                   {a.s} · {a.time}
                 </p>
               </div>
-              <p
-                className="text-[13px]"
-                style={{ color: a.usd >= 0 ? "var(--status-ok)" : "var(--text-primary)" }}
-              >
+              <p className={`text-sm font-mono tabular-nums ${a.usd >= 0 ? "text-success" : "text-foreground"}`}>
                 {signed(a.usd)}
               </p>
             </button>
@@ -276,28 +255,25 @@ function WalletHome() {
       <DetailSheet open={!!openTx} onClose={() => setOpenTx(null)} title={openTx?.t}>
         {openTx && (
           <div className="space-y-4">
-            <div className="p-5 text-center" style={{ background: "var(--bg-raised)", borderRadius: 4 }}>
-              <p
-                className="text-[22px]"
-                style={{ color: openTx.usd >= 0 ? "var(--status-ok)" : "var(--text-primary)" }}
-              >
+            <div className="rounded-lg bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.06)] p-5 text-center">
+              <p className={`text-3xl font-mono font-semibold tabular-nums ${openTx.usd >= 0 ? "text-success" : "text-foreground"}`}>
                 {signed(openTx.usd)}
               </p>
-              <p className="text-[11px] text-[var(--text-secondary)] font-light mt-1">{openTx.s}</p>
+              <p className="text-xs text-muted-foreground mt-1">{openTx.s}</p>
             </div>
-            <div style={{ border: "1px solid var(--border-default)", borderRadius: 4 }}>
-              <TxRow l="network" v={openTx.network} />
-              <TxRow l="fee" v={openTx.fee} />
-              <TxRow l="hash" v={openTx.hash} mono />
-              <TxRow l="time" v={openTx.time + " ago"} />
-              <TxRow l="status" v="confirmed · shielded" last />
+            <div className="rounded-lg border border-[rgba(255,255,255,0.06)] divide-y divide-[rgba(255,255,255,0.04)]">
+              <TxRow l="Network" v={openTx.network} />
+              <TxRow l="Fee" v={openTx.fee} />
+              <TxRow l="Hash" v={openTx.hash} mono />
+              <TxRow l="Time" v={openTx.time + " ago"} />
+              <TxRow l="Status" v="Confirmed · shielded" />
             </div>
             <div className="grid grid-cols-2 gap-2">
-              <button className="btn-ghost py-2.5 text-[12px] uppercase tracking-widest">
-                copy hash
+              <button className="rounded-md bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.06)] py-2.5 text-sm font-medium pressable hover:bg-[rgba(255,255,255,0.07)] transition">
+                Copy hash
               </button>
-              <button className="btn-primary py-2.5 text-[12px]">
-                explorer
+              <button className="rounded-md bg-primary text-primary-foreground py-2.5 text-sm font-medium pressable hover:bg-primary/90 transition">
+                View on explorer
               </button>
             </div>
           </div>
@@ -310,19 +286,11 @@ function WalletHome() {
   );
 }
 
-function TxRow({ l, v, mono, last }: { l: string; v: string; mono?: boolean; last?: boolean }) {
+function TxRow({ l, v, mono }: { l: string; v: string; mono?: boolean }) {
   return (
-    <div
-      className="flex items-center justify-between px-4 py-3"
-      style={!last ? { borderBottom: "1px solid var(--border-dim)" } : undefined}
-    >
-      <span className="label">{l}</span>
-      <span
-        className="text-[12px] text-[var(--text-primary)]"
-        style={mono ? { fontFamily: "'JetBrains Mono', monospace" } : undefined}
-      >
-        {v}
-      </span>
+    <div className="flex items-center justify-between px-4 py-3">
+      <span className="text-[11px] uppercase tracking-widest text-muted-foreground">{l}</span>
+      <span className={`text-sm ${mono ? "font-mono" : ""} text-foreground`}>{v}</span>
     </div>
   );
 }

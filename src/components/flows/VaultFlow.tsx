@@ -10,7 +10,7 @@ import { useApp, type VaultActivity } from "@/lib/store";
 import { fakeTxHash, shortAddr } from "@/lib/addresses";
 import { vaultFee } from "@/lib/fees";
 import { useSimplePrices, fmtUsd } from "@/lib/markets";
-import { Copy, Eye, EyeOff } from "lucide-react";
+import { Copy, Shield, Clock, Lock, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
 export type VaultFlowKind = "withdraw" | "settings" | "address";
@@ -18,7 +18,7 @@ export type VaultFlowKind = "withdraw" | "settings" | "address";
 const ZEC_PRICE = 35;
 
 const DELAYS = [
-  { l: "now", v: 0 },
+  { l: "Now", v: 0 },
   { l: "1 hour", v: 3600_000 },
   { l: "24 hours", v: 86_400_000 },
 ];
@@ -53,9 +53,9 @@ export function VaultFlow({ open, kind, onClose }: { open: boolean; kind: VaultF
   const balanceUsd = vaultZec * ZEC_PRICE;
 
   const titles = {
-    withdraw: ["withdraw — output asset", "output network", "amount", "recipient", "review", "processing"],
-    settings: ["vault settings"],
-    address: ["shielded address"],
+    withdraw: ["Withdraw — output asset", "Output network", "Amount", "Recipient", "Review", "Processing"],
+    settings: ["Vault settings"],
+    address: ["Shielded address"],
   } as const;
   const title = kind === "withdraw" ? titles.withdraw[step] : titles[kind][0];
   const back = kind === "withdraw" && step > 0 ? () => setStep((s) => s - 1) : undefined;
@@ -65,11 +65,11 @@ export function VaultFlow({ open, kind, onClose }: { open: boolean; kind: VaultF
     setStep(5);
     const h = await fakeTxHash("payout" + Date.now());
     const steps: Step[] = [
-      ...(delay > 0 ? [{ label: `privacy delay · ${DELAYS.find((d) => d.v === delay)?.l}`, status: "active" as const }] : []),
+      ...(delay > 0 ? [{ label: `Privacy delay · ${DELAYS.find((d) => d.v === delay)?.l}`, status: "active" as const }] : []),
       { label: "z_sendmany · z-addr → t-addr", status: delay > 0 ? "pending" : "active" as const },
-      { label: `streaming swap ZEC → ${coin.symbol} · ${vaultRouteLabel(chain)}`, status: "pending" as const },
-      { label: `sending to ${shortAddr(recipient)}`, status: "pending" as const },
-      { label: "settled", status: "pending" as const },
+      { label: `Streaming swap ZEC → ${coin.symbol} · ${vaultRouteLabel(chain)}`, status: "pending" as const },
+      { label: `Sending to ${shortAddr(recipient)}`, status: "pending" as const },
+      { label: "Settled", status: "pending" as const },
     ];
     setProgress(steps);
     const advance = (i: number) =>
@@ -95,96 +95,86 @@ export function VaultFlow({ open, kind, onClose }: { open: boolean; kind: VaultF
 
   return (
     <Sheet open={open} onClose={onClose} title={title} onBack={back}>
-      {/* ADDRESS */}
+      {/* ── ADDRESS ─────────────────────────────────────── */}
       {kind === "address" && (
         <div className="space-y-4">
-          <div
-            className="px-3 py-3 text-[12px]"
-            style={{ background: "rgba(74,222,128,0.05)", border: "1px solid rgba(74,222,128,0.2)", borderRadius: 4 }}
-          >
-            <div className="flex items-center gap-1.5 mb-1">
-              <span className="dot dot-ok" />
-              <p className="font-medium" style={{ color: "var(--status-ok)" }}>per-merchant z-addr</p>
-            </div>
-            <p className="font-light" style={{ color: "var(--text-secondary)" }}>
-              unique shielded address · never share publicly
-            </p>
-          </div>
-          <div style={{ border: "1px solid var(--border-default)", borderRadius: 4 }}>
-            <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: "1px solid var(--border-dim)" }}>
-              <span className="label">address</span>
-              <button
-                onClick={() => setRevealAddr((v) => !v)}
-                className="pressable flex items-center gap-1 text-[11px] transition-colors hover:opacity-80"
-                style={{ color: "var(--accent)" }}
-              >
-                {revealAddr ? <EyeOff className="size-3" /> : <Eye className="size-3" />}
-                {revealAddr ? "hide" : "reveal"}
-              </button>
-            </div>
-            <div className="px-4 py-3">
-              <p
-                className="text-[11px] leading-relaxed"
-                style={{ fontFamily: "'JetBrains Mono', monospace", color: "var(--text-primary)", wordBreak: "break-all" }}
-              >
-                {revealAddr ? zAddr : zAddr.slice(0, 8) + "…" + zAddr.slice(-8)}
+          <div className="rounded-lg border border-[rgba(16,185,129,0.2)] bg-[rgba(16,185,129,0.04)] p-4 flex items-start gap-3">
+            <Shield className="size-4 text-success mt-0.5 shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-foreground">Per-merchant z-addr</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                A unique shielded address. Never share publicly — funds are visible to whoever holds the viewing key.
               </p>
             </div>
           </div>
+          <div className="rounded-lg border border-[rgba(255,255,255,0.06)] p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-[11px] uppercase tracking-widest text-muted-foreground">Address</p>
+              <button
+                onClick={() => setRevealAddr((v) => !v)}
+                className="text-xs text-primary flex items-center gap-1 hover:opacity-80 transition"
+              >
+                {revealAddr ? <EyeOff className="size-3" /> : <Eye className="size-3" />}
+                {revealAddr ? "Hide" : "Reveal"}
+              </button>
+            </div>
+            <p className="font-mono text-xs break-all leading-relaxed text-foreground">
+              {revealAddr ? zAddr : zAddr.slice(0, 8) + "…" + zAddr.slice(-8)}
+            </p>
+          </div>
           <button
             onClick={() => { navigator.clipboard?.writeText(zAddr); toast.success("z-addr copied"); }}
-            className="btn-primary w-full py-2.5 flex items-center justify-center gap-2"
+            className="w-full pressable rounded-md bg-primary text-primary-foreground py-3 text-sm font-medium flex items-center justify-center gap-2 hover:bg-primary/90 transition"
           >
-            <Copy className="size-3" /> copy address
+            <Copy className="size-4" /> Copy address
           </button>
         </div>
       )}
 
-      {/* SETTINGS */}
+      {/* ── SETTINGS ────────────────────────────────────── */}
       {kind === "settings" && (
-        <div className="space-y-4">
+        <div className="space-y-3">
           <VaultToggle
-            label="vault enabled"
-            sub="when off, payments settle directly to wallet"
+            label="Vault enabled"
+            sub="When off, payments settle directly to wallet."
             value={vaultEnabled}
             onChange={(b) => useApp.setState({ vaultEnabled: b })}
           />
-          <VaultToggle label="auto-payout" sub="payout to default address when balance > $10k" value={false} onChange={() => {}} />
-          <div style={{ border: "1px solid var(--border-default)", borderRadius: 4 }}>
-            <div className="px-4 py-3" style={{ borderBottom: "1px solid var(--border-dim)" }}>
-              <p className="label mb-2">default privacy delay</p>
-              <div className="grid grid-cols-3 gap-1.5">
-                {DELAYS.map((d) => (
-                  <button
-                    key={d.l}
-                    onClick={() => toast.success(`Default set to ${d.l}`)}
-                    className="pressable py-1.5 text-[11px] uppercase tracking-widest transition-colors"
-                    style={{ borderRadius: 4, border: "1px solid var(--border-default)", background: "var(--bg-base)", color: "var(--text-secondary)" }}
-                  >
-                    {d.l}
-                  </button>
-                ))}
-              </div>
+          <VaultToggle
+            label="Auto-payout"
+            sub="Payout to default address when balance > $10k."
+            value={false}
+            onChange={() => {}}
+          />
+          <div className="rounded-lg border border-[rgba(255,255,255,0.06)] p-4">
+            <p className="text-[11px] uppercase tracking-widest text-muted-foreground mb-2">Default privacy delay</p>
+            <div className="grid grid-cols-3 gap-2">
+              {DELAYS.map((d) => (
+                <button
+                  key={d.l}
+                  onClick={() => toast.success(`Default set to ${d.l}`)}
+                  className="pressable rounded-md border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.04)] py-2 text-xs text-foreground hover:bg-[rgba(255,255,255,0.07)] transition"
+                >
+                  {d.l}
+                </button>
+              ))}
             </div>
-            <div className="px-4 py-3 text-[12px] space-y-2">
-              <div className="flex justify-between">
-                <span style={{ color: "var(--text-secondary)" }}>all-in fee</span>
-                <span style={{ color: "var(--text-primary)" }}>2.00%</span>
-              </div>
-              <div className="flex justify-between">
-                <span style={{ color: "var(--text-secondary)" }}>route</span>
-                <span style={{ color: "var(--text-primary)" }}>Maya / THORChain</span>
-              </div>
-              <div className="flex justify-between">
-                <span style={{ color: "var(--text-secondary)" }}>anonymity set</span>
-                <span style={{ color: "var(--status-ok)" }}>4.9M ZEC</span>
-              </div>
-            </div>
+          </div>
+          <div className="rounded-lg border border-[rgba(255,255,255,0.06)] p-4 text-xs space-y-2">
+            <p className="flex justify-between text-muted-foreground">
+              <span>All-in fee</span><b className="text-foreground">2.00%</b>
+            </p>
+            <p className="flex justify-between text-muted-foreground">
+              <span>Route</span><b className="text-foreground">Maya / THORChain</b>
+            </p>
+            <p className="flex justify-between text-muted-foreground">
+              <span>Anonymity set</span><b className="text-success">4.9M ZEC</b>
+            </p>
           </div>
         </div>
       )}
 
-      {/* WITHDRAW */}
+      {/* ── WITHDRAW ────────────────────────────────────── */}
       {kind === "withdraw" && step === 0 && (
         <CoinPicker onPick={(c) => { setCoin(c); setStep(1); }} />
       )}
@@ -193,28 +183,21 @@ export function VaultFlow({ open, kind, onClose }: { open: boolean; kind: VaultF
       )}
       {kind === "withdraw" && step === 2 && coin && (
         <div className="space-y-4">
-          <div className="px-4 py-3 text-center" style={{ background: "rgba(74,222,128,0.05)", border: "1px solid rgba(74,222,128,0.2)", borderRadius: 4 }}>
-            <p className="label mb-1">vault balance</p>
-            <p className="text-[15px]" style={{ color: "var(--status-ok)" }}>
-              {vaultZec.toFixed(4)} ZEC · {fmtUsd(balanceUsd)}
-            </p>
+          <div className="rounded-lg border border-[rgba(16,185,129,0.2)] bg-[rgba(16,185,129,0.04)] p-3 text-center">
+            <p className="text-[11px] uppercase tracking-widest text-muted-foreground">Vault balance</p>
+            <p className="text-success font-mono mt-0.5">ⓩ {vaultZec.toFixed(4)} · {fmtUsd(balanceUsd)}</p>
           </div>
           <AmountInput symbol={coin.symbol} price={livePrice} balance={balanceUsd / (livePrice || 1)} onChange={setAmount} />
           <div>
-            <p className="label mb-2">privacy delay</p>
-            <div className="grid grid-cols-3 gap-1.5">
+            <p className="text-[11px] uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-1">
+              <Clock className="size-3" /> Privacy delay
+            </p>
+            <div className="grid grid-cols-3 gap-2">
               {DELAYS.map((d) => (
                 <button
                   key={d.l}
                   onClick={() => setDelay(d.v)}
-                  className="pressable py-1.5 text-[11px] uppercase tracking-widest transition-colors"
-                  style={{
-                    borderRadius: 4,
-                    border: "1px solid",
-                    borderColor: delay === d.v ? "var(--accent)" : "var(--border-default)",
-                    background: delay === d.v ? "var(--accent-dim)" : "var(--bg-base)",
-                    color: delay === d.v ? "var(--accent)" : "var(--text-secondary)",
-                  }}
+                  className={`pressable rounded-md border py-2 text-xs transition ${delay === d.v ? "bg-primary text-primary-foreground border-primary" : "bg-[rgba(255,255,255,0.04)] border-[rgba(255,255,255,0.06)] text-muted-foreground hover:text-foreground"}`}
                 >
                   {d.l}
                 </button>
@@ -224,28 +207,27 @@ export function VaultFlow({ open, kind, onClose }: { open: boolean; kind: VaultF
           <button
             disabled={!amount.usd || amount.usd > balanceUsd}
             onClick={() => setStep(3)}
-            className="btn-primary w-full py-2.5 disabled:opacity-40"
+            className="w-full rounded-md bg-primary text-primary-foreground py-3 text-sm font-medium pressable disabled:opacity-50 hover:bg-primary/90 transition"
           >
-            continue
+            Continue
           </button>
         </div>
       )}
       {kind === "withdraw" && step === 3 && (
         <div className="space-y-3">
-          <p className="label">recipient address</p>
+          <label className="text-xs text-muted-foreground">Recipient address</label>
           <input
             value={recipient}
             onChange={(e) => setRecipient(e.target.value)}
             placeholder={`${chain?.addressPrefix ?? ""}…`}
-            className="w-full"
-            style={{ height: 36 }}
+            className="w-full rounded-md bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.06)] px-4 py-3 text-sm font-mono outline-none focus:border-primary/50 transition text-foreground placeholder:text-muted-foreground"
           />
           <button
             disabled={recipient.length < 10}
             onClick={() => setStep(4)}
-            className="btn-primary w-full py-2.5 disabled:opacity-40"
+            className="w-full rounded-md bg-primary text-primary-foreground py-3 text-sm font-medium pressable disabled:opacity-50 hover:bg-primary/90 transition"
           >
-            review
+            Review
           </button>
         </div>
       )}
@@ -254,22 +236,25 @@ export function VaultFlow({ open, kind, onClose }: { open: boolean; kind: VaultF
         const out = (amount.usd - fee.total) / (livePrice || 1);
         return (
           <div className="space-y-4">
-            <div className="p-5 text-center" style={{ background: "var(--bg-raised)", borderRadius: 4 }}>
-              <p className="label mb-2">withdrawing</p>
-              <p className="text-[22px]" style={{ color: "var(--text-primary)" }}>{fmtUsd(amount.usd)}</p>
-              <p className="text-[11px] font-light mt-1" style={{ color: "var(--status-ok)" }}>
-                → {out.toFixed(out < 1 ? 6 : 4)} {coin.symbol}
-              </p>
+            <div className="rounded-lg bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.06)] p-5 text-center">
+              <p className="text-[11px] uppercase tracking-widest text-muted-foreground">Withdrawing</p>
+              <p className="text-3xl font-mono font-semibold mt-2 text-foreground">{fmtUsd(amount.usd)}</p>
+              <p className="text-xs text-success font-mono mt-1">→ {out.toFixed(out < 1 ? 6 : 4)} {coin.symbol}</p>
             </div>
-            <div style={{ border: "1px solid var(--border-default)", borderRadius: 4 }}>
-              <Row l="output" v={`${coin.symbol} · ${chain.name}`} />
-              <Row l="to" v={<span style={{ fontFamily: "'JetBrains Mono', monospace" }}>{shortAddr(recipient)}</span>} />
-              <Row l="privacy delay" v={DELAYS.find((d) => d.v === delay)?.l ?? "now"} />
-              <Row l="route" v={vaultRouteLabel(chain)} />
-              <Row l="all-in fee" v={`${fmtUsd(fee.total)} · 2.00%`} />
-              <Row l="you receive" v={fmtUsd(amount.usd - fee.total)} last />
+            <div className="rounded-lg border border-[rgba(255,255,255,0.06)] divide-y divide-[rgba(255,255,255,0.04)]">
+              <Row l="Output" v={`${coin.symbol} · ${chain.name}`} />
+              <Row l="To" v={<span className="font-mono">{shortAddr(recipient)}</span>} />
+              <Row l="Privacy delay" v={DELAYS.find((d) => d.v === delay)?.l ?? "Now"} />
+              <Row l="Route" v={vaultRouteLabel(chain)} />
+              <Row l="All-in fee" v={`${fmtUsd(fee.total)} · 2.00%`} />
+              <Row l="You receive" v={fmtUsd(amount.usd - fee.total)} />
             </div>
-            <button onClick={finalize} className="btn-primary w-full py-2.5">confirm withdraw</button>
+            <button
+              onClick={finalize}
+              className="w-full rounded-md bg-primary text-primary-foreground py-3 text-sm font-medium pressable flex items-center justify-center gap-2 hover:bg-primary/90 transition"
+            >
+              <Lock className="size-4" /> Slide to withdraw
+            </button>
           </div>
         );
       })()}
@@ -277,7 +262,12 @@ export function VaultFlow({ open, kind, onClose }: { open: boolean; kind: VaultF
         <div className="space-y-4">
           <StatusTimeline steps={progress} />
           {progress.every((s) => s.status === "done") && (
-            <button onClick={onClose} className="btn-primary w-full py-2.5">done</button>
+            <button
+              onClick={onClose}
+              className="w-full rounded-md bg-primary text-primary-foreground py-3 text-sm font-medium pressable hover:bg-primary/90 transition"
+            >
+              Done
+            </button>
           )}
         </div>
       )}
@@ -287,37 +277,17 @@ export function VaultFlow({ open, kind, onClose }: { open: boolean; kind: VaultF
 
 function VaultToggle({ label, sub, value, onChange }: { label: string; sub: string; value: boolean; onChange: (v: boolean) => void }) {
   return (
-    <div
-      className="flex items-start gap-3 px-4 py-3"
-      style={{ border: "1px solid var(--border-default)", borderRadius: 4 }}
-    >
+    <div className="rounded-lg border border-[rgba(255,255,255,0.06)] p-4 flex items-start gap-3">
       <button
         onClick={() => onChange(!value)}
-        className="pressable mt-0.5 shrink-0 transition-colors"
-        style={{
-          width: 36,
-          height: 20,
-          borderRadius: 10,
-          background: value ? "var(--accent-dim)" : "var(--bg-raised)",
-          border: `1px solid ${value ? "var(--accent)" : "var(--border-default)"}`,
-          position: "relative",
-        }}
+        className={`mt-0.5 w-9 h-5 rounded-full p-0.5 transition ${value ? "bg-primary" : "bg-[rgba(255,255,255,0.12)]"}`}
         aria-pressed={value}
       >
-        <span
-          className="absolute top-0.5 transition-transform"
-          style={{
-            width: 14,
-            height: 14,
-            borderRadius: "50%",
-            background: value ? "var(--accent)" : "var(--text-tertiary)",
-            transform: value ? "translateX(18px)" : "translateX(2px)",
-          }}
-        />
+        <span className={`block size-4 rounded-full bg-white transition-transform ${value ? "translate-x-4" : ""}`} />
       </button>
       <div className="flex-1">
-        <p className="text-[13px] font-medium" style={{ color: "var(--text-primary)" }}>{label}</p>
-        <p className="text-[11px] font-light mt-0.5" style={{ color: "var(--text-secondary)" }}>{sub}</p>
+        <p className="text-sm font-medium text-foreground">{label}</p>
+        <p className="text-[11px] text-muted-foreground mt-0.5">{sub}</p>
       </div>
     </div>
   );

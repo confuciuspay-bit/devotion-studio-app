@@ -5,7 +5,7 @@ import { CoinIcon } from "@/components/CoinIcon";
 import { Sparkline } from "@/components/Sparkline";
 import { useMarkets, fmtPct, fmtCompact, DEFAULT_IDS } from "@/lib/markets";
 import { useMoney } from "@/lib/useMoney";
-import { Search, Star } from "lucide-react";
+import { Search, Star, TrendingUp, Loader as Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/markets")({
   component: MarketsPage,
@@ -51,163 +51,149 @@ function MarketsPage() {
     );
   }
 
+  const featured = (data ?? []).filter((c) => ["zcash", "bitcoin", "ethereum"].includes(c.id));
+
   return (
     <div className="animate-fade-in">
       <AppHeader subtitle="Markets" />
 
+      {/* Featured cards */}
+      <section className="px-5">
+        <div className="flex gap-3 overflow-x-auto -mx-5 px-5 pb-2 snap-x snap-mandatory scrollbar-none">
+          {featured.map((c) => {
+            const up = (c.price_change_percentage_24h ?? 0) >= 0;
+            return (
+              <Link
+                key={c.id}
+                to="/coin/$id"
+                params={{ id: c.id }}
+                className="snap-start shrink-0 w-[76%] rounded-lg border border-[rgba(255,255,255,0.06)] bg-card p-5 pressable transition"
+              >
+                <div className="flex items-center gap-3">
+                  <CoinIcon src={c.image} symbol={c.symbol} size={38} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{c.name}</p>
+                    <p className="text-[11px] uppercase tracking-widest text-muted-foreground">
+                      {c.symbol}
+                    </p>
+                  </div>
+                  <span
+                    className={`text-[11px] font-mono px-1.5 py-0.5 rounded ${
+                      up
+                        ? "bg-[rgba(16,185,129,0.12)] text-success"
+                        : "bg-[rgba(239,68,68,0.12)] text-destructive"
+                    }`}
+                  >
+                    {fmtPct(c.price_change_percentage_24h)}
+                  </span>
+                </div>
+                <p className="mt-4 text-2xl font-mono font-semibold tabular-nums text-foreground">
+                  {fmt(c.current_price)}
+                </p>
+                <div className="mt-2">
+                  <Sparkline data={c.sparkline_in_7d?.price ?? []} width={240} height={44} positive={up} />
+                </div>
+              </Link>
+            );
+          })}
+          {isLoading &&
+            [0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="snap-start shrink-0 w-[76%] h-40 rounded-lg border border-[rgba(255,255,255,0.06)] bg-card animate-pulse"
+              />
+            ))}
+        </div>
+      </section>
+
       {/* Search */}
-      <div className="px-4 py-3" style={{ borderBottom: "1px solid var(--border-dim)" }}>
-        <div
-          className="flex items-center gap-2 px-3"
-          style={{
-            background: "var(--bg-base)",
-            border: "1px solid var(--border-default)",
-            borderRadius: 4,
-            height: 36,
-          }}
-        >
-          <Search className="size-3.5 shrink-0" style={{ color: "var(--text-tertiary)" }} />
+      <section className="px-5 mt-4">
+        <div className="flex items-center gap-2 rounded-md border border-[rgba(255,255,255,0.06)] bg-card px-3 py-2">
+          <Search className="size-3.5 text-muted-foreground shrink-0" />
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="search coins"
-            className="bg-transparent outline-none flex-1 text-[13px]"
-            style={{
-              border: "none",
-              height: "auto",
-              padding: 0,
-              color: "var(--text-primary)",
-            }}
+            placeholder="Search coins…"
+            className="bg-transparent outline-none text-sm flex-1 placeholder:text-muted-foreground text-foreground"
           />
         </div>
 
         {/* Tab pills */}
-        <div className="mt-3 flex gap-2">
+        <div className="mt-3 flex gap-1.5">
           {(["all", "watch", "gainers"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
-              className="pressable px-3 py-1 text-[11px] uppercase tracking-widest transition-colors"
-              style={{
-                borderRadius: 4,
-                border: "1px solid",
-                borderColor: tab === t ? "var(--accent)" : "var(--border-default)",
-                background: tab === t ? "var(--accent-dim)" : "transparent",
-                color: tab === t ? "var(--accent)" : "var(--text-secondary)",
-                fontWeight: 300,
-              }}
+              className={`px-3 py-1.5 rounded-md text-[11px] font-medium border transition pressable ${
+                tab === t
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-card text-muted-foreground border-[rgba(255,255,255,0.06)] hover:text-foreground"
+              }`}
             >
-              {t === "all" ? "all" : t === "watch" ? `watchlist (${watch.length})` : "top movers"}
+              {t === "all" ? "All" : t === "watch" ? `Watchlist (${watch.length})` : "Top movers"}
             </button>
           ))}
         </div>
-      </div>
-
-      {/* Table header */}
-      <div
-        className="px-4 flex items-center"
-        style={{ height: 36, borderBottom: "1px solid var(--border-dim)" }}
-      >
-        <div className="w-6" />
-        <div className="w-6 mr-3" />
-        <div className="flex-1">
-          <span className="label">asset</span>
-        </div>
-        <div className="w-16 text-right mr-3">
-          <span className="label">7d</span>
-        </div>
-        <div className="w-[72px] text-right">
-          <span className="label">price</span>
-        </div>
-      </div>
-
-      {/* Error */}
-      {error && (
-        <div className="px-4 py-3 text-[12px]" style={{ color: "var(--status-err)" }}>
-          <span className="dot dot-err mr-1.5" />
-          could not load market data
-        </div>
-      )}
-
-      {/* Loading skeleton */}
-      {isLoading && !data && (
-        <div className="px-4">
-          {[0, 1, 2, 3, 4].map((i) => (
-            <div
-              key={i}
-              className="flex items-center gap-3 py-3"
-              style={{ borderBottom: "1px solid var(--border-dim)", height: 44 }}
-            >
-              <div className="size-6 rounded-full bg-[rgba(255,255,255,0.04)] animate-pulse" />
-              <div className="flex-1 space-y-1.5">
-                <div className="h-2.5 w-16 bg-[rgba(255,255,255,0.04)] rounded animate-pulse" />
-                <div className="h-2 w-10 bg-[rgba(255,255,255,0.03)] rounded animate-pulse" />
-              </div>
-              <div className="h-2.5 w-12 bg-[rgba(255,255,255,0.04)] rounded animate-pulse" />
-            </div>
-          ))}
-        </div>
-      )}
+      </section>
 
       {/* List */}
-      <div className="px-4">
-        {list.map((c) => {
-          const up = (c.price_change_percentage_24h ?? 0) >= 0;
-          const starred = watch.includes(c.id);
-          return (
-            <div
-              key={c.id}
-              className="flex items-center gap-0 hover:bg-[rgba(255,255,255,0.02)] transition-colors"
-              style={{ borderBottom: "1px solid var(--border-dim)", height: 44 }}
-            >
-              <button
-                onClick={(e) => { e.preventDefault(); toggleWatch(c.id); }}
-                className="pressable w-6 flex items-center justify-center transition-colors"
-                aria-label="Toggle watchlist"
-              >
-                <Star
-                  className="size-3"
-                  style={{
-                    fill: starred ? "var(--accent)" : "none",
-                    stroke: starred ? "var(--accent)" : "var(--text-tertiary)",
-                  }}
-                />
-              </button>
-              <Link
-                to="/coin/$id"
-                params={{ id: c.id }}
-                className="flex items-center gap-3 flex-1 min-w-0"
-                style={{ height: "100%" }}
-              >
-                <CoinIcon src={c.image} symbol={c.symbol} size={24} />
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13px] text-[var(--text-primary)]">{c.name}</p>
-                  <p className="text-[11px] text-[var(--text-secondary)] font-light">
-                    {c.symbol.toUpperCase()} · {fmtCompact(c.market_cap)}
-                  </p>
-                </div>
-                <Sparkline data={c.sparkline_in_7d?.price ?? []} positive={up} width={48} height={18} />
-                <div className="text-right w-[72px]">
-                  <p className="text-[13px] text-[var(--text-primary)]">{fmt(c.current_price)}</p>
-                  <p
-                    className="text-[11px] font-light"
-                    style={{ color: up ? "var(--status-ok)" : "var(--status-err)" }}
-                  >
-                    {fmtPct(c.price_change_percentage_24h)}
-                  </p>
-                </div>
-              </Link>
-            </div>
-          );
-        })}
-        {!isLoading && list.length === 0 && (
-          <div className="py-16 text-center">
-            <p className="label">
-              {tab === "watch" ? "star a coin to add to watchlist" : "no matches"}
-            </p>
+      <section className="px-5 mt-3">
+        {error && (
+          <div className="rounded-md border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive mb-3">
+            Couldn't load market data.
           </div>
         )}
-      </div>
+        {isLoading && !data && (
+          <div className="grid place-items-center py-12 text-muted-foreground">
+            <Loader2 className="size-4 animate-spin" />
+          </div>
+        )}
+        <div className="rounded-lg border border-[rgba(255,255,255,0.06)] bg-card divide-y divide-[rgba(255,255,255,0.04)] overflow-hidden">
+          {list.map((c) => {
+            const up = (c.price_change_percentage_24h ?? 0) >= 0;
+            const starred = watch.includes(c.id);
+            return (
+              <div key={c.id} className="flex items-center gap-3 px-3 py-3 hover:bg-[rgba(255,255,255,0.02)] transition">
+                <button
+                  onClick={(e) => { e.preventDefault(); toggleWatch(c.id); }}
+                  className="p-1 -ml-1 transition pressable"
+                  aria-label="Toggle watchlist"
+                >
+                  <Star
+                    className={`size-3.5 ${starred ? "fill-primary text-primary" : "text-muted-foreground"}`}
+                  />
+                </button>
+                <Link
+                  to="/coin/$id"
+                  params={{ id: c.id }}
+                  className="flex items-center gap-3 flex-1 min-w-0"
+                >
+                  <CoinIcon src={c.image} symbol={c.symbol} size={34} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{c.name}</p>
+                    <p className="text-[11px] text-muted-foreground font-mono">
+                      {c.symbol.toUpperCase()} · {fmtCompact(c.market_cap)}
+                    </p>
+                  </div>
+                  <Sparkline data={c.sparkline_in_7d?.price ?? []} positive={up} />
+                  <div className="text-right w-[70px]">
+                    <p className="text-sm font-mono tabular-nums text-foreground">{fmt(c.current_price)}</p>
+                    <p className={`text-[11px] font-mono ${up ? "text-success" : "text-destructive"}`}>
+                      {fmtPct(c.price_change_percentage_24h)}
+                    </p>
+                  </div>
+                </Link>
+              </div>
+            );
+          })}
+          {!isLoading && list.length === 0 && (
+            <div className="py-10 text-center text-sm text-muted-foreground">
+              <TrendingUp className="size-4 mx-auto mb-2 opacity-40" />
+              {tab === "watch" ? "Tap the star to add coins to your watchlist." : "No matches."}
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 }
