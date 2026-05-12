@@ -48,13 +48,21 @@ export function WalletFlow({ open, kind, onClose }: { open: boolean; kind: FlowK
     deriveAddress(seedHex, chain).then((d) => setAddress(d.address));
   }, [kind, chain, seedHex]);
 
-  if (!kind) return null;
+  // Hooks must run unconditionally — keep all hook calls before any early return.
+  const swapPrices = useSimplePrices(
+    [coin?.id, coinTo?.id].filter((x): x is string => !!x),
+  );
+
   const titles: Record<FlowKind, string[]> = {
     receive: ["Receive — pick coin", "Pick chain", "Your address"],
     send:    ["Send — pick coin", "Pick chain", "Amount", "Recipient", "Confirm", "Sending…"],
     swap:    ["Swap from", "Swap to", "Amount", "Confirm", "Swapping…"],
     shield:  ["Shield — pick asset", "Pick chain", "Amount", "Confirm", "Shielding to vault…"],
   };
+
+  if (!kind) {
+    return <Sheet open={open} onClose={onClose} title="" />;
+  }
   const title = titles[kind][step] ?? "";
 
   const back = step > 0 ? () => setStep((s) => s - 1) : undefined;
