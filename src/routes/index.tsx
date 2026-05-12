@@ -125,7 +125,7 @@ function WalletHome() {
           </div>
           <div className="mt-3 flex items-baseline gap-2">
             <h1 className="text-5xl font-semibold text-gradient-eclipse font-display tabular-nums">
-              {total ? fmtUsd(total, { maximumFractionDigits: 0 }) : "—"}
+              {total ? mask(fmtUsd(total, { maximumFractionDigits: 0 })) : "—"}
             </h1>
           </div>
           <div className="mt-1 text-xs text-shield font-mono">live · CoinGecko</div>
