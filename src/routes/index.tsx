@@ -124,8 +124,8 @@ function WalletHome() {
             <Shield className="size-3.5 text-shield" /> Total balance · shielded
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <h1 className="text-5xl font-semibold text-gradient-eclipse font-display tabular-nums">
-              {total ? mask(fmtUsd(total, { maximumFractionDigits: 0 })) : "—"}
+            <h1 className="text-5xl font-semibold text-foreground font-display tabular-nums">
+              {total ? fmt(total, { maximumFractionDigits: 0 }) : "—"}
             </h1>
           </div>
           <div className="mt-1 h-4" aria-hidden />
@@ -190,7 +190,7 @@ function WalletHome() {
                 </div>
                 <Sparkline data={a.spark} positive={up} width={56} height={22} />
                 <div className="text-right w-[78px]">
-                  <p className="text-sm font-mono tabular-nums">{mask(fmtUsd(a.value))}</p>
+                  <p className="text-sm font-mono tabular-nums">{fmt(a.value)}</p>
                   <p className={`text-[11px] font-mono ${up ? "text-shield" : "text-destructive"}`}>
                     {fmtPct(a.chg)}
                   </p>
@@ -227,7 +227,7 @@ function WalletHome() {
                   {a.s} · {a.time}
                 </p>
               </div>
-              <p className="text-sm font-mono tabular-nums">{mask(a.v)}</p>
+              <p className={`text-sm font-mono tabular-nums ${a.usd >= 0 ? "text-shield" : ""}`}>{signed(a.usd)}</p>
               <ChevronRight className="size-4 text-muted-foreground" />
             </button>
           ))}
@@ -242,7 +242,7 @@ function WalletHome() {
         {openTx && (
           <div className="space-y-4">
             <div className="rounded-2xl bg-foreground/5 border border-border p-5 text-center">
-              <p className="text-3xl font-display font-semibold tabular-nums">{openTx.v}</p>
+              <p className={`text-3xl font-display font-semibold tabular-nums ${openTx.usd >= 0 ? "text-shield" : ""}`}>{signed(openTx.usd)}</p>
               <p className="text-xs text-muted-foreground mt-1">{openTx.s}</p>
             </div>
             <div className="rounded-2xl border border-border divide-y divide-border">
