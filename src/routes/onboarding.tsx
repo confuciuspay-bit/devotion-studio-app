@@ -95,7 +95,7 @@ function OnboardingPage() {
     }
     // derive a stub seedHex + zAddr from mnemonic
     const seedBytes = mnemonicToSeedSync(mnemonic.join(" "));
-    const seedHex = Array.from(seedBytes.slice(0, 32)).map((b) => b.toString(16).padStart(2, "0")).join("");
+    const seedHex = Array.from(seedBytes.slice(0, 32) as Uint8Array).map((b: number) => b.toString(16).padStart(2, "0")).join("");
     const zAddr = "zs1" + Array.from({ length: 75 }, (_, i) => "qpzry9x8gf2tvdw0s3jn54khce6mua7l"[(seedBytes[i % seedBytes.length] ?? i) % 32]).join("");
 
     init(mnemonic, seedHex, zAddr);
