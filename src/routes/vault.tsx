@@ -61,6 +61,7 @@ const settled: Settled[] = [
 
 function VaultPage() {
   const [open, setOpen] = useState<Settled | null>(null);
+  const hidden = useApp((s) => s.hideBalances);
 
   return (
     <div>
