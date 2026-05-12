@@ -237,13 +237,5 @@ export function fmtPct(n: number | undefined) {
   return `${sign}${n.toFixed(2)}%`;
 }
 
-export function fmtTime(ts: number) {
-  const d = new Date(ts);
-  const now = Date.now();
-  const diff = now - ts;
-  if (diff < 60_000) return "now";
-  if (diff < 3600_000) return `${Math.floor(diff / 60_000)}m`;
-  if (diff < 86400_000) return `${Math.floor(diff / 3600_000)}h`;
-  if (diff < 7 * 86400_000) return `${Math.floor(diff / 86400_000)}d`;
-  return d.toLocaleDateString();
-}
+// SSR-safe deterministic time formatter. For live "Xm ago" use fmtRelative gated by useMounted.
+export { fmtAbs as fmtTime } from "./time";
