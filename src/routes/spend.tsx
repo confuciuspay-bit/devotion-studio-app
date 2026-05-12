@@ -3,6 +3,8 @@ import { useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { DetailSheet } from "@/components/DetailSheet";
 import { AllHistorySheet } from "@/components/AllHistorySheet";
+import { PinGate } from "@/components/PinGate";
+import { useApp } from "@/lib/store";
 import { useMoney } from "@/lib/useMoney";
 import {
   Snowflake,
@@ -39,10 +41,16 @@ const txns: Tx[] = [
 
 function SpendPage() {
   const [revealed, setRevealed] = useState(false);
+  const [pinGate, setPinGate] = useState(false);
   const [openTx, setOpenTx] = useState<Tx | null>(null);
   const [openWallet, setOpenWallet] = useState(false);
   const [allHistory, setAllHistory] = useState(false);
+  const pinHashStored = useApp((s) => s.pinHashStored);
   const { fmt, signed, hidden } = useMoney();
+  const tryReveal = () => {
+    if (revealed) { setRevealed(false); return; }
+    if (pinHashStored) setPinGate(true); else setRevealed(true);
+  };
   const fullPan = "4291 7702 4118 8842";
   const masked = "•••• •••• •••• 8842";
   const balanceUsd = 2184.30;
