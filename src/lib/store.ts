@@ -244,8 +244,10 @@ export const useApp = create<AppState>()(
           ts: Date.now() - 3 * 86400000, status: "settled", funding: "wallet" },
       ],
       cardBalanceUsd: 2184.30,
+      hideBalances: false,
 
       init: (seed, seedHex, zAddr) => set({ seed, seedHex, zAddr, initialised: true }),
+      toggleHideBalances: () => set((s) => ({ hideBalances: !s.hideBalances })),
       setHolding: (h) =>
         set((s) => {
           const idx = s.holdings.findIndex((x) => x.coinId === h.coinId);
