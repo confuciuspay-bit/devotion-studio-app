@@ -13,7 +13,7 @@ export function BottomNav() {
   const { pathname } = useLocation();
   return (
     <nav
-      className="fixed bottom-0 inset-x-0 z-50 px-3 pt-2"
+      className="fixed bottom-0 inset-x-0 z-30 px-3 pt-2"
       style={{ paddingBottom: "max(env(safe-area-inset-bottom), 0.75rem)" }}
     >
       <div className="glass mx-auto max-w-md rounded-2xl border border-border/60 px-2 py-1.5 flex items-center justify-between">
