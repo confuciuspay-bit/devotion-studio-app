@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { DetailSheet } from "@/components/DetailSheet";
-import { useApp } from "@/lib/store";
+import { useMoney } from "@/lib/useMoney";
 import {
   Snowflake,
   Wifi,
@@ -21,74 +21,40 @@ type Tx = {
   id: string;
   m: string;
   c: string;
-  a: string;
+  /** USD amount; positive = incoming, negative = outgoing */
+  usd: number;
   t: string;
-  in?: boolean;
   category: string;
   fx?: string;
   status: string;
 };
 
 const txns: Tx[] = [
-  {
-    id: "tx1",
-    m: "Rakuten",
-    c: "Tokyo · ¥",
-    a: "− $42.10",
-    t: "12:08",
-    category: "Shopping",
-    fx: "¥6,280 @ 149.16",
-    status: "Settled",
-  },
-  {
-    id: "tx2",
-    m: "Lufthansa",
-    c: "Online · €",
-    a: "− $612.00",
-    t: "Yesterday",
-    category: "Travel",
-    fx: "€565.00 @ 1.083",
-    status: "Settled",
-  },
-  {
-    id: "tx3",
-    m: "Blue Bottle",
-    c: "NYC · $",
-    a: "− $7.50",
-    t: "Mon",
-    category: "Coffee",
-    status: "Settled",
-  },
-  {
-    id: "tx4",
-    m: "Top up",
-    c: "from Wallet · ZEC",
-    a: "+ $1,000.00",
-    t: "Mon",
-    in: true,
-    category: "Funding",
-    status: "Confirmed",
-  },
+  { id: "tx1", m: "Rakuten",     c: "Tokyo · ¥",          usd: -42.10,  t: "12:08",     category: "Shopping", fx: "¥6,280 @ 149.16",  status: "Settled" },
+  { id: "tx2", m: "Lufthansa",   c: "Online · €",         usd: -612.00, t: "Yesterday", category: "Travel",   fx: "€565.00 @ 1.083",  status: "Settled" },
+  { id: "tx3", m: "Blue Bottle", c: "NYC · $",            usd: -7.50,   t: "Mon",       category: "Coffee",                              status: "Settled" },
+  { id: "tx4", m: "Top up",      c: "from Wallet · ZEC",  usd: 1000,    t: "Mon",       category: "Funding",                             status: "Confirmed" },
 ];
 
 function SpendPage() {
   const [revealed, setRevealed] = useState(false);
   const [openTx, setOpenTx] = useState<Tx | null>(null);
   const [openWallet, setOpenWallet] = useState(false);
-  const hidden = useApp((s) => s.hideBalances);
+  const { fmt, signed, hidden } = useMoney();
   const fullPan = "4291 7702 4118 8842";
   const masked = "•••• •••• •••• 8842";
+  const balanceUsd = 2184.30;
 
   return (
-    <div>
+    <div className="animate-fade-in">
       <AppHeader subtitle="UmbraSpend · Card" />
 
       <section className="px-5">
         <div
-          className="relative aspect-[1.586/1] rounded-3xl p-6 overflow-hidden border border-border grain"
+          className="relative aspect-[1.586/1] rounded-3xl p-6 overflow-hidden border border-border grain animate-scale-in"
           style={{
             background:
-              "radial-gradient(140% 100% at 0% 0%, oklch(0.30 0.06 85 / 0.55), transparent 60%), linear-gradient(160deg, oklch(0.20 0.012 270), oklch(0.10 0.015 280))",
+              "radial-gradient(140% 100% at 0% 0%, oklch(0.30 0.06 295 / 0.55), transparent 60%), linear-gradient(160deg, oklch(0.20 0.012 285), oklch(0.10 0.015 285))",
           }}
         >
           <div className="flex items-center justify-between">
@@ -110,15 +76,11 @@ function SpendPage() {
             <div className="mt-3 flex items-end justify-between">
               <div className="flex gap-4">
                 <div>
-                  <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-                    Exp
-                  </p>
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Exp</p>
                   <p className="text-sm font-mono">{revealed ? "08/29" : "••/••"}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-                    CVV
-                  </p>
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">CVV</p>
                   <p className="text-sm font-mono">{revealed ? "418" : "•••"}</p>
                 </div>
               </div>
@@ -140,7 +102,6 @@ function SpendPage() {
           </span>
         </div>
 
-        {/* Apple Wallet */}
         <button
           onClick={() => setOpenWallet(true)}
           className="mt-4 w-full rounded-2xl bg-black text-white py-3.5 text-sm font-semibold flex items-center justify-center gap-2 border border-white/10 pressable"
@@ -151,14 +112,12 @@ function SpendPage() {
 
         <div className="mt-4 flex items-center justify-between">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-              Available
-            </p>
-            <p className="text-3xl font-display font-semibold mt-1 tabular-nums">
-              {hidden ? "•••••" : <>$2,184<span className="text-muted-foreground">.30</span></>}
+            <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Available</p>
+            <p className="text-3xl font-display font-semibold mt-1 tabular-nums text-foreground">
+              {hidden ? "•••••" : fmt(balanceUsd)}
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 stagger">
             <button className="pressable size-10 rounded-full bg-foreground/5 border border-border grid place-items-center">
               <Snowflake className="size-4" />
             </button>
@@ -171,28 +130,29 @@ function SpendPage() {
 
       <section className="px-5 mt-6">
         <h2 className="text-sm font-semibold mb-3">Transactions</h2>
-        <div className="rounded-2xl border border-border bg-card divide-y divide-border overflow-hidden">
-          {txns.map((tx) => (
-            <button
-              key={tx.id}
-              onClick={() => setOpenTx(tx)}
-              className="pressable w-full text-left flex items-center gap-3 px-4 py-3.5 active:bg-foreground/5"
-            >
-              <div
-                className={`size-10 rounded-full grid place-items-center text-xs font-semibold ${tx.in ? "bg-shield/15 text-shield" : "bg-secondary text-foreground"}`}
+        <div className="rounded-2xl border border-border bg-card divide-y divide-border overflow-hidden stagger">
+          {txns.map((tx) => {
+            const incoming = tx.usd > 0;
+            return (
+              <button
+                key={tx.id}
+                onClick={() => setOpenTx(tx)}
+                className="pressable w-full text-left flex items-center gap-3 px-4 py-3.5 active:bg-foreground/5"
               >
-                {tx.m.slice(0, 1)}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{tx.m}</p>
-                <p className="text-[11px] text-muted-foreground">
-                  {tx.c} · {tx.t}
-                </p>
-              </div>
-              <p className={`text-sm font-mono ${tx.in ? "text-shield" : ""}`}>{tx.a}</p>
-              <ChevronRight className="size-4 text-muted-foreground" />
-            </button>
-          ))}
+                <div
+                  className={`size-10 rounded-full grid place-items-center text-xs font-semibold ${incoming ? "bg-shield/15 text-shield" : "bg-secondary text-foreground"}`}
+                >
+                  {tx.m.slice(0, 1)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{tx.m}</p>
+                  <p className="text-[11px] text-muted-foreground">{tx.c} · {tx.t}</p>
+                </div>
+                <p className={`text-sm font-mono tabular-nums ${incoming ? "text-shield" : ""}`}>{signed(tx.usd)}</p>
+                <ChevronRight className="size-4 text-muted-foreground" />
+              </button>
+            );
+          })}
         </div>
       </section>
 
@@ -200,11 +160,9 @@ function SpendPage() {
         {openTx && (
           <div className="space-y-4">
             <div className="rounded-2xl bg-foreground/5 border border-border p-5 text-center">
-              <p className="text-xs uppercase tracking-wider text-muted-foreground">
-                {openTx.category}
-              </p>
-              <p className={`text-3xl font-display font-semibold mt-1 tabular-nums ${openTx.in ? "text-shield" : ""}`}>
-                {openTx.a}
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">{openTx.category}</p>
+              <p className={`text-3xl font-display font-semibold mt-1 tabular-nums ${openTx.usd > 0 ? "text-shield" : ""}`}>
+                {signed(openTx.usd)}
               </p>
               <p className="text-[11px] font-mono text-muted-foreground mt-1">{openTx.c}</p>
             </div>
@@ -216,22 +174,14 @@ function SpendPage() {
               <Row l="Card" v="•••• 8842" mono />
             </div>
             <div className="grid grid-cols-2 gap-2">
-              <button className="pressable rounded-2xl bg-foreground/5 border border-border py-3 text-sm font-medium">
-                Dispute
-              </button>
-              <button className="pressable rounded-2xl bg-foreground/5 border border-border py-3 text-sm font-medium">
-                Categorize
-              </button>
+              <button className="pressable rounded-2xl bg-foreground/5 border border-border py-3 text-sm font-medium">Dispute</button>
+              <button className="pressable rounded-2xl bg-foreground/5 border border-border py-3 text-sm font-medium">Categorize</button>
             </div>
           </div>
         )}
       </DetailSheet>
 
-      <DetailSheet
-        open={openWallet}
-        onClose={() => setOpenWallet(false)}
-        title="Add to Apple Wallet"
-      >
+      <DetailSheet open={openWallet} onClose={() => setOpenWallet(false)} title="Add to Apple Wallet">
         <div className="space-y-4">
           <div className="rounded-2xl border border-border bg-card p-5 flex items-start gap-3">
             <div className="size-10 rounded-xl bg-foreground/5 grid place-items-center">
