@@ -74,6 +74,7 @@ function SpendPage() {
   const [revealed, setRevealed] = useState(false);
   const [openTx, setOpenTx] = useState<Tx | null>(null);
   const [openWallet, setOpenWallet] = useState(false);
+  const hidden = useApp((s) => s.hideBalances);
   const fullPan = "4291 7702 4118 8842";
   const masked = "•••• •••• •••• 8842";
 
