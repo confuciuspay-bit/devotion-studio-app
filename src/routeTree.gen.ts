@@ -13,6 +13,7 @@ import { Route as VaultRouteImport } from './routes/vault'
 import { Route as StreamRouteImport } from './routes/stream'
 import { Route as SpendRouteImport } from './routes/spend'
 import { Route as PayRouteImport } from './routes/pay'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as MarketsRouteImport } from './routes/markets'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CoinIdRouteImport } from './routes/coin.$id'
@@ -37,6 +38,11 @@ const PayRoute = PayRouteImport.update({
   path: '/pay',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MarketsRoute = MarketsRouteImport.update({
   id: '/markets',
   path: '/markets',
@@ -56,6 +62,7 @@ const CoinIdRoute = CoinIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/markets': typeof MarketsRoute
+  '/onboarding': typeof OnboardingRoute
   '/pay': typeof PayRoute
   '/spend': typeof SpendRoute
   '/stream': typeof StreamRoute
@@ -65,6 +72,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/markets': typeof MarketsRoute
+  '/onboarding': typeof OnboardingRoute
   '/pay': typeof PayRoute
   '/spend': typeof SpendRoute
   '/stream': typeof StreamRoute
@@ -75,6 +83,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/markets': typeof MarketsRoute
+  '/onboarding': typeof OnboardingRoute
   '/pay': typeof PayRoute
   '/spend': typeof SpendRoute
   '/stream': typeof StreamRoute
@@ -86,17 +95,27 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/markets'
+    | '/onboarding'
     | '/pay'
     | '/spend'
     | '/stream'
     | '/vault'
     | '/coin/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/markets' | '/pay' | '/spend' | '/stream' | '/vault' | '/coin/$id'
+  to:
+    | '/'
+    | '/markets'
+    | '/onboarding'
+    | '/pay'
+    | '/spend'
+    | '/stream'
+    | '/vault'
+    | '/coin/$id'
   id:
     | '__root__'
     | '/'
     | '/markets'
+    | '/onboarding'
     | '/pay'
     | '/spend'
     | '/stream'
@@ -107,6 +126,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   MarketsRoute: typeof MarketsRoute
+  OnboardingRoute: typeof OnboardingRoute
   PayRoute: typeof PayRoute
   SpendRoute: typeof SpendRoute
   StreamRoute: typeof StreamRoute
@@ -144,6 +164,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PayRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/markets': {
       id: '/markets'
       path: '/markets'
@@ -171,6 +198,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   MarketsRoute: MarketsRoute,
+  OnboardingRoute: OnboardingRoute,
   PayRoute: PayRoute,
   SpendRoute: SpendRoute,
   StreamRoute: StreamRoute,
@@ -180,3 +208,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
