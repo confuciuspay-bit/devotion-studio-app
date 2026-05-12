@@ -11,7 +11,7 @@ export function AppHeader({ subtitle: _subtitle }: { subtitle?: string }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="px-5 pt-6 pb-3 flex items-center justify-between animate-fade-in">
+    <header className="relative z-50 px-5 pt-6 pb-3 flex items-center justify-between animate-fade-in">
       <div>
         <div className="flex items-center gap-2">
           <div className="size-7 rounded-lg bg-foreground/95 grid place-items-center">
