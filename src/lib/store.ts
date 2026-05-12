@@ -144,6 +144,9 @@ interface AppState {
   cardTxs: CardTx[];
   cardBalanceUsd: number;
 
+  // UX
+  hideBalances: boolean;
+
   // actions
   init: (seed: string[], seedHex: string, zAddr: string) => void;
   setHolding: (h: Holding) => void;
