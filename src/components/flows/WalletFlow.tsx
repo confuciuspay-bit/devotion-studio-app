@@ -73,7 +73,7 @@ export function WalletFlow({ open, kind, onClose }: { open: boolean; kind: FlowK
   // ── RECEIVE ──────────────────────────────────────────
   const renderReceive = () => {
     if (step === 0) return <CoinPicker onPick={(c) => { setCoin(c); setStep(1); }} />;
-    if (step === 1) return <ChainPicker onPick={(c) => { setChain(c); setStep(2); }} />;
+    if (step === 1) return <ChainPicker coinId={coin?.id} onPick={(c) => { setChain(c); setStep(2); }} />;
     return (
       <div className="space-y-4">
         <div className="grid place-items-center">
