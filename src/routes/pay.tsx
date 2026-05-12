@@ -32,18 +32,19 @@ const TABS: { id: Tab; label: string; icon: React.ComponentType<{ className?: st
 
 interface Subscription {
   id: string;
-  customer: string;
+  name: string;          // plan name (e.g. "Pro plan")
   amountUsd: number;
   cadence: "weekly" | "monthly" | "yearly";
   token: string;
   active: boolean;
-  nextRun: number;
+  subscribers: number;   // count of customers signed up via the link
+  createdAt: number;
 }
 
 const SEED_SUBS: Subscription[] = [
-  { id: "sub_001", customer: "acme.eth", amountUsd: 49, cadence: "monthly", token: "USDC", active: true, nextRun: Date.now() + 4 * 86_400_000 },
-  { id: "sub_002", customer: "globex@umbra.id", amountUsd: 1200, cadence: "monthly", token: "ZEC", active: true, nextRun: Date.now() + 12 * 86_400_000 },
-  { id: "sub_003", customer: "soylent.corp", amountUsd: 19, cadence: "weekly", token: "USDT", active: false, nextRun: Date.now() + 2 * 86_400_000 },
+  { id: "sub_001", name: "Pro plan", amountUsd: 49, cadence: "monthly", token: "USDC", active: true, subscribers: 128, createdAt: Date.now() - 21 * 86_400_000 },
+  { id: "sub_002", name: "Enterprise", amountUsd: 1200, cadence: "monthly", token: "ZEC", active: true, subscribers: 6, createdAt: Date.now() - 60 * 86_400_000 },
+  { id: "sub_003", name: "Newsletter", amountUsd: 19, cadence: "weekly", token: "USDT", active: false, subscribers: 42, createdAt: Date.now() - 90 * 86_400_000 },
 ];
 
 function PayPage() {
@@ -511,35 +512,42 @@ function RecurringTab({
   fmt: (n: number, o?: Intl.NumberFormatOptions) => string;
 }) {
   const [open, setOpen] = useState(false);
-  const [customer, setCustomer] = useState("");
+  const [created, setCreated] = useState<Subscription | null>(null);
+  const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [cadence, setCadence] = useState<Subscription["cadence"]>("monthly");
   const [token, setToken] = useState("USDC");
 
-  const reset = () => { setCustomer(""); setAmount(""); setCadence("monthly"); setToken("USDC"); };
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const subLink = (s: Subscription) => `${origin}/subscribe/${s.id}`;
+
+  const reset = () => { setName(""); setAmount(""); setCadence("monthly"); setToken("USDC"); setCreated(null); };
   const create = () => {
     const amt = parseFloat(amount);
-    if (!customer.trim() || !amt || amt <= 0) {
-      toast.error("Customer and amount required");
+    if (!name.trim() || !amt || amt <= 0) {
+      toast.error("Plan name and amount required");
       return;
     }
     const next: Subscription = {
       id: "sub_" + Math.random().toString(36).slice(2, 8),
-      customer: customer.trim(),
+      name: name.trim(),
       amountUsd: amt,
       cadence,
       token,
       active: true,
-      nextRun: Date.now() + (cadence === "weekly" ? 7 : cadence === "monthly" ? 30 : 365) * 86_400_000,
+      subscribers: 0,
+      createdAt: Date.now(),
     };
     setSubs([next, ...subs]);
-    toast.success("Subscription created");
-    reset();
-    setOpen(false);
+    setCreated(next);
+    toast.success("Subscription link created");
   };
 
-  const toggle = (id: string) =>
-    setSubs(subs.map((s) => (s.id === id ? { ...s, active: !s.active } : s)));
+  const toggle = (id: string) => {
+    const s = subs.find((x) => x.id === id);
+    setSubs(subs.map((x) => (x.id === id ? { ...x, active: !x.active } : x)));
+    toast(s?.active ? "Paused" : "Resumed");
+  };
   const remove = (id: string) => {
     setSubs(subs.filter((s) => s.id !== id));
     toast("Subscription removed");
@@ -550,89 +558,150 @@ function RecurringTab({
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold">Recurring</h2>
         <button
-          onClick={() => setOpen(true)}
+          onClick={() => { reset(); setOpen(true); }}
           className="pressable inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold"
         >
-          <Plus className="size-3.5" /> New
+          <Plus className="size-3.5" /> New link
         </button>
       </div>
       {subs.length === 0 && (
         <div className="rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center text-sm text-muted-foreground">
-          No subscriptions.
+          No subscription links.
         </div>
       )}
       <div className="space-y-2 stagger">
-        {subs.map((s) => (
-          <div
-            key={s.id}
-            className="rounded-2xl border border-border bg-card px-4 py-3 flex items-center gap-3"
-          >
-            <div className={`size-9 rounded-xl grid place-items-center ${s.active ? "bg-shield/15 text-shield" : "bg-foreground/5 text-muted-foreground"}`}>
-              <Repeat className="size-4" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{s.customer}</p>
-              <p className="text-[11px] text-muted-foreground font-mono truncate">
-                {fmt(s.amountUsd)} · {s.cadence} · {s.token} · next {fmtTime(s.nextRun)}
-              </p>
-            </div>
-            <button
-              onClick={() => { toggle(s.id); toast(s.active ? "Paused" : "Resumed"); }}
-              className="pressable size-8 grid place-items-center rounded-full bg-foreground/5 border border-border"
-              aria-label={s.active ? "Pause" : "Resume"}
+        {subs.map((s) => {
+          const link = subLink(s);
+          return (
+            <div
+              key={s.id}
+              className="rounded-2xl border border-border bg-card px-4 py-3 space-y-2"
             >
-              {s.active ? <Pause className="size-3.5" /> : <Play className="size-3.5" />}
-            </button>
-            <button
-              onClick={() => remove(s.id)}
-              className="pressable size-8 grid place-items-center rounded-full bg-foreground/5 border border-border text-destructive"
-              aria-label="Remove"
-            >
-              <Trash2 className="size-3.5" />
-            </button>
-          </div>
-        ))}
+              <div className="flex items-center gap-3">
+                <div className={`size-9 rounded-xl grid place-items-center ${s.active ? "bg-shield/15 text-shield" : "bg-foreground/5 text-muted-foreground"}`}>
+                  <Repeat className="size-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{s.name}</p>
+                  <p className="text-[11px] text-muted-foreground font-mono truncate">
+                    {fmt(s.amountUsd)} · {s.cadence} · {s.token} · {s.subscribers} subs
+                  </p>
+                </div>
+                <button
+                  onClick={() => toggle(s.id)}
+                  className="pressable size-8 grid place-items-center rounded-full bg-foreground/5 border border-border"
+                  aria-label={s.active ? "Pause" : "Resume"}
+                >
+                  {s.active ? <Pause className="size-3.5" /> : <Play className="size-3.5" />}
+                </button>
+                <button
+                  onClick={() => remove(s.id)}
+                  className="pressable size-8 grid place-items-center rounded-full bg-foreground/5 border border-border text-destructive"
+                  aria-label="Remove"
+                >
+                  <Trash2 className="size-3.5" />
+                </button>
+              </div>
+              <div className="flex items-center gap-2">
+                <p className="flex-1 font-mono text-[11px] text-muted-foreground truncate">{link}</p>
+                <button
+                  onClick={() => { navigator.clipboard?.writeText(link); toast.success("Link copied"); }}
+                  className="pressable size-7 grid place-items-center rounded-full bg-foreground/5 border border-border"
+                  aria-label="Copy link"
+                >
+                  <Copy className="size-3" />
+                </button>
+                <button
+                  onClick={() => navigator.share?.({ title: s.name, text: link }).catch(() => {})}
+                  className="pressable size-7 grid place-items-center rounded-full bg-foreground/5 border border-border"
+                  aria-label="Share link"
+                >
+                  <Share2 className="size-3" />
+                </button>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
-      <DetailSheet open={open} onClose={() => setOpen(false)} title="New subscription">
-        <div className="space-y-3">
-          <Field label="Customer" value={customer} onChange={setCustomer} placeholder="name, email or 0x…" />
-          <Field label="Amount (USD)" value={amount} onChange={setAmount} placeholder="49" />
-          <div>
-            <p className="text-[11px] text-muted-foreground mb-1.5">Cadence</p>
-            <div className="grid grid-cols-3 gap-2">
-              {(["weekly", "monthly", "yearly"] as const).map((c) => (
-                <button
-                  key={c}
-                  onClick={() => setCadence(c)}
-                  className={`pressable rounded-xl border py-2 text-xs font-medium capitalize ${cadence === c ? "bg-primary text-primary-foreground border-primary" : "bg-foreground/5 border-border"}`}
-                >
-                  {c}
-                </button>
-              ))}
+      <DetailSheet open={open} onClose={() => { setOpen(false); reset(); }} title={created ? "Subscription link" : "New subscription link"}>
+        {!created ? (
+          <div className="space-y-3">
+            <Field label="Plan name" value={name} onChange={setName} placeholder="Pro plan" />
+            <Field label="Amount (USD)" value={amount} onChange={setAmount} placeholder="49" />
+            <div>
+              <p className="text-[11px] text-muted-foreground mb-1.5">Billing cadence</p>
+              <div className="grid grid-cols-3 gap-2">
+                {(["weekly", "monthly", "yearly"] as const).map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => setCadence(c)}
+                    className={`pressable rounded-xl border py-2 text-xs font-medium capitalize ${cadence === c ? "bg-primary text-primary-foreground border-primary" : "bg-foreground/5 border-border"}`}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-          <div>
-            <p className="text-[11px] text-muted-foreground mb-1.5">Settlement token</p>
-            <div className="grid grid-cols-4 gap-2">
-              {["USDC", "USDT", "ZEC", "ETH"].map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setToken(t)}
-                  className={`pressable rounded-xl border py-2 text-xs font-mono ${token === t ? "bg-primary text-primary-foreground border-primary" : "bg-foreground/5 border-border"}`}
-                >
-                  {t}
-                </button>
-              ))}
+            <div>
+              <p className="text-[11px] text-muted-foreground mb-1.5">Settlement token</p>
+              <div className="grid grid-cols-4 gap-2">
+                {["USDC", "USDT", "ZEC", "ETH"].map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => setToken(t)}
+                    className={`pressable rounded-xl border py-2 text-xs font-mono ${token === t ? "bg-primary text-primary-foreground border-primary" : "bg-foreground/5 border-border"}`}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
             </div>
+            <p className="text-[11px] text-muted-foreground">
+              Customers subscribe themselves through the hosted link. No customer info needed up front.
+            </p>
+            <button
+              onClick={create}
+              className="w-full pressable rounded-2xl bg-primary text-primary-foreground py-3.5 text-sm font-semibold"
+            >
+              Generate link
+            </button>
           </div>
-          <button
-            onClick={create}
-            className="w-full pressable rounded-2xl bg-primary text-primary-foreground py-3.5 text-sm font-semibold"
-          >
-            Create subscription
-          </button>
-        </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="rounded-2xl bg-foreground/5 border border-border p-5 text-center">
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">{created.name}</p>
+              <p className="text-3xl font-display font-semibold mt-1 tabular-nums">{fmt(created.amountUsd)}</p>
+              <p className="text-[11px] text-muted-foreground mt-1 font-mono">
+                {created.cadence} · {created.token}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-border bg-foreground/5 p-4">
+              <p className="text-[11px] text-muted-foreground mb-1">Hosted subscription link</p>
+              <p className="font-mono text-xs break-all">{subLink(created)}</p>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => { navigator.clipboard?.writeText(subLink(created)); toast.success("Link copied"); }}
+                className="pressable rounded-2xl bg-foreground/5 border border-border py-3 text-sm font-medium flex items-center justify-center gap-2"
+              >
+                <Copy className="size-4" /> Copy
+              </button>
+              <button
+                onClick={() => navigator.share?.({ title: created.name, text: subLink(created) }).catch(() => {})}
+                className="pressable rounded-2xl bg-primary text-primary-foreground py-3 text-sm font-semibold flex items-center justify-center gap-2"
+              >
+                <Share2 className="size-4" /> Share
+              </button>
+            </div>
+            <button
+              onClick={() => { setOpen(false); reset(); }}
+              className="w-full text-sm text-muted-foreground pressable py-2"
+            >
+              Done
+            </button>
+          </div>
+        )}
       </DetailSheet>
     </div>
   );
