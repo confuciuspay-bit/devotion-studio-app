@@ -6,7 +6,7 @@ const tabs = [
   { to: "/markets", label: "Markets", icon: LineChart },
   { to: "/pay", label: "Pay", icon: Store },
   { to: "/vault", label: "Vault", icon: Shield },
-  { to: "/spend", label: "Card", icon: CreditCard },
+  { to: "/spend", label: "Spend", icon: CreditCard },
 ] as const;
 
 export function BottomNav() {
