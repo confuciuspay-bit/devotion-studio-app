@@ -216,6 +216,13 @@ export const useApp = create<AppState>()(
       seed: null,
       seedHex: null,
       initialised: false,
+      merchant: null,
+      pinHashStored: null,
+      biometricsEnabled: false,
+      autoLockMinutes: 5 as AutoLock,
+      torEnabled: false,
+      network: "mainnet" as const,
+      locked: false,
       holdings: DEFAULT_HOLDINGS,
       watchlist: ["zcash", "bitcoin", "ethereum", "monero"],
       contacts: [
