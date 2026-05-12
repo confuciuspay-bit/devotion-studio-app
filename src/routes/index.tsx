@@ -78,6 +78,7 @@ const activity: Activity[] = [
 function WalletHome() {
   const { data } = useMarkets();
   const [openTx, setOpenTx] = useState<Activity | null>(null);
+  const [flow, setFlow] = useState<"receive" | "send" | "swap" | "shield" | null>(null);
 
   const assets = useMemo(() => {
     if (!data) return [];
