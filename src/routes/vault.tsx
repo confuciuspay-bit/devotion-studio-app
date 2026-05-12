@@ -103,8 +103,13 @@ function VaultPage() {
         </div>
       </section>
 
-      <section className="px-5 mt-6">
-        <h2 className="text-sm font-semibold mb-3">Activity</h2>
+      <section className="px-5 mt-6 pb-32">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold">Activity</h2>
+          <button onClick={() => setAllHistory(true)} className="text-xs text-muted-foreground flex items-center pressable">
+            All history <ChevronRight className="size-3" />
+          </button>
+        </div>
         <div className="space-y-2 stagger">
           {vaultActivity.length === 0 && (
             <div className="rounded-2xl border border-dashed border-border bg-card/50 p-8 text-center text-sm text-muted-foreground">
