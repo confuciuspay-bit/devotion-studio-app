@@ -3,7 +3,8 @@ import { useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { CoinIcon } from "@/components/CoinIcon";
 import { Sparkline } from "@/components/Sparkline";
-import { useMarkets, fmtUsd, fmtPct, fmtCompact, DEFAULT_IDS } from "@/lib/markets";
+import { useMarkets, fmtPct, fmtCompact, DEFAULT_IDS } from "@/lib/markets";
+import { useMoney } from "@/lib/useMoney";
 import { Search, Star, TrendingUp, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/markets")({
@@ -24,6 +25,7 @@ function getWatch(): string[] {
 
 function MarketsPage() {
   const { data, isLoading, error } = useMarkets(DEFAULT_IDS);
+  const { fmt } = useMoney();
   const [tab, setTab] = useState<"all" | "watch" | "gainers">("all");
   const [q, setQ] = useState("");
   const [watch, setWatch] = useState<string[]>(getWatch);
@@ -54,12 +56,12 @@ function MarketsPage() {
   const featured = (data ?? []).filter((c) => ["zcash", "bitcoin", "ethereum"].includes(c.id));
 
   return (
-    <div>
+    <div className="animate-fade-in">
       <AppHeader subtitle="Markets" />
 
       {/* Featured carousel */}
       <section className="px-5">
-        <div className="flex gap-3 overflow-x-auto -mx-5 px-5 pb-2 snap-x snap-mandatory scrollbar-none">
+        <div className="flex gap-3 overflow-x-auto -mx-5 px-5 pb-2 snap-x snap-mandatory scrollbar-none stagger">
           {featured.map((c) => {
             const up = (c.price_change_percentage_24h ?? 0) >= 0;
             return (
@@ -84,7 +86,7 @@ function MarketsPage() {
                   </span>
                 </div>
                 <p className="mt-4 text-2xl font-display font-semibold tabular-nums">
-                  {fmtUsd(c.current_price)}
+                  {fmt(c.current_price)}
                 </p>
                 <div className="mt-2">
                   <Sparkline data={c.sparkline_in_7d?.price ?? []} width={260} height={48} positive={up} />
@@ -143,7 +145,7 @@ function MarketsPage() {
             <Loader2 className="size-5 animate-spin" />
           </div>
         )}
-        <div className="rounded-2xl border border-border bg-card divide-y divide-border overflow-hidden">
+        <div className="rounded-2xl border border-border bg-card divide-y divide-border overflow-hidden stagger">
           {list.map((c) => {
             const up = (c.price_change_percentage_24h ?? 0) >= 0;
             const starred = watch.includes(c.id);
@@ -175,7 +177,7 @@ function MarketsPage() {
                   </div>
                   <Sparkline data={c.sparkline_in_7d?.price ?? []} positive={up} />
                   <div className="text-right w-[72px]">
-                    <p className="text-sm font-mono tabular-nums">{fmtUsd(c.current_price)}</p>
+                    <p className="text-sm font-mono tabular-nums">{fmt(c.current_price)}</p>
                     <p
                       className={`text-[11px] font-mono ${up ? "text-shield" : "text-destructive"}`}
                     >
