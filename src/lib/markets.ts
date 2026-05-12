@@ -164,6 +164,10 @@ export function fmtUsd(n: number, opts: Intl.NumberFormatOptions = {}) {
   }).format(n);
 }
 
+export function maskValue(s: string) {
+  return s.replace(/[\d.,]/g, "•");
+}
+
 export function fmtCompact(n: number) {
   return new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 2 }).format(n);
 }
