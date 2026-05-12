@@ -57,6 +57,7 @@ const payments: Invoice[] = [
 
 function PayPage() {
   const [open, setOpen] = useState<Invoice | null>(null);
+  const hidden = useApp((s) => s.hideBalances);
 
   return (
     <div>
