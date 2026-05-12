@@ -207,9 +207,6 @@ export function WalletFlow({ open, kind, onClose }: { open: boolean; kind: FlowK
   };
 
   // ── SWAP ─────────────────────────────────────────────
-  const swapPrices = useSimplePrices(
-    [coin?.id, coinTo?.id].filter((x): x is string => !!x),
-  );
 
   const swapInit = () => {
     setStep(4);
