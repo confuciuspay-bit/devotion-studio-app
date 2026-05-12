@@ -35,7 +35,7 @@ export function Sheet({
       />
       <div
         className={`absolute inset-x-0 bottom-0 mx-auto max-w-md rounded-t-3xl border-t border-x border-border bg-card shadow-2xl transition-transform duration-300 ease-out ${open ? "translate-y-0" : "translate-y-full"}`}
-        style={{ paddingBottom: "max(env(safe-area-inset-bottom), 1rem)" }}
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 96px)" }}
       >
         <div className="pt-2 pb-1 grid place-items-center">
           <div className="h-1 w-10 rounded-full bg-foreground/20" />
