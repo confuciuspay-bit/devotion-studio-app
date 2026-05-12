@@ -168,6 +168,7 @@ interface AppState {
   setCardSettings: (s: Partial<CardSettings>) => void;
   addCardTx: (t: CardTx) => void;
   topupCard: (usd: number) => void;
+  toggleHideBalances: () => void;
 
   resetAll: () => void;
 }
