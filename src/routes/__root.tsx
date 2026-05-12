@@ -80,9 +80,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "description", content: "Non-custodial multi-chain wallet with ZEC shielded payments, vault settlement, payroll and crypto cards." },
       { name: "author", content: "Umbra Protocol" },
       { property: "og:title", content: "Umbra — Privacy-First Crypto Wallet" },
-      { property: "og:description", content: "Non-custodial. No KYC. ZEC shielded by default." },
+      { property: "og:description", content: "Non-custodial multi-chain wallet with ZEC shielded payments, vault settlement, payroll and crypto cards." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: "Umbra — Privacy-First Crypto Wallet" },
+      { name: "twitter:description", content: "Non-custodial multi-chain wallet with ZEC shielded payments, vault settlement, payroll and crypto cards." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/7e888cb6-51a3-4f0b-b600-d55d633dde8e/id-preview-d84087ff--42f5142a-e8ea-40ce-b634-5964bf97b1ea.lovable.app-1778585092374.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/7e888cb6-51a3-4f0b-b600-d55d633dde8e/id-preview-d84087ff--42f5142a-e8ea-40ce-b634-5964bf97b1ea.lovable.app-1778585092374.png" },
     ],
     links: [{ rel: "stylesheet", href: appCss },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -111,57 +115,16 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 import { BottomNav } from "@/components/BottomNav";
-import { LockScreen } from "@/components/LockScreen";
-import { MerchantBrand } from "@/components/MerchantBrand";
-import { useApp } from "@/lib/store";
-import { useMounted } from "@/lib/useMounted";
-import { useEffect } from "react";
-import { useRouterState, useNavigate } from "@tanstack/react-router";
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const mounted = useMounted();
-  const initialised = useApp((s) => s.initialised);
-  const locked = useApp((s) => s.locked);
-  const setLocked = useApp((s) => s.setLocked);
-  const autoLock = useApp((s) => s.autoLockMinutes);
-  const navigate = useNavigate();
-  const location = useRouterState({ select: (s) => s.location });
-
-  // Onboarding gate
-  useEffect(() => {
-    if (!mounted) return;
-    if (!initialised && location.pathname !== "/onboarding") {
-      navigate({ to: "/onboarding" });
-    }
-  }, [mounted, initialised, location.pathname, navigate]);
-
-  // Auto-lock timer
-  useEffect(() => {
-    if (!mounted || !initialised || autoLock === "never") return;
-    let last = Date.now();
-    const bump = () => { last = Date.now(); };
-    const events: (keyof DocumentEventMap)[] = ["pointerdown", "keydown", "touchstart"];
-    events.forEach((e) => document.addEventListener(e, bump));
-    const id = window.setInterval(() => {
-      if (Date.now() - last > (autoLock as number) * 60_000) setLocked(true);
-    }, 5_000);
-    return () => {
-      events.forEach((e) => document.removeEventListener(e, bump));
-      window.clearInterval(id);
-    };
-  }, [mounted, initialised, autoLock, setLocked]);
-
-  const isOnboarding = location.pathname === "/onboarding";
 
   return (
     <QueryClientProvider client={queryClient}>
-      <MerchantBrand />
-      <div className={`mx-auto max-w-md min-h-dvh relative ${isOnboarding ? "" : "pb-28"}`}>
-        {mounted ? <Outlet /> : <div className="min-h-dvh" />}
+      <div className="mx-auto max-w-md min-h-dvh pb-28 relative">
+        <Outlet />
       </div>
-      {mounted && !isOnboarding && initialised && <BottomNav />}
-      {mounted && initialised && <LockScreen />}
+      <BottomNav />
     </QueryClientProvider>
   );
 }
