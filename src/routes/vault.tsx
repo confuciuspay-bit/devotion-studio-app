@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { DetailSheet } from "@/components/DetailSheet";
+import { AllHistorySheet } from "@/components/AllHistorySheet";
 import { WalletFlow } from "@/components/flows/WalletFlow";
 import { VaultFlow, type VaultFlowKind } from "@/components/flows/VaultFlow";
 import { Shield, ArrowRight, Lock, ChevronRight, Plus, Settings, KeyRound, ExternalLink } from "lucide-react";
@@ -26,6 +27,7 @@ function VaultPage() {
   const [open, setOpen] = useState<VaultActivity | null>(null);
   const [vfk, setVfk] = useState<VaultFlowKind | null>(null);
   const [shieldFlow, setShieldFlow] = useState(false);
+  const [allHistory, setAllHistory] = useState(false);
   const { fmt } = useMoney();
 
   const hidden = hideBalances;
@@ -101,8 +103,13 @@ function VaultPage() {
         </div>
       </section>
 
-      <section className="px-5 mt-6">
-        <h2 className="text-sm font-semibold mb-3">Activity</h2>
+      <section className="px-5 mt-6 pb-32">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold">Activity</h2>
+          <button onClick={() => setAllHistory(true)} className="text-xs text-muted-foreground flex items-center pressable">
+            All history <ChevronRight className="size-3" />
+          </button>
+        </div>
         <div className="space-y-2 stagger">
           {vaultActivity.length === 0 && (
             <div className="rounded-2xl border border-dashed border-border bg-card/50 p-8 text-center text-sm text-muted-foreground">
@@ -141,6 +148,7 @@ function VaultPage() {
 
       <VaultFlow open={!!vfk} kind={vfk} onClose={() => setVfk(null)} />
       <WalletFlow open={shieldFlow} kind={shieldFlow ? "shield" : null} onClose={() => setShieldFlow(false)} />
+      <AllHistorySheet open={allHistory} scope="vault" onClose={() => setAllHistory(false)} title="Vault history" />
 
       <DetailSheet open={!!open} onClose={() => setOpen(null)} title="Vault entry">
         {open && (

@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { DetailSheet } from "@/components/DetailSheet";
+import { AllHistorySheet } from "@/components/AllHistorySheet";
 import { Users, Plus, Shield, Calendar, ChevronRight, Play, Pencil } from "lucide-react";
 
 export const Route = createFileRoute("/stream")({ component: StreamPage });
@@ -52,6 +53,7 @@ const batches: Batch[] = [
 
 function StreamPage() {
   const [open, setOpen] = useState<Batch | null>(null);
+  const [allHistory, setAllHistory] = useState(false);
   return (
     <div>
       <AppHeader subtitle="UmbraStream · Payroll" />
@@ -79,7 +81,12 @@ function StreamPage() {
       </section>
 
       <section className="px-5 mt-6">
-        <h2 className="text-sm font-semibold mb-3">Batches</h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold">Batches</h2>
+          <button onClick={() => setAllHistory(true)} className="text-xs text-muted-foreground flex items-center pressable">
+            All history <ChevronRight className="size-3" />
+          </button>
+        </div>
         <div className="space-y-2">
           {batches.map((b) => (
             <button
@@ -166,6 +173,7 @@ function StreamPage() {
           </div>
         )}
       </DetailSheet>
+      <AllHistorySheet open={allHistory} scope="stream" onClose={() => setAllHistory(false)} title="Stream history" />
     </div>
   );
 }

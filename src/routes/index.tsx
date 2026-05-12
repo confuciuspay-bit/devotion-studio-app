@@ -3,6 +3,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { CoinIcon } from "@/components/CoinIcon";
 import { Sparkline } from "@/components/Sparkline";
 import { DetailSheet } from "@/components/DetailSheet";
+import { AllHistorySheet } from "@/components/AllHistorySheet";
 import { WalletFlow } from "@/components/flows/WalletFlow";
 import { useMarkets, fmtPct } from "@/lib/markets";
 import { useMoney } from "@/lib/useMoney";
@@ -81,6 +82,7 @@ function WalletHome() {
   const { data } = useMarkets();
   const [openTx, setOpenTx] = useState<Activity | null>(null);
   const [flow, setFlow] = useState<"receive" | "send" | "swap" | "shield" | null>(null);
+  const [allHistory, setAllHistory] = useState(false);
   const { fmt, signed, hidden } = useMoney();
 
   const assets = useMemo(() => {
@@ -208,7 +210,12 @@ function WalletHome() {
       </section>
 
       <section className="px-5 mt-6">
-        <h2 className="text-sm font-semibold tracking-tight mb-3">Recent activity</h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold tracking-tight">Recent activity</h2>
+          <button onClick={() => setAllHistory(true)} className="text-xs text-muted-foreground flex items-center pressable">
+            All history <ChevronRight className="size-3" />
+          </button>
+        </div>
         <div className="space-y-2">
           {activity.map((a) => (
             <button
@@ -265,6 +272,7 @@ function WalletHome() {
       </DetailSheet>
 
       <WalletFlow open={!!flow} kind={flow} onClose={() => setFlow(null)} />
+      <AllHistorySheet open={allHistory} scope="wallet" onClose={() => setAllHistory(false)} title="Wallet history" />
     </div>
   );
 }

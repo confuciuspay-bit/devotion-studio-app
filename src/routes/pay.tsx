@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { DetailSheet } from "@/components/DetailSheet";
+import { AllHistorySheet } from "@/components/AllHistorySheet";
 import { PayFlow, type PayFlowKind } from "@/components/flows/PayFlow";
 import {
   QrCode, Copy, Link2, Plus, Check, ChevronRight, Download, Share2,
@@ -59,6 +60,7 @@ function PayPage() {
   const [filter, setFilter] = useState<"all" | PaymentStatus>("all");
   const [showSettings, setShowSettings] = useState(false);
   const [subs, setSubs] = useState<Subscription[]>(SEED_SUBS);
+  const [allHistory, setAllHistory] = useState(false);
 
   const list = useMemo(
     () => (filter === "all" ? payments : payments.filter((p) => p.status === filter)),
@@ -128,25 +130,33 @@ function PayPage() {
 
       {/* Sub-tabs */}
       <section className="px-5 mt-5">
-        <div className="flex gap-1.5 overflow-x-auto scrollbar-none -mx-1 px-1">
-          {TABS.map((t) => {
-            const Icon = t.icon;
-            const active = tab === t.id;
-            return (
-              <button
-                key={t.id}
-                onClick={() => setTab(t.id)}
-                className={`pressable shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-full border text-xs font-medium ${
-                  active
-                    ? "bg-foreground text-background border-foreground"
-                    : "bg-foreground/5 border-border text-muted-foreground"
-                }`}
-              >
-                <Icon className="size-3.5" />
-                {t.label}
-              </button>
-            );
-          })}
+        <div className="flex items-center gap-2">
+          <div className="flex-1 flex gap-1.5 overflow-x-auto scrollbar-none -mx-1 px-1">
+            {TABS.map((t) => {
+              const Icon = t.icon;
+              const active = tab === t.id;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => setTab(t.id)}
+                  className={`pressable shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-full border text-xs font-medium ${
+                    active
+                      ? "bg-foreground text-background border-foreground"
+                      : "bg-foreground/5 border-border text-muted-foreground"
+                  }`}
+                >
+                  <Icon className="size-3.5" />
+                  {t.label}
+                </button>
+              );
+            })}
+          </div>
+          <button
+            onClick={() => setAllHistory(true)}
+            className="pressable shrink-0 inline-flex items-center gap-1 px-3 py-2 rounded-full border border-border bg-foreground/5 text-xs font-medium text-muted-foreground"
+          >
+            History
+          </button>
         </div>
       </section>
 
@@ -205,6 +215,7 @@ function PayPage() {
       </section>
 
       <PayFlow open={!!flow} kind={flow} onClose={() => setFlow(null)} />
+      <AllHistorySheet open={allHistory} scope="pay" onClose={() => setAllHistory(false)} title="Pay history" />
 
       {/* Payment detail */}
       <DetailSheet open={!!open} onClose={() => setOpen(null)} title={open?.id}>
