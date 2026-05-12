@@ -84,8 +84,24 @@
   h1, h2, h3, h4 { letter-spacing: -0.02em; }
 }
 
+@layer base {
+  html, body {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overscroll-behavior-y: none;
+  }
+  body { padding-top: env(safe-area-inset-top); }
+  button, a { -webkit-touch-callout: none; user-select: none; }
+  input, textarea { font-size: 16px; } /* prevents iOS zoom on focus */
+}
+
 @layer utilities {
   .font-mono { font-family: var(--font-mono); }
+  .scrollbar-none::-webkit-scrollbar { display: none; }
+  .scrollbar-none { scrollbar-width: none; }
+  .pressable { transition: transform 120ms ease, background-color 120ms ease; }
+  .pressable:active { transform: scale(0.98); }
   .glass {
     background: oklch(0.17 0.012 270 / 0.6);
     backdrop-filter: blur(16px);
