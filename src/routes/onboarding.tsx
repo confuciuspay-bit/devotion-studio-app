@@ -11,12 +11,12 @@ export const Route = createFileRoute("/onboarding")({ component: OnboardingPage 
 type Step = "welcome" | "seed" | "confirm" | "pin" | "merchant" | "done";
 
 const BRAND_PRESETS = [
-  { name: "Violet",   value: "oklch(0.68 0.22 295)" },
-  { name: "Emerald",  value: "oklch(0.72 0.18 155)" },
-  { name: "Amber",    value: "oklch(0.78 0.16 70)" },
-  { name: "Rose",     value: "oklch(0.70 0.20 15)" },
-  { name: "Cyan",     value: "oklch(0.74 0.14 220)" },
-  { name: "Slate",    value: "oklch(0.66 0.04 260)" },
+  { name: "Violet",  value: "#7c3aed" },
+  { name: "Emerald", value: "#10b981" },
+  { name: "Amber",   value: "#f59e0b" },
+  { name: "Rose",    value: "#f43f5e" },
+  { name: "Cyan",    value: "#06b6d4" },
+  { name: "Slate",   value: "#64748b" },
 ];
 
 function OnboardingPage() {
@@ -128,10 +128,10 @@ function OnboardingPage() {
     <div className="min-h-dvh flex flex-col px-6 py-10 bg-background">
       <header className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-2">
-          <div className="size-7 rounded-lg bg-foreground/95 grid place-items-center">
-            <div className="size-3 rounded-full bg-background" />
+          <div className="size-6 rounded-md bg-primary grid place-items-center">
+            <div className="size-2.5 rounded-full bg-white/90" />
           </div>
-          <span className="font-display font-semibold tracking-tight text-lg">umbra</span>
+          <span className="text-sm font-semibold tracking-tight text-foreground">umbra</span>
         </div>
         <StepDots step={step} />
       </header>
@@ -159,7 +159,7 @@ function OnboardingPage() {
       )}
       {step === "pin" && (
         <div className="flex-1 flex flex-col justify-center max-w-sm w-full mx-auto">
-          <h2 className="text-xl font-display font-semibold text-center mb-1">
+          <h2 className="text-xl font-sans font-semibold text-center mb-1">
             {pin1 ? "Confirm your PIN" : "Set a 4-digit PIN"}
           </h2>
           <p className="text-xs text-muted-foreground text-center mb-6">
@@ -201,10 +201,10 @@ function StepDots({ step }: { step: Step }) {
 function Welcome({ onNext }: { onNext: () => void }) {
   return (
     <div className="flex-1 flex flex-col justify-center text-center max-w-sm mx-auto animate-fade-in">
-      <div className="size-16 mx-auto rounded-2xl bg-primary/15 text-primary grid place-items-center mb-6">
+      <div className="size-16 mx-auto rounded-lg bg-primary/15 text-primary grid place-items-center mb-6">
         <Sparkles className="size-7" />
       </div>
-      <h1 className="text-3xl font-display font-semibold tracking-tight">
+      <h1 className="text-3xl font-sans font-semibold tracking-tight">
         Set up your merchant account
       </h1>
       <p className="mt-3 text-sm text-muted-foreground">
@@ -224,7 +224,7 @@ function Welcome({ onNext }: { onNext: () => void }) {
       </ul>
       <button
         onClick={onNext}
-        className="mt-10 pressable rounded-2xl bg-primary text-primary-foreground py-4 text-sm font-semibold flex items-center justify-center gap-2"
+        className="mt-10 pressable rounded-lg bg-primary text-primary-foreground py-4 text-sm font-semibold flex items-center justify-center gap-2"
       >
         Get started <ChevronRight className="size-4" />
       </button>
@@ -243,12 +243,12 @@ function SeedView({
       <button onClick={onBack} className="self-start text-xs text-muted-foreground flex items-center gap-1 mb-4 pressable">
         <ArrowLeft className="size-3.5" /> Back
       </button>
-      <h2 className="text-xl font-display font-semibold">Your recovery phrase</h2>
+      <h2 className="text-xl font-sans font-semibold">Your recovery phrase</h2>
       <p className="mt-2 text-xs text-muted-foreground">
         Write these 12 words down on paper — in order. Anyone with them controls your funds.
       </p>
 
-      <div className="mt-5 relative rounded-2xl border border-border bg-card p-4">
+      <div className="mt-5 relative rounded-lg border border-[rgba(255,255,255,0.06)] bg-card p-4">
         <div className={`grid grid-cols-3 gap-2 ${revealed ? "" : "blur-md select-none"}`}>
           {mnemonic.map((w, i) => (
             <div key={i} className="flex items-baseline gap-1.5 px-2 py-2 rounded-lg bg-foreground/5">
@@ -262,7 +262,7 @@ function SeedView({
             onClick={onReveal}
             className="absolute inset-0 grid place-items-center text-sm font-medium text-primary"
           >
-            <span className="flex items-center gap-2 pressable px-4 py-2 rounded-full bg-background border border-border">
+            <span className="flex items-center gap-2 pressable px-4 py-2 rounded-full bg-background border border-[rgba(255,255,255,0.06)]">
               <Eye className="size-4" /> Tap to reveal
             </span>
           </button>
@@ -278,7 +278,7 @@ function SeedView({
         </button>
       )}
 
-      <div className="mt-5 rounded-xl bg-destructive/10 border border-destructive/30 p-3 text-[11px] text-destructive flex gap-2">
+      <div className="mt-5 rounded-md bg-destructive/10 border border-destructive/30 p-3 text-[11px] text-destructive flex gap-2">
         <Shield className="size-3.5 shrink-0 mt-0.5" />
         <span>Never share these words. Umbra support will never ask for them.</span>
       </div>
@@ -286,7 +286,7 @@ function SeedView({
       <button
         onClick={onNext}
         disabled={!revealed}
-        className="mt-auto pressable rounded-2xl bg-primary text-primary-foreground py-4 text-sm font-semibold disabled:opacity-40 disabled:pointer-events-none"
+        className="mt-auto pressable rounded-lg bg-primary text-primary-foreground py-4 text-sm font-semibold disabled:opacity-40 disabled:pointer-events-none"
       >
         I've written them down
       </button>
@@ -305,7 +305,7 @@ function ConfirmView({
       <button onClick={onBack} className="self-start text-xs text-muted-foreground flex items-center gap-1 mb-4 pressable">
         <ArrowLeft className="size-3.5" /> Back
       </button>
-      <h2 className="text-xl font-display font-semibold">Confirm your phrase</h2>
+      <h2 className="text-xl font-sans font-semibold">Confirm your phrase</h2>
       <p className="mt-2 text-xs text-muted-foreground">
         Type the requested words from your backup.
       </p>
@@ -325,7 +325,7 @@ function ConfirmView({
                 next[i] = e.target.value;
                 setInputs(next);
               }}
-              className="mt-1 w-full rounded-xl bg-foreground/5 border border-border px-3 py-3 font-mono text-sm focus:outline-none focus:border-primary"
+              className="mt-1 w-full rounded-md bg-foreground/5 border border-[rgba(255,255,255,0.06)] px-3 py-3 font-mono text-sm focus:outline-none focus:border-primary"
             />
           </div>
         ))}
@@ -333,7 +333,7 @@ function ConfirmView({
       <button
         onClick={onNext}
         disabled={inputs.some((x) => !x.trim())}
-        className="mt-auto pressable rounded-2xl bg-primary text-primary-foreground py-4 text-sm font-semibold disabled:opacity-40 disabled:pointer-events-none"
+        className="mt-auto pressable rounded-lg bg-primary text-primary-foreground py-4 text-sm font-semibold disabled:opacity-40 disabled:pointer-events-none"
       >
         Continue
       </button>
@@ -353,17 +353,17 @@ function MerchantView(props: {
   const initials = (props.biz || "U").trim().split(/\s+/).map((s) => s[0]).slice(0, 2).join("").toUpperCase();
   return (
     <div className="flex-1 flex flex-col max-w-sm mx-auto w-full animate-fade-in pb-6">
-      <h2 className="text-xl font-display font-semibold">Brand your account</h2>
+      <h2 className="text-xl font-sans font-semibold">Brand your account</h2>
       <p className="mt-2 text-xs text-muted-foreground">
         Customers will see this on checkout pages and invoices.
       </p>
 
-      <div className="mt-6 flex items-center gap-3 p-4 rounded-2xl border border-border bg-card">
-        <label className="size-12 rounded-xl grid place-items-center cursor-pointer overflow-hidden relative" style={{ backgroundColor: props.brandColor }}>
+      <div className="mt-6 flex items-center gap-3 p-4 rounded-lg border border-[rgba(255,255,255,0.06)] bg-card">
+        <label className="size-12 rounded-md grid place-items-center cursor-pointer overflow-hidden relative" style={{ backgroundColor: props.brandColor }}>
           {props.logoDataUrl ? (
             <img src={props.logoDataUrl} alt="" className="absolute inset-0 size-full object-cover" />
           ) : (
-            <span className="text-background font-display font-semibold text-base">{initials}</span>
+            <span className="text-background font-sans font-semibold text-base">{initials}</span>
           )}
           <input type="file" accept="image/*" onChange={props.onLogoUpload} className="hidden" />
           <span className="absolute -bottom-1 -right-1 size-5 rounded-full bg-foreground text-background grid place-items-center">
@@ -390,7 +390,7 @@ function MerchantView(props: {
               <button
                 key={c.value}
                 onClick={() => props.setBrandColor(c.value)}
-                className={`aspect-square rounded-xl border-2 transition ${props.brandColor === c.value ? "border-foreground" : "border-transparent"}`}
+                className={`aspect-square rounded-md border-2 transition ${props.brandColor === c.value ? "border-foreground" : "border-transparent"}`}
                 style={{ backgroundColor: c.value }}
                 aria-label={c.name}
               />
@@ -401,7 +401,7 @@ function MerchantView(props: {
 
       <button
         onClick={props.onFinish}
-        className="mt-8 pressable rounded-2xl bg-primary text-primary-foreground py-4 text-sm font-semibold"
+        className="mt-8 pressable rounded-lg bg-primary text-primary-foreground py-4 text-sm font-semibold"
       >
         Open Umbra
       </button>
@@ -424,7 +424,7 @@ function Field({
         value={value}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1 w-full rounded-xl bg-foreground/5 border border-border px-3 py-3 text-sm focus:outline-none focus:border-primary"
+        className="mt-1 w-full rounded-md bg-foreground/5 border border-[rgba(255,255,255,0.06)] px-3 py-3 text-sm focus:outline-none focus:border-primary"
       />
     </div>
   );

@@ -1,4 +1,4 @@
-import { Search, Loader2 } from "lucide-react";
+import { Search, Loader as Loader2 } from "lucide-react";
 import { useState } from "react";
 import { CoinIcon } from "./CoinIcon";
 import { useCoinSearch, useTopMarkets, fmtUsd, fmtPct } from "@/lib/markets";
@@ -26,37 +26,37 @@ export function CoinPicker({ onPick }: { onPick: (c: PickedCoin) => void }) {
 
   return (
     <div>
-      <div className="flex items-center gap-2 rounded-2xl border border-border bg-foreground/5 px-3 py-2 mb-3">
-        <Search className="size-4 text-muted-foreground" />
+      <div className="flex items-center gap-2 rounded-md border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.04)] px-3 py-2 mb-3">
+        <Search className="size-3.5 text-muted-foreground shrink-0" />
         <input
           autoFocus
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search any of 14,000 coins…"
-          className="bg-transparent outline-none text-sm flex-1 placeholder:text-muted-foreground"
+          placeholder="Search coins…"
+          className="bg-transparent outline-none text-sm flex-1 placeholder:text-muted-foreground text-foreground"
         />
         {isFetching && <Loader2 className="size-3.5 animate-spin text-muted-foreground" />}
       </div>
-      <div className="rounded-2xl border border-border bg-card divide-y divide-border max-h-[55vh] overflow-y-auto">
+      <div className="rounded-lg border border-[rgba(255,255,255,0.06)] bg-card divide-y divide-[rgba(255,255,255,0.04)] max-h-[55vh] overflow-y-auto scrollbar-none">
         {list.map((c) => {
           const t = top?.find((x) => x.id === c.id);
           return (
             <button
               key={c.id}
               onClick={() => onPick({ ...c, price: t?.current_price ?? c.price })}
-              className="w-full flex items-center gap-3 px-3 py-2.5 active:bg-foreground/5 text-left"
+              className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-[rgba(255,255,255,0.02)] transition text-left"
             >
-              <CoinIcon src={c.image} symbol={c.symbol} size={32} />
+              <CoinIcon src={c.image} symbol={c.symbol} size={30} />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{c.name}</p>
-                <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-mono">
+                <p className="text-sm font-medium text-foreground truncate">{c.name}</p>
+                <p className="text-[11px] uppercase tracking-widest text-muted-foreground font-mono">
                   {c.symbol}
                 </p>
               </div>
               {t && (
                 <div className="text-right">
-                  <p className="text-xs font-mono">{fmtUsd(t.current_price)}</p>
-                  <p className={`text-[10px] font-mono ${(t.price_change_percentage_24h ?? 0) >= 0 ? "text-shield" : "text-destructive"}`}>
+                  <p className="text-xs font-mono text-foreground">{fmtUsd(t.current_price)}</p>
+                  <p className={`text-[10px] font-mono ${(t.price_change_percentage_24h ?? 0) >= 0 ? "text-success" : "text-destructive"}`}>
                     {fmtPct(t.price_change_percentage_24h)}
                   </p>
                 </div>

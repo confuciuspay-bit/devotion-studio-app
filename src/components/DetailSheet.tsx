@@ -28,30 +28,39 @@ export function DetailSheet({
       className={`fixed inset-0 z-[80] ${open ? "pointer-events-auto" : "pointer-events-none"}`}
       aria-hidden={!open}
     >
+      {/* Backdrop */}
       <div
         onClick={onClose}
-        className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${open ? "opacity-100" : "opacity-0"}`}
+        className={`absolute inset-0 bg-black/70 transition-opacity duration-200 ${open ? "opacity-100" : "opacity-0"}`}
       />
+
+      {/* Panel */}
       <div
-        className={`absolute inset-x-0 bottom-0 mx-auto max-w-md rounded-t-3xl border-t border-x border-border bg-card shadow-2xl transition-transform duration-300 ease-out ${
+        className={`absolute inset-x-0 bottom-0 mx-auto max-w-md rounded-t-lg border-t border-x border-[rgba(255,255,255,0.06)] bg-card transition-transform duration-200 ease-out ${
           open ? "translate-y-0" : "translate-y-full"
         }`}
         style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 96px)" }}
       >
-        <div className="pt-2 pb-1 grid place-items-center">
-          <div className="h-1 w-10 rounded-full bg-foreground/20" />
+        {/* Handle */}
+        <div className="pt-3 pb-1 grid place-items-center">
+          <div className="h-[3px] w-8 rounded-full bg-[rgba(255,255,255,0.12)]" />
         </div>
-        <div className="px-5 pt-2 pb-2 flex items-center justify-between">
-          <h3 className="font-display font-semibold text-base">{title}</h3>
+
+        {/* Header */}
+        <div className="px-5 pt-1 pb-3 flex items-center justify-between">
+          <h3 className="text-sm font-medium text-foreground">{title}</h3>
           <button
             onClick={onClose}
-            className="size-8 grid place-items-center rounded-full bg-foreground/5 border border-border text-muted-foreground"
+            className="size-7 grid place-items-center rounded-md bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.06)] text-muted-foreground hover:text-foreground transition"
             aria-label="Close"
           >
-            <X className="size-4" />
+            <X className="size-3.5" />
           </button>
         </div>
-        <div className="px-5 pb-6 max-h-[75vh] overflow-y-auto overscroll-contain">{children}</div>
+
+        <div className="px-5 pb-6 max-h-[75vh] overflow-y-auto overscroll-contain">
+          {children}
+        </div>
       </div>
     </div>
   );

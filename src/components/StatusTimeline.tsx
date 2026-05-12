@@ -1,4 +1,4 @@
-import { Check, Circle, Loader2 } from "lucide-react";
+import { Check, Circle, Loader as Loader2 } from "lucide-react";
 
 export interface Step {
   label: string;
@@ -13,16 +13,16 @@ export function StatusTimeline({ steps }: { steps: Step[] }) {
         <li key={i} className="flex items-start gap-3">
           <div className="mt-0.5 shrink-0">
             {s.status === "done" ? (
-              <div className="size-6 rounded-full bg-shield/20 text-shield grid place-items-center">
-                <Check className="size-3.5" />
+              <div className="size-5 rounded bg-[rgba(16,185,129,0.15)] text-success grid place-items-center">
+                <Check className="size-3" />
               </div>
             ) : s.status === "active" ? (
-              <div className="size-6 rounded-full bg-primary/20 text-primary grid place-items-center">
-                <Loader2 className="size-3.5 animate-spin" />
+              <div className="size-5 rounded bg-primary/15 text-primary grid place-items-center">
+                <Loader2 className="size-3 animate-spin" />
               </div>
             ) : (
-              <div className="size-6 rounded-full bg-foreground/5 text-muted-foreground grid place-items-center">
-                <Circle className="size-2 fill-current" />
+              <div className="size-5 rounded bg-[rgba(255,255,255,0.04)] text-muted-foreground grid place-items-center">
+                <Circle className="size-1.5 fill-current" />
               </div>
             )}
           </div>

@@ -1,4 +1,4 @@
-import { Eye, EyeOff, Bell, ChevronDown, Settings } from "lucide-react";
+import { Eye, EyeOff, Settings, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useApp } from "@/lib/store";
@@ -12,35 +12,36 @@ export function AppHeader({ subtitle: _subtitle }: { subtitle?: string }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="relative z-50 px-5 pt-6 pb-3 flex items-center justify-between animate-fade-in">
-      <div>
-        <div className="flex items-center gap-2">
-          <div className="size-7 rounded-lg bg-foreground/95 grid place-items-center">
-            <div className="size-3 rounded-full bg-background" />
-          </div>
-          <span className="font-display font-semibold tracking-tight text-lg">umbra</span>
+    <header className="px-5 pt-5 pb-3 flex items-center justify-between">
+      {/* Wordmark */}
+      <div className="flex items-center gap-2">
+        <div className="size-6 rounded-md bg-primary grid place-items-center">
+          <div className="size-2.5 rounded-full bg-white/90" />
         </div>
-        <div className="mt-2 h-[11px]" aria-hidden />
+        <span className="text-sm font-semibold tracking-tight text-foreground">umbra</span>
       </div>
-      <div className="flex items-center gap-1.5">
+
+      {/* Controls */}
+      <div className="flex items-center gap-1">
+        {/* Currency picker */}
         <div className="relative">
           <button
             onClick={() => setOpen((o) => !o)}
-            className="h-9 px-2.5 flex items-center gap-1 rounded-full bg-card border border-border text-xs font-mono text-muted-foreground active:scale-95 transition pressable"
+            className="h-7 px-2 flex items-center gap-1 rounded-md border border-[rgba(255,255,255,0.06)] bg-card text-[11px] font-mono text-muted-foreground hover:text-foreground hover:border-[rgba(255,255,255,0.12)] transition pressable"
             aria-label="Display currency"
           >
             {ccy}
-            <ChevronDown className="size-3" />
+            <ChevronDown className="size-2.5" />
           </button>
           {open && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-              <div className="absolute right-0 mt-1 z-50 w-32 max-h-72 overflow-y-auto rounded-2xl border border-border bg-popover shadow-2xl animate-scale-in">
+              <div className="absolute right-0 mt-1 z-50 w-28 max-h-64 overflow-y-auto rounded-lg border border-[rgba(255,255,255,0.08)] bg-popover shadow-xl animate-scale-in scrollbar-none">
                 {SUPPORTED_CURRENCIES.map((c) => (
                   <button
                     key={c}
                     onClick={() => { setCcy(c); setOpen(false); }}
-                    className={`w-full text-left px-3 py-2 text-xs font-mono hover:bg-foreground/5 ${c === ccy ? "text-primary" : ""}`}
+                    className={`w-full text-left px-3 py-2 text-xs font-mono transition-colors hover:bg-white/5 ${c === ccy ? "text-primary" : "text-muted-foreground"}`}
                   >
                     {c}
                   </button>
@@ -49,24 +50,24 @@ export function AppHeader({ subtitle: _subtitle }: { subtitle?: string }) {
             </>
           )}
         </div>
+
+        {/* Balance toggle */}
         <button
           onClick={toggle}
-          className="size-9 grid place-items-center rounded-full bg-card border border-border text-muted-foreground active:scale-95 transition"
+          className="size-7 grid place-items-center rounded-md border border-[rgba(255,255,255,0.06)] bg-card text-muted-foreground hover:text-foreground hover:border-[rgba(255,255,255,0.12)] transition pressable"
           aria-label="Toggle balance visibility"
         >
-          {hidden ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+          {hidden ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
         </button>
+
+        {/* Settings */}
         <Link
           to="/settings"
-          className="size-9 grid place-items-center rounded-full bg-card border border-border text-muted-foreground active:scale-95 transition pressable"
+          className="size-7 grid place-items-center rounded-md border border-[rgba(255,255,255,0.06)] bg-card text-muted-foreground hover:text-foreground hover:border-[rgba(255,255,255,0.12)] transition pressable"
           aria-label="Settings"
         >
-          <Settings className="size-4" />
+          <Settings className="size-3.5" />
         </Link>
-        <button className="size-9 grid place-items-center rounded-full bg-card border border-border text-muted-foreground relative">
-          <Bell className="size-4" />
-          <span className="absolute top-2 right-2 size-1.5 rounded-full bg-primary" />
-        </button>
       </div>
     </header>
   );

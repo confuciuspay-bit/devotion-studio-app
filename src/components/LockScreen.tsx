@@ -2,10 +2,6 @@ import { PinGate } from "@/components/PinGate";
 import { useApp } from "@/lib/store";
 import { Lock } from "lucide-react";
 
-/**
- * Full-screen lock overlay shown when `useApp.locked === true`.
- * Unlocked by entering the merchant PIN.
- */
 export function LockScreen() {
   const locked = useApp((s) => s.locked);
   const merchant = useApp((s) => s.merchant);
@@ -14,14 +10,16 @@ export function LockScreen() {
   if (!locked) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-xl grid place-items-center px-6 animate-fade-in">
-      <div className="w-full max-w-sm">
-        <div className="flex flex-col items-center mb-8 gap-3">
-          <div className="size-14 rounded-2xl bg-foreground/5 border border-border grid place-items-center">
-            <Lock className="size-6 text-primary" />
+    <div className="fixed inset-0 z-[100] bg-background grid place-items-center px-6 animate-fade-in">
+      <div className="w-full max-w-xs">
+        <div className="flex flex-col items-center mb-8 gap-2">
+          <div className="size-12 rounded-lg bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.06)] grid place-items-center">
+            <Lock className="size-5 text-primary" />
           </div>
-          <p className="text-sm text-muted-foreground">App locked</p>
-          <h2 className="text-lg font-display font-semibold">{merchant?.businessName ?? "Umbra"}</h2>
+          <p className="text-base font-medium text-foreground mt-1">
+            {merchant?.businessName ?? "Umbra"}
+          </p>
+          <p className="text-xs text-muted-foreground">App locked</p>
         </div>
         <PinGate title="Enter PIN to unlock" onPass={() => setLocked(false)} />
       </div>

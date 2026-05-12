@@ -4,10 +4,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { DetailSheet } from "@/components/DetailSheet";
 import { AllHistorySheet } from "@/components/AllHistorySheet";
 import { PayFlow, type PayFlowKind } from "@/components/flows/PayFlow";
-import {
-  QrCode, Copy, Link2, Plus, Check, ChevronRight, Download, Share2,
-  Settings2, Filter, Repeat, FileText, Receipt, LayoutGrid, Pause, Play, Trash2,
-} from "lucide-react";
+import { QrCode, Copy, Link2, Plus, Check, ChevronRight, Download, Share2, Settings2, ListFilter as Filter, Repeat, FileText, Receipt, LayoutGrid, Pause, Play, Trash2 } from "lucide-react";
 import { useApp, type PaymentRecord, type PaymentStatus, type Invoice } from "@/lib/store";
 import { fmtTime } from "@/lib/markets";
 import { useMoney } from "@/lib/useMoney";
@@ -83,46 +80,46 @@ function PayPage() {
       <AppHeader subtitle="UmbraPay" />
 
       <section className="px-5">
-        <div className="rounded-3xl border border-border p-6 bg-[image:var(--gradient-card)] grain relative overflow-hidden">
+        <div className="rounded-lg border border-[rgba(255,255,255,0.06)] bg-card p-6">
           <div className="flex items-center justify-between">
-            <div className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+            <p className="text-[11px] uppercase tracking-widest text-muted-foreground">
               This month · gross
-            </div>
+            </p>
             <button
               onClick={() => setShowSettings(true)}
-              className="size-7 rounded-full bg-foreground/5 border border-border grid place-items-center"
+              className="size-7 rounded-md bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.06)] grid place-items-center text-muted-foreground hover:text-foreground transition pressable"
               aria-label="PSP settings"
             >
               <Settings2 className="size-3.5" />
             </button>
           </div>
-          <h1 className="text-4xl font-display font-semibold mt-2 tabular-nums">
+          <h1 className="text-4xl font-mono font-semibold mt-2 tabular-nums text-foreground">
             {fmt(monthlyVolumeUsd, { maximumFractionDigits: 0 })}
           </h1>
           <div className="mt-1 flex items-center gap-2 text-xs">
-            <span className="text-shield font-mono">
+            <span className="text-success font-mono">
               {vaultEnabled ? "VAULT · 2.00% all-in" : "PSP · 0.50% per tx"}
             </span>
           </div>
 
-          <div className="mt-5 grid grid-cols-3 gap-2 stagger">
+          <div className="mt-5 grid grid-cols-3 gap-2">
             <button
               onClick={() => setFlow("new")}
-              className="pressable bg-primary text-primary-foreground rounded-2xl py-3 text-sm font-semibold flex flex-col items-center gap-1"
+              className="pressable bg-primary text-primary-foreground rounded-md py-3 text-sm font-medium flex flex-col items-center gap-1 hover:bg-primary/90 transition"
             >
               <Plus className="size-4" /> New
             </button>
             <button
               onClick={() => setFlow("qr")}
-              className="pressable bg-foreground/5 border border-border rounded-2xl py-3 text-sm font-medium flex flex-col items-center gap-1"
+              className="pressable bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.06)] rounded-md py-3 text-sm font-medium flex flex-col items-center gap-1 hover:bg-[rgba(255,255,255,0.07)] transition"
             >
-              <QrCode className="size-4" /> QR
+              <QrCode className="size-4 text-muted-foreground" /> QR
             </button>
             <button
               onClick={() => setFlow("link")}
-              className="pressable bg-foreground/5 border border-border rounded-2xl py-3 text-sm font-medium flex flex-col items-center gap-1"
+              className="pressable bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.06)] rounded-md py-3 text-sm font-medium flex flex-col items-center gap-1 hover:bg-[rgba(255,255,255,0.07)] transition"
             >
-              <Link2 className="size-4" /> Link
+              <Link2 className="size-4 text-muted-foreground" /> Link
             </button>
           </div>
         </div>
@@ -139,13 +136,13 @@ function PayPage() {
                 <button
                   key={t.id}
                   onClick={() => setTab(t.id)}
-                  className={`pressable shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-full border text-xs font-medium ${
+                  className={`pressable shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-[11px] font-medium transition ${
                     active
                       ? "bg-foreground text-background border-foreground"
-                      : "bg-foreground/5 border-border text-muted-foreground"
+                      : "bg-[rgba(255,255,255,0.04)] border-[rgba(255,255,255,0.06)] text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  <Icon className="size-3.5" />
+                  <Icon className="size-3" />
                   {t.label}
                 </button>
               );
@@ -153,7 +150,7 @@ function PayPage() {
           </div>
           <button
             onClick={() => setAllHistory(true)}
-            className="pressable shrink-0 inline-flex items-center gap-1 px-3 py-2 rounded-full border border-border bg-foreground/5 text-xs font-medium text-muted-foreground"
+            className="pressable shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-md border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.04)] text-[11px] font-medium text-muted-foreground hover:text-foreground transition"
           >
             History
           </button>
@@ -183,16 +180,16 @@ function PayPage() {
                   <button
                     key={k}
                     onClick={() => setFilter(k)}
-                    className={`px-2 py-1 rounded-full border ${
+                    className={`px-2 py-1 rounded-md border ${
                       filter === k
                         ? "bg-foreground text-background border-foreground"
-                        : "bg-foreground/5 border-border text-muted-foreground"
+                        : "bg-foreground/5 border-[rgba(255,255,255,0.06)] text-muted-foreground"
                     }`}
                   >
                     {k === "all" ? "All" : STATUS_LABEL[k]}
                   </button>
                 ))}
-                <button className="px-2 py-1 rounded-full bg-foreground/5 border border-border text-muted-foreground">
+                <button className="px-2 py-1 rounded-md bg-foreground/5 border border-[rgba(255,255,255,0.06)] text-muted-foreground">
                   <Filter className="size-3" />
                 </button>
               </div>
@@ -221,16 +218,16 @@ function PayPage() {
       <DetailSheet open={!!open} onClose={() => setOpen(null)} title={open?.id}>
         {open && (
           <div className="space-y-4">
-            <div className="rounded-2xl bg-foreground/5 border border-border p-5 text-center">
+            <div className="rounded-lg bg-foreground/5 border border-[rgba(255,255,255,0.06)] p-5 text-center">
               <p className="text-xs uppercase tracking-wider text-muted-foreground">
                 {open.reference || "Payment"}
               </p>
-              <p className="text-3xl font-display font-semibold mt-1 tabular-nums">{fmt(open.amountUsd)}</p>
-              <span className="inline-block mt-2 text-[10px] font-mono text-shield bg-shield/10 px-2 py-0.5 rounded-full">
+              <p className="text-3xl font-mono font-semibold mt-1 tabular-nums">{fmt(open.amountUsd)}</p>
+              <span className="inline-block mt-2 text-[10px] font-mono text-success bg-success/10 px-2 py-0.5 rounded-md">
                 {STATUS_LABEL[open.status]}
               </span>
             </div>
-            <div className="rounded-2xl border border-border divide-y divide-border">
+            <div className="rounded-lg border border-[rgba(255,255,255,0.06)] divide-y divide-[rgba(255,255,255,0.04)]">
               <Row l="Created" v={fmtTime(open.createdAt)} />
               <Row l="Expires" v={fmtTime(open.expiresAt)} />
               {open.customer && <Row l="Customer" v={open.customer} mono />}
@@ -239,12 +236,12 @@ function PayPage() {
               <Row l="PSP fee" v={open.feeUsd ? fmt(open.feeUsd) : "$0.00 · waived"} />
               {open.hash && <Row l="Hash" v={shortAddrLocal(open.hash)} mono />}
             </div>
-            <div className="rounded-2xl border border-border p-4">
+            <div className="rounded-lg border border-[rgba(255,255,255,0.06)] p-4">
               <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Settlement</p>
               <div className="flex items-center justify-between text-sm">
                 <span className="font-mono">{open.token}</span>
                 <span>→</span>
-                <span className="text-shield font-mono">
+                <span className="text-success font-mono">
                   {open.vault ? "ZEC z-addr" : "Wallet"}
                 </span>
               </div>
@@ -252,13 +249,13 @@ function PayPage() {
             <div className="grid grid-cols-3 gap-2">
               <button
                 onClick={() => { navigator.clipboard?.writeText(open.address); toast.success("Address copied"); }}
-                className="pressable rounded-2xl bg-foreground/5 border border-border py-3 text-xs font-medium flex flex-col items-center gap-1"
+                className="pressable rounded-lg bg-foreground/5 border border-[rgba(255,255,255,0.06)] py-3 text-xs font-medium flex flex-col items-center gap-1"
               >
                 <Copy className="size-4" /> Address
               </button>
               <button
                 onClick={() => navigator.share?.({ title: open.id, text: `${window.location.origin}/pay/${open.id}` }).catch(() => {})}
-                className="pressable rounded-2xl bg-foreground/5 border border-border py-3 text-xs font-medium flex flex-col items-center gap-1"
+                className="pressable rounded-lg bg-foreground/5 border border-[rgba(255,255,255,0.06)] py-3 text-xs font-medium flex flex-col items-center gap-1"
               >
                 <Share2 className="size-4" /> Share
               </button>
@@ -273,7 +270,7 @@ function PayPage() {
                   }
                   setOpen(null);
                 }}
-                className="pressable rounded-2xl bg-primary text-primary-foreground py-3 text-xs font-semibold"
+                className="pressable rounded-lg bg-primary text-primary-foreground py-3 text-xs font-semibold"
               >
                 {open.status === "RELEASED" ? "Refund" : "Cancel"}
               </button>
@@ -282,7 +279,7 @@ function PayPage() {
               <a
                 href={getChain(open.chainId)?.explorerTx(open.hash) ?? "#"}
                 target="_blank" rel="noopener"
-                className="w-full pressable rounded-2xl bg-foreground/5 border border-border py-3 text-sm font-medium flex items-center justify-center gap-2"
+                className="w-full pressable rounded-lg bg-foreground/5 border border-[rgba(255,255,255,0.06)] py-3 text-sm font-medium flex items-center justify-center gap-2"
               >
                 View on explorer <Download className="size-3.5 rotate-180" />
               </a>
@@ -295,12 +292,12 @@ function PayPage() {
       <DetailSheet open={!!openInvoice} onClose={() => setOpenInvoice(null)} title={openInvoice?.number}>
         {openInvoice && (
           <div className="space-y-4">
-            <div className="rounded-2xl bg-foreground/5 border border-border p-5 text-center">
+            <div className="rounded-lg bg-foreground/5 border border-[rgba(255,255,255,0.06)] p-5 text-center">
               <p className="text-xs uppercase tracking-wider text-muted-foreground">Invoice</p>
-              <p className="text-3xl font-display font-semibold mt-1 tabular-nums">{fmt(openInvoice.amountUsd)}</p>
+              <p className="text-3xl font-mono font-semibold mt-1 tabular-nums">{fmt(openInvoice.amountUsd)}</p>
               <p className="text-xs text-muted-foreground mt-1 font-mono">{openInvoice.recipient}</p>
             </div>
-            <div className="rounded-2xl border border-border divide-y divide-border">
+            <div className="rounded-lg border border-[rgba(255,255,255,0.06)] divide-y divide-[rgba(255,255,255,0.04)]">
               <Row l="Issued" v={fmtTime(openInvoice.ts)} />
               <Row l="Hash v1" v={shortAddrLocal(openInvoice.hashV1)} mono />
               {openInvoice.hashV2 && <Row l="Hash v2" v={shortAddrLocal(openInvoice.hashV2)} mono />}
@@ -309,13 +306,13 @@ function PayPage() {
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => { navigator.clipboard?.writeText(openInvoice.hashV1); toast.success("Hash copied"); }}
-                className="pressable rounded-2xl bg-foreground/5 border border-border py-3 text-sm font-medium flex items-center justify-center gap-2"
+                className="pressable rounded-lg bg-foreground/5 border border-[rgba(255,255,255,0.06)] py-3 text-sm font-medium flex items-center justify-center gap-2"
               >
                 <Copy className="size-4" /> Copy hash
               </button>
               <button
                 onClick={() => toast.success("Invoice PDF ready")}
-                className="pressable rounded-2xl bg-primary text-primary-foreground py-3 text-sm font-semibold flex items-center justify-center gap-2"
+                className="pressable rounded-lg bg-primary text-primary-foreground py-3 text-sm font-semibold flex items-center justify-center gap-2"
               >
                 <Download className="size-4" /> PDF
               </button>
@@ -345,7 +342,7 @@ function PayPage() {
             value={true}
             onChange={() => {}}
           />
-          <div className="rounded-2xl border border-border p-4 space-y-2">
+          <div className="rounded-lg border border-[rgba(255,255,255,0.06)] p-4 space-y-2">
             <p className="text-xs uppercase tracking-wider text-muted-foreground">API key</p>
             <p className="font-mono text-xs break-all">umb_live_••••••••••••••rk2A</p>
             <button
@@ -403,10 +400,10 @@ function StatCard({
   return (
     <Comp
       onClick={onClick}
-      className={`pressable text-left rounded-2xl border border-border bg-card p-4 ${onClick ? "active:bg-foreground/5" : ""}`}
+      className={`pressable text-left rounded-lg border border-[rgba(255,255,255,0.06)] bg-card p-4 ${onClick ? "active:bg-foreground/5" : ""}`}
     >
       <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
-      <p className={`text-xl font-display font-semibold mt-1 tabular-nums ${tone === "shield" ? "text-shield" : ""}`}>{value}</p>
+      <p className={`text-xl font-mono font-semibold mt-1 tabular-nums ${tone === "shield" ? "text-success" : ""}`}>{value}</p>
       {sub && <p className="text-[11px] text-muted-foreground mt-0.5 font-mono">{sub}</p>}
     </Comp>
   );
@@ -422,7 +419,7 @@ function PaymentList({
 }) {
   if (list.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-border bg-card/50 p-8 text-center text-sm text-muted-foreground">
+      <div className="rounded-lg border border border-[rgba(255,255,255,0.06)] bg-card p-8 text-center text-sm text-muted-foreground">
         No payments yet.
       </div>
     );
@@ -435,10 +432,10 @@ function PaymentList({
           <button
             key={p.id}
             onClick={() => onOpen(p)}
-            className="w-full text-left pressable rounded-2xl border border-border bg-card px-4 py-3 flex items-center gap-3 active:bg-foreground/5"
+            className="w-full text-left pressable rounded-lg border border-[rgba(255,255,255,0.06)] bg-card px-4 py-3 flex items-center gap-3 active:bg-foreground/5"
           >
-            <div className={`size-9 rounded-xl grid place-items-center ${
-              p.status === "RELEASED" ? "bg-shield/15 text-shield"
+            <div className={`size-9 rounded-md grid place-items-center ${
+              p.status === "RELEASED" ? "bg-success/15 text-success"
               : p.status === "FUNDED" ? "bg-primary/15 text-primary"
               : p.status === "EXPIRED" || p.status === "REFUNDED" ? "bg-destructive/15 text-destructive"
               : "bg-foreground/5 text-muted-foreground"
@@ -481,13 +478,13 @@ function InvoicesTab({
         <h2 className="text-sm font-semibold">Invoices</h2>
         <button
           onClick={onNew}
-          className="pressable inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold"
+          className="pressable inline-flex items-center gap-1 px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-semibold"
         >
           <Plus className="size-3.5" /> New
         </button>
       </div>
       {invoices.length === 0 && (
-        <div className="rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center text-sm text-muted-foreground">
+        <div className="rounded-lg border border border-[rgba(255,255,255,0.06)] bg-card p-10 text-center text-sm text-muted-foreground">
           <FileText className="size-6 mx-auto mb-2 opacity-60" />
           No invoices yet. Anchored invoices appear here with on-chain hash proof.
         </div>
@@ -497,9 +494,9 @@ function InvoicesTab({
           <button
             key={i.id}
             onClick={() => onOpen(i)}
-            className="w-full text-left pressable rounded-2xl border border-border bg-card px-4 py-3 flex items-center gap-3"
+            className="w-full text-left pressable rounded-lg border border-[rgba(255,255,255,0.06)] bg-card px-4 py-3 flex items-center gap-3"
           >
-            <div className="size-9 rounded-xl grid place-items-center bg-foreground/5 text-muted-foreground">
+            <div className="size-9 rounded-md grid place-items-center bg-foreground/5 text-muted-foreground">
               <FileText className="size-4" />
             </div>
             <div className="flex-1 min-w-0">
@@ -570,13 +567,13 @@ function RecurringTab({
         <h2 className="text-sm font-semibold">Recurring</h2>
         <button
           onClick={() => { reset(); setOpen(true); }}
-          className="pressable inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold"
+          className="pressable inline-flex items-center gap-1 px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-semibold"
         >
           <Plus className="size-3.5" /> New link
         </button>
       </div>
       {subs.length === 0 && (
-        <div className="rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center text-sm text-muted-foreground">
+        <div className="rounded-lg border border border-[rgba(255,255,255,0.06)] bg-card p-10 text-center text-sm text-muted-foreground">
           No subscription links.
         </div>
       )}
@@ -586,10 +583,10 @@ function RecurringTab({
           return (
             <div
               key={s.id}
-              className="rounded-2xl border border-border bg-card px-4 py-3 space-y-2"
+              className="rounded-lg border border-[rgba(255,255,255,0.06)] bg-card px-4 py-3 space-y-2"
             >
               <div className="flex items-center gap-3">
-                <div className={`size-9 rounded-xl grid place-items-center ${s.active ? "bg-shield/15 text-shield" : "bg-foreground/5 text-muted-foreground"}`}>
+                <div className={`size-9 rounded-md grid place-items-center ${s.active ? "bg-success/15 text-success" : "bg-foreground/5 text-muted-foreground"}`}>
                   <Repeat className="size-4" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -600,14 +597,14 @@ function RecurringTab({
                 </div>
                 <button
                   onClick={() => toggle(s.id)}
-                  className="pressable size-8 grid place-items-center rounded-full bg-foreground/5 border border-border"
+                  className="pressable size-8 grid place-items-center rounded-md bg-foreground/5 border border-[rgba(255,255,255,0.06)]"
                   aria-label={s.active ? "Pause" : "Resume"}
                 >
                   {s.active ? <Pause className="size-3.5" /> : <Play className="size-3.5" />}
                 </button>
                 <button
                   onClick={() => remove(s.id)}
-                  className="pressable size-8 grid place-items-center rounded-full bg-foreground/5 border border-border text-destructive"
+                  className="pressable size-8 grid place-items-center rounded-md bg-foreground/5 border border-[rgba(255,255,255,0.06)] text-destructive"
                   aria-label="Remove"
                 >
                   <Trash2 className="size-3.5" />
@@ -617,14 +614,14 @@ function RecurringTab({
                 <p className="flex-1 font-mono text-[11px] text-muted-foreground truncate">{link}</p>
                 <button
                   onClick={() => { navigator.clipboard?.writeText(link); toast.success("Link copied"); }}
-                  className="pressable size-7 grid place-items-center rounded-full bg-foreground/5 border border-border"
+                  className="pressable size-7 grid place-items-center rounded-md bg-foreground/5 border border-[rgba(255,255,255,0.06)]"
                   aria-label="Copy link"
                 >
                   <Copy className="size-3" />
                 </button>
                 <button
                   onClick={() => navigator.share?.({ title: s.name, text: link }).catch(() => {})}
-                  className="pressable size-7 grid place-items-center rounded-full bg-foreground/5 border border-border"
+                  className="pressable size-7 grid place-items-center rounded-md bg-foreground/5 border border-[rgba(255,255,255,0.06)]"
                   aria-label="Share link"
                 >
                   <Share2 className="size-3" />
@@ -647,7 +644,7 @@ function RecurringTab({
                   <button
                     key={c}
                     onClick={() => setCadence(c)}
-                    className={`pressable rounded-xl border py-2 text-xs font-medium capitalize ${cadence === c ? "bg-primary text-primary-foreground border-primary" : "bg-foreground/5 border-border"}`}
+                    className={`pressable rounded-md border py-2 text-xs font-medium capitalize ${cadence === c ? "bg-primary text-primary-foreground border-primary" : "bg-foreground/5 border-[rgba(255,255,255,0.06)]"}`}
                   >
                     {c}
                   </button>
@@ -661,7 +658,7 @@ function RecurringTab({
                   <button
                     key={t}
                     onClick={() => setToken(t)}
-                    className={`pressable rounded-xl border py-2 text-xs font-mono ${token === t ? "bg-primary text-primary-foreground border-primary" : "bg-foreground/5 border-border"}`}
+                    className={`pressable rounded-md border py-2 text-xs font-mono ${token === t ? "bg-primary text-primary-foreground border-primary" : "bg-foreground/5 border-[rgba(255,255,255,0.06)]"}`}
                   >
                     {t}
                   </button>
@@ -673,34 +670,34 @@ function RecurringTab({
             </p>
             <button
               onClick={create}
-              className="w-full pressable rounded-2xl bg-primary text-primary-foreground py-3.5 text-sm font-semibold"
+              className="w-full pressable rounded-lg bg-primary text-primary-foreground py-3.5 text-sm font-semibold"
             >
               Generate link
             </button>
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="rounded-2xl bg-foreground/5 border border-border p-5 text-center">
+            <div className="rounded-lg bg-foreground/5 border border-[rgba(255,255,255,0.06)] p-5 text-center">
               <p className="text-xs uppercase tracking-wider text-muted-foreground">{created.name}</p>
-              <p className="text-3xl font-display font-semibold mt-1 tabular-nums">{fmt(created.amountUsd)}</p>
+              <p className="text-3xl font-mono font-semibold mt-1 tabular-nums">{fmt(created.amountUsd)}</p>
               <p className="text-[11px] text-muted-foreground mt-1 font-mono">
                 {created.cadence} · {created.token}
               </p>
             </div>
-            <div className="rounded-2xl border border-border bg-foreground/5 p-4">
+            <div className="rounded-lg border border-[rgba(255,255,255,0.06)] bg-foreground/5 p-4">
               <p className="text-[11px] text-muted-foreground mb-1">Hosted subscription link</p>
               <p className="font-mono text-xs break-all">{subLink(created)}</p>
             </div>
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => { navigator.clipboard?.writeText(subLink(created)); toast.success("Link copied"); }}
-                className="pressable rounded-2xl bg-foreground/5 border border-border py-3 text-sm font-medium flex items-center justify-center gap-2"
+                className="pressable rounded-lg bg-foreground/5 border border-[rgba(255,255,255,0.06)] py-3 text-sm font-medium flex items-center justify-center gap-2"
               >
                 <Copy className="size-4" /> Copy
               </button>
               <button
                 onClick={() => navigator.share?.({ title: created.name, text: subLink(created) }).catch(() => {})}
-                className="pressable rounded-2xl bg-primary text-primary-foreground py-3 text-sm font-semibold flex items-center justify-center gap-2"
+                className="pressable rounded-lg bg-primary text-primary-foreground py-3 text-sm font-semibold flex items-center justify-center gap-2"
               >
                 <Share2 className="size-4" /> Share
               </button>
@@ -728,7 +725,7 @@ function Field({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="mt-1 w-full rounded-2xl bg-foreground/5 border border-border px-4 py-3 text-sm outline-none focus:border-primary"
+        className="mt-1 w-full rounded-lg bg-foreground/5 border border-[rgba(255,255,255,0.06)] px-4 py-3 text-sm outline-none focus:border-primary"
       />
     </div>
   );
@@ -748,13 +745,13 @@ function LinksTab({
         <h2 className="text-sm font-semibold">Hosted checkout links</h2>
         <button
           onClick={onNew}
-          className="pressable inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold"
+          className="pressable inline-flex items-center gap-1 px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-semibold"
         >
           <Plus className="size-3.5" /> New
         </button>
       </div>
       {payments.length === 0 && (
-        <div className="rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center text-sm text-muted-foreground">
+        <div className="rounded-lg border border border-[rgba(255,255,255,0.06)] bg-card p-10 text-center text-sm text-muted-foreground">
           <Link2 className="size-6 mx-auto mb-2 opacity-60" />
           Generate a payment to share its hosted link.
         </div>
@@ -763,7 +760,7 @@ function LinksTab({
         {payments.map((p) => {
           const link = `${origin}/pay/${p.id}`;
           return (
-            <div key={p.id} className="rounded-2xl border border-border bg-card p-4 space-y-2">
+            <div key={p.id} className="rounded-lg border border-[rgba(255,255,255,0.06)] bg-card p-4 space-y-2">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium">{p.reference || p.id}</p>
                 <p className="text-sm font-mono">{fmt(p.amountUsd)}</p>
@@ -772,13 +769,13 @@ function LinksTab({
               <div className="flex gap-2">
                 <button
                   onClick={() => { navigator.clipboard?.writeText(link); toast.success("Link copied"); }}
-                  className="pressable flex-1 rounded-xl bg-foreground/5 border border-border py-2 text-xs font-medium inline-flex items-center justify-center gap-1"
+                  className="pressable flex-1 rounded-md bg-foreground/5 border border-[rgba(255,255,255,0.06)] py-2 text-xs font-medium inline-flex items-center justify-center gap-1"
                 >
                   <Copy className="size-3.5" /> Copy
                 </button>
                 <button
                   onClick={() => navigator.share?.({ title: p.id, text: link }).catch(() => {})}
-                  className="pressable flex-1 rounded-xl bg-primary text-primary-foreground py-2 text-xs font-semibold inline-flex items-center justify-center gap-1"
+                  className="pressable flex-1 rounded-md bg-primary text-primary-foreground py-2 text-xs font-semibold inline-flex items-center justify-center gap-1"
                 >
                   <Share2 className="size-3.5" /> Share
                 </button>
@@ -793,13 +790,13 @@ function LinksTab({
 
 function Toggle({ label, sub, value, onChange }: { label: string; sub: string; value: boolean; onChange: (v: boolean) => void }) {
   return (
-    <div className="rounded-2xl border border-border p-4 flex items-start gap-3">
+    <div className="rounded-lg border border-[rgba(255,255,255,0.06)] p-4 flex items-start gap-3">
       <button
         onClick={() => onChange(!value)}
-        className={`mt-0.5 w-9 h-5 rounded-full p-0.5 transition ${value ? "bg-primary" : "bg-foreground/15"}`}
+        className={`mt-0.5 w-9 h-5 rounded-md p-0.5 transition ${value ? "bg-primary" : "bg-foreground/15"}`}
         aria-pressed={value}
       >
-        <span className={`block size-4 rounded-full bg-background transition-transform ${value ? "translate-x-4" : ""}`} />
+        <span className={`block size-4 rounded-md bg-background transition-transform ${value ? "translate-x-4" : ""}`} />
       </button>
       <div className="flex-1">
         <p className="text-sm font-medium">{label}</p>

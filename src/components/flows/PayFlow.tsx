@@ -1,4 +1,3 @@
-// PSP-style payment creation, QR, and shareable link flows.
 import { useEffect, useMemo, useState } from "react";
 import { Sheet } from "@/components/Sheet";
 import { CoinPicker, type PickedCoin } from "@/components/CoinPicker";
@@ -34,7 +33,6 @@ export function PayFlow({
 }) {
   const { payments, addPayment, seedHex, vaultEnabled } = useApp();
 
-  // shared state for "new"
   const [step, setStep] = useState(0);
   const [coin, setCoin] = useState<PickedCoin | null>(null);
   const [chain, setChain] = useState<Chain | null>(null);
@@ -62,7 +60,6 @@ export function PayFlow({
     }
   }, [open]);
 
-  // Pick "active" payment for QR/link flows
   const target =
     focusPayment ??
     payments.find((p) => p.status === "INITIATED" || p.status === "FUNDED") ??
@@ -73,11 +70,9 @@ export function PayFlow({
     return <Sheet open={open} onClose={onClose} title=""><div /></Sheet>;
   }
 
-  // ── Build payment link ─────────────────────────────────
   const paymentLink = (p: PaymentRecord) =>
     `${typeof window !== "undefined" ? window.location.origin : ""}/pay/${p.id}`;
 
-  // ── NEW payment flow ───────────────────────────────────
   const titles = ["New payment — asset", "Network", "Amount", "Details", "Review", "Live"];
   const title =
     kind === "new" ? titles[step]
@@ -108,7 +103,6 @@ export function PayFlow({
       { label: "Released", status: "pending" },
     ];
     setProgress(steps);
-    // Simulated lifecycle
     setTimeout(async () => {
       const h = await fakeTxHash(addr.address);
       setProgress((p) => p.map((s, k) => (k < 2 ? { ...s, status: "done" } : k === 2 ? { ...s, status: "active" } : s)));
@@ -120,7 +114,6 @@ export function PayFlow({
     }, 5500);
   };
 
-  // ── render ─────────────────────────────────────────────
   return (
     <Sheet open={open} onClose={onClose} title={title} onBack={back}>
       {kind === "qr" && <QrFlow target={target} />}
@@ -142,7 +135,7 @@ export function PayFlow({
                 <button
                   key={e.l}
                   onClick={() => setExpiryMs(e.v)}
-                  className={`pressable rounded-xl border py-2 text-xs font-medium ${expiryMs === e.v ? "bg-primary text-primary-foreground border-primary" : "bg-foreground/5 border-border"}`}
+                  className={`pressable rounded-md border py-2 text-xs font-medium transition ${expiryMs === e.v ? "bg-primary text-primary-foreground border-primary" : "bg-[rgba(255,255,255,0.04)] border-[rgba(255,255,255,0.06)] text-muted-foreground hover:text-foreground"}`}
                 >
                   {e.l}
                 </button>
@@ -152,7 +145,7 @@ export function PayFlow({
           <button
             disabled={!amount.usd}
             onClick={() => setStep(3)}
-            className="w-full rounded-2xl bg-primary text-primary-foreground py-3.5 text-sm font-semibold pressable disabled:opacity-50"
+            className="w-full rounded-md bg-primary text-primary-foreground py-3 text-sm font-medium pressable disabled:opacity-50 hover:bg-primary/90 transition"
           >
             Continue
           </button>
@@ -165,16 +158,16 @@ export function PayFlow({
           <Field label="Description" value={description} onChange={setDescription} placeholder="Invoice line / memo" />
           <Field label="Webhook URL" value={webhook} onChange={setWebhook} placeholder="https://… (optional)" mono />
 
-          <div className="rounded-2xl border border-border p-4 flex items-start gap-3">
+          <div className="rounded-lg border border-[rgba(255,255,255,0.06)] p-4 flex items-start gap-3">
             <button
               onClick={() => setVault((v) => !v)}
-              className={`mt-0.5 size-5 rounded-md grid place-items-center border ${vault ? "bg-shield border-shield text-background" : "bg-foreground/5 border-border"}`}
+              className={`mt-0.5 size-5 rounded grid place-items-center border transition ${vault ? "bg-success border-success text-black" : "bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.08)]"}`}
               aria-pressed={vault}
             >
               {vault && <Check className="size-3.5" />}
             </button>
             <div className="flex-1">
-              <p className="text-sm font-medium">Settle to UmbraVault</p>
+              <p className="text-sm font-medium text-foreground">Settle to UmbraVault</p>
               <p className="text-[11px] text-muted-foreground mt-0.5">
                 {vault
                   ? "2.00% all-in. PSP fee waived. Funds shielded into ZEC z-addr."
@@ -188,7 +181,7 @@ export function PayFlow({
 
           <button
             onClick={() => setStep(4)}
-            className="w-full rounded-2xl bg-primary text-primary-foreground py-3.5 text-sm font-semibold pressable"
+            className="w-full rounded-md bg-primary text-primary-foreground py-3 text-sm font-medium pressable hover:bg-primary/90 transition"
           >
             Review
           </button>
@@ -196,12 +189,12 @@ export function PayFlow({
       )}
       {kind === "new" && step === 4 && coin && chain && (
         <div className="space-y-4">
-          <div className="rounded-2xl bg-foreground/5 border border-border p-5 text-center">
-            <p className="text-xs uppercase tracking-wider text-muted-foreground">Request</p>
-            <p className="text-3xl font-display font-semibold mt-1 tabular-nums">{fmtUsd(amount.usd)}</p>
+          <div className="rounded-lg bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.06)] p-5 text-center">
+            <p className="text-[11px] uppercase tracking-widest text-muted-foreground">Request</p>
+            <p className="text-3xl font-mono font-semibold mt-2 tabular-nums text-foreground">{fmtUsd(amount.usd)}</p>
             <p className="text-xs text-muted-foreground font-mono mt-1">≈ {amount.token.toFixed(amount.token < 1 ? 6 : 4)} {coin.symbol}</p>
           </div>
-          <div className="rounded-2xl border border-border divide-y divide-border">
+          <div className="rounded-lg border border-[rgba(255,255,255,0.06)] divide-y divide-[rgba(255,255,255,0.04)]">
             <Row l="Asset" v={<span className="flex items-center gap-1.5 justify-end"><CoinIcon src={coin.image} symbol={coin.symbol} size={16} /> {coin.symbol}</span>} />
             <Row l="Network" v={chain.name} />
             <Row l="Expires" v={fmtTime(Date.now() + expiryMs)} />
@@ -210,7 +203,10 @@ export function PayFlow({
             {customer && <Row l="Customer" v={customer} />}
             {webhook && <Row l="Webhook" v={<span className="font-mono text-[10px] truncate max-w-[180px] inline-block">{webhook}</span>} />}
           </div>
-          <button onClick={finalize} className="w-full rounded-2xl bg-primary text-primary-foreground py-3.5 text-sm font-semibold pressable">
+          <button
+            onClick={finalize}
+            className="w-full rounded-md bg-primary text-primary-foreground py-3 text-sm font-medium pressable hover:bg-primary/90 transition"
+          >
             Create payment
           </button>
         </div>
@@ -220,7 +216,7 @@ export function PayFlow({
           <div className="grid place-items-center">
             <QR value={`${chain.symbol.toLowerCase()}:${created.address}?amount=${created.amountToken}`} size={200} />
           </div>
-          <div className="rounded-2xl border border-border divide-y divide-border">
+          <div className="rounded-lg border border-[rgba(255,255,255,0.06)] divide-y divide-[rgba(255,255,255,0.04)]">
             <Row l="ID" v={created.id} mono />
             <Row l="Address" v={<span className="font-mono break-all text-[11px]">{created.address}</span>} />
             <Row l="Amount" v={`${created.amountToken.toFixed(4)} ${created.token}`} />
@@ -229,24 +225,26 @@ export function PayFlow({
           <div className="grid grid-cols-3 gap-2">
             <button
               onClick={() => { navigator.clipboard?.writeText(created.address); toast.success("Address copied"); }}
-              className="pressable rounded-2xl bg-foreground/5 border border-border py-3 text-xs font-medium flex flex-col items-center gap-1"
+              className="pressable rounded-md bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.06)] py-3 text-xs font-medium flex flex-col items-center gap-1 hover:bg-[rgba(255,255,255,0.07)] transition"
             >
               <Copy className="size-4" /> Address
             </button>
             <button
               onClick={() => { navigator.clipboard?.writeText(paymentLink(created)); toast.success("Link copied"); }}
-              className="pressable rounded-2xl bg-foreground/5 border border-border py-3 text-xs font-medium flex flex-col items-center gap-1"
+              className="pressable rounded-md bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.06)] py-3 text-xs font-medium flex flex-col items-center gap-1 hover:bg-[rgba(255,255,255,0.07)] transition"
             >
               <Link2 className="size-4" /> Link
             </button>
             <button
               onClick={() => navigator.share?.({ title: created.id, text: paymentLink(created) }).catch(() => {})}
-              className="pressable rounded-2xl bg-primary text-primary-foreground py-3 text-xs font-semibold flex flex-col items-center gap-1"
+              className="pressable rounded-md bg-primary text-primary-foreground py-3 text-xs font-medium flex flex-col items-center gap-1 hover:bg-primary/90 transition"
             >
               <Share2 className="size-4" /> Share
             </button>
           </div>
-          <button onClick={onClose} className="w-full text-sm text-muted-foreground pressable py-2">Done</button>
+          <button onClick={onClose} className="w-full text-sm text-muted-foreground pressable py-2 hover:text-foreground transition">
+            Done
+          </button>
         </div>
       )}
     </Sheet>
@@ -263,7 +261,7 @@ function Field({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className={`mt-1 w-full rounded-2xl bg-foreground/5 border border-border px-4 py-3 text-sm outline-none focus:border-primary ${mono ? "font-mono text-xs" : ""}`}
+        className={`mt-1 w-full rounded-md bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.06)] px-4 py-3 text-sm outline-none focus:border-primary/50 transition text-foreground placeholder:text-muted-foreground ${mono ? "font-mono text-xs" : ""}`}
       />
     </div>
   );
@@ -275,19 +273,19 @@ function QrFlow({ target }: { target: PaymentRecord | null }) {
     <div className="space-y-4">
       <div className="text-center">
         <p className="text-xs text-muted-foreground">{target.id}</p>
-        <p className="text-2xl font-display font-semibold tabular-nums mt-0.5">{fmtUsd(target.amountUsd)}</p>
+        <p className="text-2xl font-mono font-semibold tabular-nums mt-0.5 text-foreground">{fmtUsd(target.amountUsd)}</p>
         <p className="text-[11px] text-muted-foreground">{target.token} · {target.chainId}</p>
       </div>
       <div className="grid place-items-center">
         <QR value={`${target.token.toLowerCase()}:${target.address}?amount=${target.amountToken}`} size={220} />
       </div>
-      <div className="rounded-2xl border border-border divide-y divide-border">
+      <div className="rounded-lg border border-[rgba(255,255,255,0.06)] divide-y divide-[rgba(255,255,255,0.04)]">
         <Row l="Address" v={<span className="font-mono break-all text-[11px]">{target.address}</span>} />
         <Row l="Status" v={target.status} />
       </div>
       <button
         onClick={() => { navigator.clipboard?.writeText(target.address); toast.success("Address copied"); }}
-        className="w-full pressable rounded-2xl bg-primary text-primary-foreground py-3 text-sm font-semibold flex items-center justify-center gap-2"
+        className="w-full pressable rounded-md bg-primary text-primary-foreground py-3 text-sm font-medium flex items-center justify-center gap-2 hover:bg-primary/90 transition"
       >
         <Copy className="size-4" /> Copy address
       </button>
@@ -302,11 +300,11 @@ function LinkFlow({
   const link = buildLink(target);
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border border-border bg-foreground/5 p-4">
+      <div className="rounded-lg border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.03)] p-4">
         <p className="text-[11px] text-muted-foreground mb-1">Hosted checkout link</p>
-        <p className="font-mono text-xs break-all">{link}</p>
+        <p className="font-mono text-xs break-all text-foreground">{link}</p>
       </div>
-      <div className="rounded-2xl border border-border divide-y divide-border">
+      <div className="rounded-lg border border-[rgba(255,255,255,0.06)] divide-y divide-[rgba(255,255,255,0.04)]">
         <Row l="Invoice" v={target.id} mono />
         <Row l="Amount" v={fmtUsd(target.amountUsd)} />
         <Row l="Status" v={target.status} />
@@ -314,13 +312,13 @@ function LinkFlow({
       <div className="grid grid-cols-2 gap-2">
         <button
           onClick={() => { navigator.clipboard?.writeText(link); toast.success("Link copied"); }}
-          className="pressable rounded-2xl bg-foreground/5 border border-border py-3 text-sm font-medium flex items-center justify-center gap-2"
+          className="pressable rounded-md bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.06)] py-3 text-sm font-medium flex items-center justify-center gap-2 hover:bg-[rgba(255,255,255,0.07)] transition"
         >
           <Copy className="size-4" /> Copy
         </button>
         <button
           onClick={() => navigator.share?.({ title: target.id, text: link }).catch(() => {})}
-          className="pressable rounded-2xl bg-primary text-primary-foreground py-3 text-sm font-semibold flex items-center justify-center gap-2"
+          className="pressable rounded-md bg-primary text-primary-foreground py-3 text-sm font-medium flex items-center justify-center gap-2 hover:bg-primary/90 transition"
         >
           <Share2 className="size-4" /> Share
         </button>
@@ -332,8 +330,8 @@ function LinkFlow({
 function Empty({ kind }: { kind: "qr" | "link" }) {
   return (
     <div className="py-12 text-center text-sm text-muted-foreground space-y-2">
-      <div className="mx-auto size-12 grid place-items-center rounded-full bg-foreground/5 border border-border">
-        {kind === "qr" ? <QrCode className="size-5" /> : <Link2 className="size-5" />}
+      <div className="mx-auto size-10 grid place-items-center rounded-md bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.06)]">
+        {kind === "qr" ? <QrCode className="size-4" /> : <Link2 className="size-4" />}
       </div>
       <p>No active payment yet.</p>
       <p className="text-xs">Tap <b>+ New</b> to create one.</p>

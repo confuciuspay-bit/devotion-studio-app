@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowLeft, Star, ExternalLink, Loader2, ArrowDownLeft, ArrowUpRight, Repeat } from "lucide-react";
+import { ArrowLeft, Star, ExternalLink, Loader as Loader2, ArrowDownLeft, ArrowUpRight, Repeat } from "lucide-react";
 import { useCoin, useCoinChart, fmtUsd, fmtPct, fmtCompact } from "@/lib/markets";
 import { CoinIcon } from "@/components/CoinIcon";
 import { Sparkline } from "@/components/Sparkline";
@@ -31,17 +31,17 @@ function CoinDetail() {
       <header className="px-5 pt-6 pb-2 flex items-center justify-between">
         <Link
           to="/markets"
-          className="size-9 grid place-items-center rounded-full bg-card border border-border"
+          className="size-8 grid place-items-center rounded-md bg-card border border-[rgba(255,255,255,0.06)]"
         >
           <ArrowLeft className="size-4" />
         </Link>
         <div className="flex items-center gap-2">
           {coin && <CoinIcon src={coin.image.large} symbol={coin.symbol} size={24} />}
-          <span className="font-display font-semibold">
+          <span className="font-sans font-medium">
             {coin?.name ?? "Loading…"}
           </span>
         </div>
-        <button className="size-9 grid place-items-center rounded-full bg-card border border-border text-muted-foreground">
+        <button className="size-8 grid place-items-center rounded-md bg-card border border-[rgba(255,255,255,0.06)] text-muted-foreground">
           <Star className="size-4" />
         </button>
       </header>
@@ -57,29 +57,29 @@ function CoinDetail() {
               {coin.symbol.toUpperCase()} · USD
             </p>
             <div className="flex items-baseline gap-2 mt-1">
-              <h1 className="text-4xl font-display font-semibold tabular-nums">
+              <h1 className="text-4xl font-mono font-semibold tabular-nums">
                 {fmtUsd(coin.market_data.current_price.usd)}
               </h1>
             </div>
             <p
-              className={`text-xs font-mono mt-1 ${(coin.market_data.price_change_percentage_24h ?? 0) >= 0 ? "text-shield" : "text-destructive"}`}
+              className={`text-xs font-mono mt-1 ${(coin.market_data.price_change_percentage_24h ?? 0) >= 0 ? "text-success" : "text-destructive"}`}
             >
               {fmtPct(coin.market_data.price_change_percentage_24h)} · 24h
             </p>
           </section>
 
           <section className="px-5 mt-4">
-            <div className="rounded-3xl border border-border bg-[image:var(--gradient-card)] p-3 grain relative overflow-hidden">
+            <div className="rounded-lg border border-[rgba(255,255,255,0.06)] bg-card p-3 relative overflow-hidden">
               <Sparkline data={prices} width={500} height={160} positive={up} />
               <div className="mt-3 flex gap-1">
                 {RANGES.map((r) => (
                   <button
                     key={r.d}
                     onClick={() => setDays(r.d)}
-                    className={`flex-1 py-1.5 rounded-full text-[11px] font-medium ${
+                    className={`flex-1 py-1.5 rounded-md text-[11px] font-medium transition ${
                       days === r.d
                         ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground"
+                        : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     {r.l}
@@ -97,7 +97,7 @@ function CoinDetail() {
             ].map((a) => (
               <button
                 key={a.l}
-                className="rounded-2xl bg-foreground/5 border border-border py-3 flex flex-col items-center gap-1 active:bg-foreground/10"
+                className="rounded-md bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.06)] py-3 flex flex-col items-center gap-1 pressable hover:bg-[rgba(255,255,255,0.06)] transition"
               >
                 <a.i className="size-4 text-primary" />
                 <span className="text-[11px] font-medium">{a.l}</span>
@@ -107,7 +107,7 @@ function CoinDetail() {
 
           <section className="px-5 mt-5">
             <h2 className="text-sm font-semibold mb-3">Stats</h2>
-            <div className="rounded-2xl border border-border bg-card p-4 grid grid-cols-2 gap-y-3 gap-x-4 text-sm">
+            <div className="rounded-lg border border-[rgba(255,255,255,0.06)] bg-card p-4 grid grid-cols-2 gap-y-3 gap-x-4 text-sm">
               <Stat l="Market cap" v={fmtUsd(coin.market_data.market_cap.usd, { maximumFractionDigits: 0 })} />
               <Stat l="Volume 24h" v={fmtCompact(coin.market_data.total_volume.usd)} />
               <Stat l="High 24h" v={fmtUsd(coin.market_data.high_24h.usd)} />

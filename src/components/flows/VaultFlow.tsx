@@ -1,4 +1,3 @@
-// Vault payout / withdraw / settings flows
 import { useEffect, useState } from "react";
 import { Sheet } from "@/components/Sheet";
 import { CoinPicker, type PickedCoin } from "@/components/CoinPicker";
@@ -99,30 +98,33 @@ export function VaultFlow({ open, kind, onClose }: { open: boolean; kind: VaultF
       {/* ── ADDRESS ─────────────────────────────────────── */}
       {kind === "address" && (
         <div className="space-y-4">
-          <div className="rounded-2xl border border-shield/30 bg-shield/5 p-4 flex items-start gap-3">
-            <Shield className="size-5 text-shield mt-0.5 shrink-0" />
+          <div className="rounded-lg border border-[rgba(16,185,129,0.2)] bg-[rgba(16,185,129,0.04)] p-4 flex items-start gap-3">
+            <Shield className="size-4 text-success mt-0.5 shrink-0" />
             <div>
-              <p className="text-sm font-medium">Per-merchant z-addr</p>
+              <p className="text-sm font-medium text-foreground">Per-merchant z-addr</p>
               <p className="text-[11px] text-muted-foreground mt-0.5">
                 A unique shielded address. Never share publicly — funds are visible to whoever holds the viewing key.
               </p>
             </div>
           </div>
-          <div className="rounded-2xl border border-border p-4 space-y-3">
+          <div className="rounded-lg border border-[rgba(255,255,255,0.06)] p-4 space-y-3">
             <div className="flex items-center justify-between">
-              <p className="text-xs text-muted-foreground">Address</p>
-              <button onClick={() => setRevealAddr((v) => !v)} className="text-xs text-primary flex items-center gap-1">
+              <p className="text-[11px] uppercase tracking-widest text-muted-foreground">Address</p>
+              <button
+                onClick={() => setRevealAddr((v) => !v)}
+                className="text-xs text-primary flex items-center gap-1 hover:opacity-80 transition"
+              >
                 {revealAddr ? <EyeOff className="size-3" /> : <Eye className="size-3" />}
                 {revealAddr ? "Hide" : "Reveal"}
               </button>
             </div>
-            <p className="font-mono text-xs break-all leading-relaxed">
+            <p className="font-mono text-xs break-all leading-relaxed text-foreground">
               {revealAddr ? zAddr : zAddr.slice(0, 8) + "…" + zAddr.slice(-8)}
             </p>
           </div>
           <button
             onClick={() => { navigator.clipboard?.writeText(zAddr); toast.success("z-addr copied"); }}
-            className="w-full pressable rounded-2xl bg-primary text-primary-foreground py-3 text-sm font-semibold flex items-center justify-center gap-2"
+            className="w-full pressable rounded-md bg-primary text-primary-foreground py-3 text-sm font-medium flex items-center justify-center gap-2 hover:bg-primary/90 transition"
           >
             <Copy className="size-4" /> Copy address
           </button>
@@ -132,36 +134,42 @@ export function VaultFlow({ open, kind, onClose }: { open: boolean; kind: VaultF
       {/* ── SETTINGS ────────────────────────────────────── */}
       {kind === "settings" && (
         <div className="space-y-3">
-          <Toggle
+          <VaultToggle
             label="Vault enabled"
             sub="When off, payments settle directly to wallet."
             value={vaultEnabled}
             onChange={(b) => useApp.setState({ vaultEnabled: b })}
           />
-          <Toggle
+          <VaultToggle
             label="Auto-payout"
             sub="Payout to default address when balance > $10k."
             value={false}
             onChange={() => {}}
           />
-          <div className="rounded-2xl border border-border p-4">
-            <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">Default privacy delay</p>
+          <div className="rounded-lg border border-[rgba(255,255,255,0.06)] p-4">
+            <p className="text-[11px] uppercase tracking-widest text-muted-foreground mb-2">Default privacy delay</p>
             <div className="grid grid-cols-3 gap-2">
               {DELAYS.map((d) => (
                 <button
                   key={d.l}
                   onClick={() => toast.success(`Default set to ${d.l}`)}
-                  className="pressable rounded-xl border border-border bg-foreground/5 py-2 text-xs"
+                  className="pressable rounded-md border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.04)] py-2 text-xs text-foreground hover:bg-[rgba(255,255,255,0.07)] transition"
                 >
                   {d.l}
                 </button>
               ))}
             </div>
           </div>
-          <div className="rounded-2xl border border-border p-4 text-xs space-y-1.5">
-            <p className="flex justify-between"><span className="text-muted-foreground">All-in fee</span><b>2.00%</b></p>
-            <p className="flex justify-between"><span className="text-muted-foreground">Route</span><b>Maya / THORChain</b></p>
-            <p className="flex justify-between"><span className="text-muted-foreground">Anonymity set</span><b className="text-shield">4.9M ZEC</b></p>
+          <div className="rounded-lg border border-[rgba(255,255,255,0.06)] p-4 text-xs space-y-2">
+            <p className="flex justify-between text-muted-foreground">
+              <span>All-in fee</span><b className="text-foreground">2.00%</b>
+            </p>
+            <p className="flex justify-between text-muted-foreground">
+              <span>Route</span><b className="text-foreground">Maya / THORChain</b>
+            </p>
+            <p className="flex justify-between text-muted-foreground">
+              <span>Anonymity set</span><b className="text-success">4.9M ZEC</b>
+            </p>
           </div>
         </div>
       )}
@@ -175,13 +183,13 @@ export function VaultFlow({ open, kind, onClose }: { open: boolean; kind: VaultF
       )}
       {kind === "withdraw" && step === 2 && coin && (
         <div className="space-y-4">
-          <div className="rounded-2xl border border-shield/30 bg-shield/5 p-3 text-center">
-            <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Vault balance</p>
-            <p className="text-shield font-mono mt-0.5">ⓩ {vaultZec.toFixed(4)} · {fmtUsd(balanceUsd)}</p>
+          <div className="rounded-lg border border-[rgba(16,185,129,0.2)] bg-[rgba(16,185,129,0.04)] p-3 text-center">
+            <p className="text-[11px] uppercase tracking-widest text-muted-foreground">Vault balance</p>
+            <p className="text-success font-mono mt-0.5">ⓩ {vaultZec.toFixed(4)} · {fmtUsd(balanceUsd)}</p>
           </div>
           <AmountInput symbol={coin.symbol} price={livePrice} balance={balanceUsd / (livePrice || 1)} onChange={setAmount} />
           <div>
-            <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-1">
+            <p className="text-[11px] uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-1">
               <Clock className="size-3" /> Privacy delay
             </p>
             <div className="grid grid-cols-3 gap-2">
@@ -189,7 +197,7 @@ export function VaultFlow({ open, kind, onClose }: { open: boolean; kind: VaultF
                 <button
                   key={d.l}
                   onClick={() => setDelay(d.v)}
-                  className={`pressable rounded-xl border py-2 text-xs ${delay === d.v ? "bg-primary text-primary-foreground border-primary" : "bg-foreground/5 border-border"}`}
+                  className={`pressable rounded-md border py-2 text-xs transition ${delay === d.v ? "bg-primary text-primary-foreground border-primary" : "bg-[rgba(255,255,255,0.04)] border-[rgba(255,255,255,0.06)] text-muted-foreground hover:text-foreground"}`}
                 >
                   {d.l}
                 </button>
@@ -199,7 +207,7 @@ export function VaultFlow({ open, kind, onClose }: { open: boolean; kind: VaultF
           <button
             disabled={!amount.usd || amount.usd > balanceUsd}
             onClick={() => setStep(3)}
-            className="w-full rounded-2xl bg-primary text-primary-foreground py-3.5 text-sm font-semibold pressable disabled:opacity-50"
+            className="w-full rounded-md bg-primary text-primary-foreground py-3 text-sm font-medium pressable disabled:opacity-50 hover:bg-primary/90 transition"
           >
             Continue
           </button>
@@ -212,12 +220,12 @@ export function VaultFlow({ open, kind, onClose }: { open: boolean; kind: VaultF
             value={recipient}
             onChange={(e) => setRecipient(e.target.value)}
             placeholder={`${chain?.addressPrefix ?? ""}…`}
-            className="w-full rounded-2xl bg-foreground/5 border border-border px-4 py-3 text-sm font-mono outline-none focus:border-primary"
+            className="w-full rounded-md bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.06)] px-4 py-3 text-sm font-mono outline-none focus:border-primary/50 transition text-foreground placeholder:text-muted-foreground"
           />
           <button
             disabled={recipient.length < 10}
             onClick={() => setStep(4)}
-            className="w-full rounded-2xl bg-primary text-primary-foreground py-3.5 text-sm font-semibold pressable disabled:opacity-50"
+            className="w-full rounded-md bg-primary text-primary-foreground py-3 text-sm font-medium pressable disabled:opacity-50 hover:bg-primary/90 transition"
           >
             Review
           </button>
@@ -228,12 +236,12 @@ export function VaultFlow({ open, kind, onClose }: { open: boolean; kind: VaultF
         const out = (amount.usd - fee.total) / (livePrice || 1);
         return (
           <div className="space-y-4">
-            <div className="rounded-2xl bg-foreground/5 border border-border p-5 text-center">
-              <p className="text-xs uppercase tracking-wider text-muted-foreground">Withdrawing</p>
-              <p className="text-3xl font-display font-semibold mt-1">{fmtUsd(amount.usd)}</p>
-              <p className="text-xs text-shield font-mono mt-1">→ {out.toFixed(out < 1 ? 6 : 4)} {coin.symbol}</p>
+            <div className="rounded-lg bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.06)] p-5 text-center">
+              <p className="text-[11px] uppercase tracking-widest text-muted-foreground">Withdrawing</p>
+              <p className="text-3xl font-mono font-semibold mt-2 text-foreground">{fmtUsd(amount.usd)}</p>
+              <p className="text-xs text-success font-mono mt-1">→ {out.toFixed(out < 1 ? 6 : 4)} {coin.symbol}</p>
             </div>
-            <div className="rounded-2xl border border-border divide-y divide-border">
+            <div className="rounded-lg border border-[rgba(255,255,255,0.06)] divide-y divide-[rgba(255,255,255,0.04)]">
               <Row l="Output" v={`${coin.symbol} · ${chain.name}`} />
               <Row l="To" v={<span className="font-mono">{shortAddr(recipient)}</span>} />
               <Row l="Privacy delay" v={DELAYS.find((d) => d.v === delay)?.l ?? "Now"} />
@@ -241,7 +249,10 @@ export function VaultFlow({ open, kind, onClose }: { open: boolean; kind: VaultF
               <Row l="All-in fee" v={`${fmtUsd(fee.total)} · 2.00%`} />
               <Row l="You receive" v={fmtUsd(amount.usd - fee.total)} />
             </div>
-            <button onClick={finalize} className="w-full rounded-2xl bg-primary text-primary-foreground py-3.5 text-sm font-semibold pressable flex items-center justify-center gap-2">
+            <button
+              onClick={finalize}
+              className="w-full rounded-md bg-primary text-primary-foreground py-3 text-sm font-medium pressable flex items-center justify-center gap-2 hover:bg-primary/90 transition"
+            >
               <Lock className="size-4" /> Slide to withdraw
             </button>
           </div>
@@ -251,7 +262,10 @@ export function VaultFlow({ open, kind, onClose }: { open: boolean; kind: VaultF
         <div className="space-y-4">
           <StatusTimeline steps={progress} />
           {progress.every((s) => s.status === "done") && (
-            <button onClick={onClose} className="w-full rounded-2xl bg-primary text-primary-foreground py-3 text-sm font-semibold pressable">
+            <button
+              onClick={onClose}
+              className="w-full rounded-md bg-primary text-primary-foreground py-3 text-sm font-medium pressable hover:bg-primary/90 transition"
+            >
               Done
             </button>
           )}
@@ -261,18 +275,18 @@ export function VaultFlow({ open, kind, onClose }: { open: boolean; kind: VaultF
   );
 }
 
-function Toggle({ label, sub, value, onChange }: { label: string; sub: string; value: boolean; onChange: (v: boolean) => void }) {
+function VaultToggle({ label, sub, value, onChange }: { label: string; sub: string; value: boolean; onChange: (v: boolean) => void }) {
   return (
-    <div className="rounded-2xl border border-border p-4 flex items-start gap-3">
+    <div className="rounded-lg border border-[rgba(255,255,255,0.06)] p-4 flex items-start gap-3">
       <button
         onClick={() => onChange(!value)}
-        className={`mt-0.5 w-9 h-5 rounded-full p-0.5 transition ${value ? "bg-primary" : "bg-foreground/15"}`}
+        className={`mt-0.5 w-9 h-5 rounded-full p-0.5 transition ${value ? "bg-primary" : "bg-[rgba(255,255,255,0.12)]"}`}
         aria-pressed={value}
       >
-        <span className={`block size-4 rounded-full bg-background transition-transform ${value ? "translate-x-4" : ""}`} />
+        <span className={`block size-4 rounded-full bg-white transition-transform ${value ? "translate-x-4" : ""}`} />
       </button>
       <div className="flex-1">
-        <p className="text-sm font-medium">{label}</p>
+        <p className="text-sm font-medium text-foreground">{label}</p>
         <p className="text-[11px] text-muted-foreground mt-0.5">{sub}</p>
       </div>
     </div>

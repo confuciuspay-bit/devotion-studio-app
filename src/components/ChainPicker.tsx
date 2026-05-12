@@ -2,7 +2,7 @@ import { CoinIcon } from "./CoinIcon";
 import { CHAINS } from "@/lib/chains";
 import type { Chain } from "@/lib/chains";
 import { useCoinChains } from "@/lib/coinChains";
-import { Loader2 } from "lucide-react";
+import { Loader as Loader2 } from "lucide-react";
 
 export function ChainPicker({
   coinId,
@@ -25,7 +25,7 @@ export function ChainPicker({
           Networks where this asset exists
         </p>
       )}
-      <div className="rounded-2xl border border-border bg-card divide-y divide-border max-h-[60vh] overflow-y-auto">
+      <div className="rounded-lg border border-[rgba(255,255,255,0.06)] bg-card divide-y divide-[rgba(255,255,255,0.04)] max-h-[60vh] overflow-y-auto scrollbar-none">
         {isFetching && coinId && !list.length && (
           <div className="py-8 grid place-items-center text-muted-foreground">
             <Loader2 className="size-4 animate-spin" />
@@ -40,7 +40,7 @@ export function ChainPicker({
           <button
             key={c.id}
             onClick={() => onPick(c)}
-            className="w-full text-left flex items-center gap-3 px-3 py-3 active:bg-foreground/5"
+            className="w-full text-left flex items-center gap-3 px-3 py-3 hover:bg-[rgba(255,255,255,0.02)] transition"
           >
             <CoinIcon src={c.logo} symbol={c.shortName} size={30} />
             <div className="flex-1 min-w-0">
