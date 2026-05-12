@@ -155,7 +155,7 @@ function SpendPage() {
               Available
             </p>
             <p className="text-3xl font-display font-semibold mt-1 tabular-nums">
-              $2,184<span className="text-muted-foreground">.30</span>
+              {hidden ? "•••••" : <>$2,184<span className="text-muted-foreground">.30</span></>}
             </p>
           </div>
           <div className="flex gap-2">
