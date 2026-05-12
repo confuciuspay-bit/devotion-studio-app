@@ -4,8 +4,8 @@ import { CoinIcon } from "@/components/CoinIcon";
 import { Sparkline } from "@/components/Sparkline";
 import { DetailSheet } from "@/components/DetailSheet";
 import { WalletFlow } from "@/components/flows/WalletFlow";
-import { useMarkets, fmtUsd, fmtPct, maskValue } from "@/lib/markets";
-import { useApp } from "@/lib/store";
+import { useMarkets, fmtPct } from "@/lib/markets";
+import { useMoney } from "@/lib/useMoney";
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -30,7 +30,8 @@ type Activity = {
   id: string;
   t: string;
   s: string;
-  v: string;
+  /** USD amount; negative = outgoing, positive = incoming */
+  usd: number;
   time: string;
   shield?: boolean;
   type: "shield" | "swap" | "payroll" | "receive";
@@ -44,7 +45,7 @@ const activity: Activity[] = [
     id: "a1",
     t: "Shielded into vault",
     s: "via UmbraVault · ZEC",
-    v: "+ $1,250.00",
+    usd: 1250,
     time: "2m",
     shield: true,
     type: "shield",
@@ -56,7 +57,7 @@ const activity: Activity[] = [
     id: "a2",
     t: "Swap ETH → ZEC",
     s: "Streaming · 0.50%",
-    v: "− 0.42 ETH",
+    usd: -1480,
     time: "1h",
     type: "swap",
     hash: "0x7b1e…cc24",
@@ -67,7 +68,7 @@ const activity: Activity[] = [
     id: "a3",
     t: "Payroll batch #218",
     s: "12 recipients · enhanced",
-    v: "− $9,840.00",
+    usd: -9840,
     time: "Yesterday",
     type: "payroll",
     hash: "batch:00218",
@@ -80,8 +81,7 @@ function WalletHome() {
   const { data } = useMarkets();
   const [openTx, setOpenTx] = useState<Activity | null>(null);
   const [flow, setFlow] = useState<"receive" | "send" | "swap" | "shield" | null>(null);
-  const hidden = useApp((s) => s.hideBalances);
-  const mask = (s: string) => (hidden ? maskValue(s) : s);
+  const { fmt, signed, hidden } = useMoney();
 
   const assets = useMemo(() => {
     if (!data) return [];
