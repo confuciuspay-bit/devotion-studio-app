@@ -227,7 +227,7 @@ function WalletHome() {
                   {a.s} · {a.time}
                 </p>
               </div>
-              <p className="text-sm font-mono tabular-nums">{a.v}</p>
+              <p className="text-sm font-mono tabular-nums">{mask(a.v)}</p>
               <ChevronRight className="size-4 text-muted-foreground" />
             </button>
           ))}
