@@ -185,12 +185,12 @@ function WalletHome() {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{a.symbol}</p>
                   <p className="text-[11px] text-muted-foreground truncate">
-                    {a.qty.toLocaleString()} · {a.name}
+                    {hidden ? "•••" : a.qty.toLocaleString()} · {a.name}
                   </p>
                 </div>
                 <Sparkline data={a.spark} positive={up} width={56} height={22} />
                 <div className="text-right w-[78px]">
-                  <p className="text-sm font-mono tabular-nums">{fmtUsd(a.value)}</p>
+                  <p className="text-sm font-mono tabular-nums">{mask(fmtUsd(a.value))}</p>
                   <p className={`text-[11px] font-mono ${up ? "text-shield" : "text-destructive"}`}>
                     {fmtPct(a.chg)}
                   </p>
