@@ -115,7 +115,7 @@ function WalletHome() {
   const total = assets.reduce((s, a) => s + a.value, 0);
 
   return (
-    <div className="relative">
+    <div className="relative animate-fade-in">
       <AppHeader subtitle="Wallet" />
 
       <section className="px-5 pt-2">
