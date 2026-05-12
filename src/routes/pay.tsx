@@ -5,7 +5,8 @@ import { DetailSheet } from "@/components/DetailSheet";
 import { PayFlow, type PayFlowKind } from "@/components/flows/PayFlow";
 import { QrCode, Copy, Link2, Plus, Check, ChevronRight, Download, Share2, Settings2, Filter } from "lucide-react";
 import { useApp, type PaymentRecord, type PaymentStatus } from "@/lib/store";
-import { fmtUsd, fmtTime, maskValue } from "@/lib/markets";
+import { fmtTime } from "@/lib/markets";
+import { useMoney } from "@/lib/useMoney";
 import { getChain } from "@/lib/chains";
 import { toast } from "sonner";
 
@@ -17,9 +18,9 @@ const STATUS_LABEL: Record<PaymentStatus, string> = {
 };
 
 function PayPage() {
-  const { payments, monthlyVolumeUsd, vaultEnabled, hideBalances, updatePayment } = useApp((s) => s);
+  const { payments, monthlyVolumeUsd, vaultEnabled, updatePayment } = useApp((s) => s);
   const setVault = (b: boolean) => useApp.setState({ vaultEnabled: b });
-  const hidden = hideBalances;
+  const { fmt } = useMoney();
 
   const [open, setOpen] = useState<PaymentRecord | null>(null);
   const [flow, setFlow] = useState<PayFlowKind | null>(null);
@@ -31,10 +32,8 @@ function PayPage() {
     [payments, filter],
   );
 
-  const fmt = (s: string) => (hidden ? maskValue(s) : s);
-
   return (
-    <div>
+    <div className="animate-fade-in">
       <AppHeader subtitle="UmbraPay" />
       <section className="px-5">
         <div className="rounded-3xl border border-border p-6 bg-[image:var(--gradient-card)] grain relative overflow-hidden">
@@ -51,7 +50,7 @@ function PayPage() {
             </button>
           </div>
           <h1 className="text-4xl font-display font-semibold mt-2 tabular-nums">
-            {fmt(fmtUsd(monthlyVolumeUsd, { maximumFractionDigits: 0 }))}
+            {fmt(monthlyVolumeUsd, { maximumFractionDigits: 0 })}
           </h1>
           <div className="mt-1 flex items-center gap-2 text-xs">
             <span className="text-shield font-mono">
@@ -59,7 +58,7 @@ function PayPage() {
             </span>
           </div>
 
-          <div className="mt-5 grid grid-cols-3 gap-2">
+          <div className="mt-5 grid grid-cols-3 gap-2 stagger">
             <button
               onClick={() => setFlow("new")}
               className="pressable bg-primary text-primary-foreground rounded-2xl py-3 text-sm font-semibold flex flex-col items-center gap-1"
@@ -100,7 +99,7 @@ function PayPage() {
             </button>
           </div>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-2 stagger">
           {list.length === 0 && (
             <div className="rounded-2xl border border-dashed border-border bg-card/50 p-8 text-center text-sm text-muted-foreground">
               No payments yet. Tap <b>+ New</b> to create one.
@@ -129,7 +128,7 @@ function PayPage() {
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-mono">{fmt(fmtUsd(p.amountUsd))}</p>
+                  <p className="text-sm font-mono">{fmt(p.amountUsd)}</p>
                   <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
                     {STATUS_LABEL[p.status]}
                   </p>
@@ -151,7 +150,7 @@ function PayPage() {
               <p className="text-xs uppercase tracking-wider text-muted-foreground">
                 {open.reference || "Payment"}
               </p>
-              <p className="text-3xl font-display font-semibold mt-1 tabular-nums">{fmt(fmtUsd(open.amountUsd))}</p>
+              <p className="text-3xl font-display font-semibold mt-1 tabular-nums">{fmt(open.amountUsd)}</p>
               <span className="inline-block mt-2 text-[10px] font-mono text-shield bg-shield/10 px-2 py-0.5 rounded-full">
                 {STATUS_LABEL[open.status]}
               </span>
@@ -162,7 +161,7 @@ function PayPage() {
               {open.customer && <Row l="Customer" v={open.customer} mono />}
               <Row l="Network" v={getChain(open.chainId)?.name ?? open.chainId} />
               <Row l="Address" v={shortAddrLocal(open.address)} mono />
-              <Row l="PSP fee" v={open.feeUsd ? fmtUsd(open.feeUsd) : "$0.00 · waived"} />
+              <Row l="PSP fee" v={open.feeUsd ? fmt(open.feeUsd) : "$0.00 · waived"} />
               {open.hash && <Row l="Hash" v={shortAddrLocal(open.hash)} mono />}
             </div>
             <div className="rounded-2xl border border-border p-4">
