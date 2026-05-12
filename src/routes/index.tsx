@@ -128,7 +128,7 @@ function WalletHome() {
               {total ? mask(fmtUsd(total, { maximumFractionDigits: 0 })) : "—"}
             </h1>
           </div>
-          <div className="mt-1 text-xs text-shield font-mono">live · CoinGecko</div>
+          <div className="mt-1 h-4" aria-hidden />
 
           <div className="mt-6 grid grid-cols-4 gap-2">
             {([
