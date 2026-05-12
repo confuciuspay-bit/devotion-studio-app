@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { DetailSheet } from "@/components/DetailSheet";
+import { AllHistorySheet } from "@/components/AllHistorySheet";
 import { WalletFlow } from "@/components/flows/WalletFlow";
 import { VaultFlow, type VaultFlowKind } from "@/components/flows/VaultFlow";
 import { Shield, ArrowRight, Lock, ChevronRight, Plus, Settings, KeyRound, ExternalLink } from "lucide-react";
