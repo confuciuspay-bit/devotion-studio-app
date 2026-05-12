@@ -1,8 +1,10 @@
 import { Eye, EyeOff, Bell } from "lucide-react";
-import { useState } from "react";
+import { useApp } from "@/lib/store";
 
-export function AppHeader({ subtitle }: { subtitle?: string }) {
-  const [hidden, setHidden] = useState(false);
+// `subtitle` is accepted but no longer rendered — we keep an empty margin instead.
+export function AppHeader({ subtitle: _subtitle }: { subtitle?: string }) {
+  const hidden = useApp((s) => s.hideBalances);
+  const toggle = useApp((s) => s.toggleHideBalances);
   return (
     <header className="px-5 pt-6 pb-3 flex items-center justify-between">
       <div>
@@ -12,14 +14,12 @@ export function AppHeader({ subtitle }: { subtitle?: string }) {
           </div>
           <span className="font-display font-semibold tracking-tight text-lg">umbra</span>
         </div>
-        {subtitle && (
-          <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground mt-2">{subtitle}</p>
-        )}
+        <div className="mt-2 h-[11px]" aria-hidden />
       </div>
       <div className="flex items-center gap-1.5">
         <button
-          onClick={() => setHidden((v) => !v)}
-          className="size-9 grid place-items-center rounded-full bg-card border border-border text-muted-foreground"
+          onClick={toggle}
+          className="size-9 grid place-items-center rounded-full bg-card border border-border text-muted-foreground active:scale-95 transition"
           aria-label="Toggle balance visibility"
         >
           {hidden ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
