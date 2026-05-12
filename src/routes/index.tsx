@@ -3,6 +3,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { CoinIcon } from "@/components/CoinIcon";
 import { Sparkline } from "@/components/Sparkline";
 import { DetailSheet } from "@/components/DetailSheet";
+import { AllHistorySheet } from "@/components/AllHistorySheet";
 import { WalletFlow } from "@/components/flows/WalletFlow";
 import { useMarkets, fmtPct } from "@/lib/markets";
 import { useMoney } from "@/lib/useMoney";
