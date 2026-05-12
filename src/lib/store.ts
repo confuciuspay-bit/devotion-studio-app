@@ -335,9 +335,24 @@ export const useApp = create<AppState>()(
         set((s) => ({ cardTxs: [t, ...s.cardTxs], cardBalanceUsd: s.cardBalanceUsd - t.amountUsd })),
       topupCard: (usd) => set((s) => ({ cardBalanceUsd: s.cardBalanceUsd + usd })),
 
+      setMerchant: (patch) =>
+        set((s) => ({
+          merchant: {
+            businessName: s.merchant?.businessName ?? "",
+            createdAt: s.merchant?.createdAt ?? Date.now(),
+            ...s.merchant,
+            ...patch,
+          },
+        })),
+      setPinHashStored: (h) => set({ pinHashStored: h }),
+      setSecurity: (patch) => set((s) => ({ ...s, ...patch })),
+      setLocked: (locked) => set({ locked }),
+
       resetAll: () =>
         set({
           seed: null, seedHex: null, initialised: false,
+          merchant: null, pinHashStored: null, biometricsEnabled: false,
+          autoLockMinutes: 5 as AutoLock, torEnabled: false, network: "mainnet" as const, locked: false,
           holdings: DEFAULT_HOLDINGS, watchlist: ["zcash", "bitcoin", "ethereum"],
           payments: [], batches: [], invoices: [], vaultActivity: [], cardTxs: [],
           monthlyVolumeUsd: 0, vaultZec: 0, cardBalanceUsd: 0,
@@ -349,6 +364,9 @@ export const useApp = create<AppState>()(
       name: "umbra-app-v1",
       partialize: (s) => ({
         seed: s.seed, seedHex: s.seedHex, initialised: s.initialised,
+        merchant: s.merchant, pinHashStored: s.pinHashStored,
+        biometricsEnabled: s.biometricsEnabled, autoLockMinutes: s.autoLockMinutes,
+        torEnabled: s.torEnabled, network: s.network,
         holdings: s.holdings, watchlist: s.watchlist, contacts: s.contacts,
         payments: s.payments, monthlyVolumeUsd: s.monthlyVolumeUsd, vaultEnabled: s.vaultEnabled,
         batches: s.batches, invoices: s.invoices,
