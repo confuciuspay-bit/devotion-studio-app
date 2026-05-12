@@ -9,8 +9,32 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VaultRouteImport } from './routes/vault'
+import { Route as StreamRouteImport } from './routes/stream'
+import { Route as SpendRouteImport } from './routes/spend'
+import { Route as PayRouteImport } from './routes/pay'
 import { Route as IndexRouteImport } from './routes/index'
 
+const VaultRoute = VaultRouteImport.update({
+  id: '/vault',
+  path: '/vault',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StreamRoute = StreamRouteImport.update({
+  id: '/stream',
+  path: '/stream',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SpendRoute = SpendRouteImport.update({
+  id: '/spend',
+  path: '/spend',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PayRoute = PayRouteImport.update({
+  id: '/pay',
+  path: '/pay',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -19,28 +43,72 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/pay': typeof PayRoute
+  '/spend': typeof SpendRoute
+  '/stream': typeof StreamRoute
+  '/vault': typeof VaultRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/pay': typeof PayRoute
+  '/spend': typeof SpendRoute
+  '/stream': typeof StreamRoute
+  '/vault': typeof VaultRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/pay': typeof PayRoute
+  '/spend': typeof SpendRoute
+  '/stream': typeof StreamRoute
+  '/vault': typeof VaultRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/pay' | '/spend' | '/stream' | '/vault'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/pay' | '/spend' | '/stream' | '/vault'
+  id: '__root__' | '/' | '/pay' | '/spend' | '/stream' | '/vault'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  PayRoute: typeof PayRoute
+  SpendRoute: typeof SpendRoute
+  StreamRoute: typeof StreamRoute
+  VaultRoute: typeof VaultRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/vault': {
+      id: '/vault'
+      path: '/vault'
+      fullPath: '/vault'
+      preLoaderRoute: typeof VaultRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/stream': {
+      id: '/stream'
+      path: '/stream'
+      fullPath: '/stream'
+      preLoaderRoute: typeof StreamRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/spend': {
+      id: '/spend'
+      path: '/spend'
+      fullPath: '/spend'
+      preLoaderRoute: typeof SpendRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pay': {
+      id: '/pay'
+      path: '/pay'
+      fullPath: '/pay'
+      preLoaderRoute: typeof PayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -53,17 +121,11 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  PayRoute: PayRoute,
+  SpendRoute: SpendRoute,
+  StreamRoute: StreamRoute,
+  VaultRoute: VaultRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
