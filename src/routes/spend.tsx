@@ -8,14 +8,11 @@ import { useApp } from "@/lib/store";
 import { useMoney } from "@/lib/useMoney";
 import {
   Snowflake,
-  Wifi,
   Plus,
   EyeOff,
   Eye,
   ChevronRight,
   Copy,
-  Lock,
-  ShieldCheck,
 } from "lucide-react";
 
 export const Route = createFileRoute("/spend")({ component: SpendPage });
@@ -60,122 +57,159 @@ function SpendPage() {
     <div className="animate-fade-in">
       <AppHeader subtitle="UmbraSpend · Card" />
 
-      <section className="px-5">
-        {/* Card surface */}
+      {/* Card */}
+      <section className="px-4 py-5" style={{ borderBottom: "1px solid var(--border-dim)" }}>
         <div
-          className="relative aspect-[1.586/1] rounded-lg p-5 overflow-hidden border border-[rgba(255,255,255,0.08)]"
-          style={{ background: "linear-gradient(160deg, #1a1a28, #0f0f18)" }}
+          className="p-4"
+          style={{
+            background: "var(--bg-surface)",
+            border: "1px solid var(--border-default)",
+            borderRadius: 4,
+            aspectRatio: "1.586 / 1",
+            position: "relative",
+            overflow: "hidden",
+          }}
         >
           {/* Header row */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="size-5 rounded bg-white/90 grid place-items-center">
-                <div className="size-2 rounded-full bg-[#0a0a0f]" />
-              </div>
-              <span className="text-sm font-medium text-white/90">umbra</span>
-            </div>
-            <Wifi className="size-4 text-white/50 -rotate-90" />
+            <span
+              style={{
+                fontFamily: "'JetBrains Mono', monospace",
+                fontSize: 13,
+                fontWeight: 400,
+                color: "var(--text-primary)",
+              }}
+            >
+              umbra
+            </span>
+            <span className="label" style={{ color: "var(--text-tertiary)" }}>visa</span>
           </div>
 
-          {/* PAN / details at bottom */}
-          <div className="absolute inset-x-5 bottom-5">
+          {/* PAN */}
+          <div className="absolute inset-x-4 bottom-4">
             <button
               onClick={tryReveal}
-              className="font-mono text-base tracking-[0.15em] block w-full text-left text-white pressable"
+              className="pressable w-full text-left transition-colors"
+              style={{
+                fontFamily: "'JetBrains Mono', monospace",
+                fontSize: 14,
+                letterSpacing: "0.15em",
+                color: "var(--text-primary)",
+              }}
             >
               {revealed ? fullPan : masked}
             </button>
             <div className="mt-3 flex items-end justify-between">
-              <div className="flex gap-4">
+              <div className="flex gap-5">
                 <div>
-                  <p className="text-[9px] uppercase tracking-widest text-white/40">Exp</p>
-                  <p className="text-xs font-mono text-white/80">{revealed ? "08/29" : "••/••"}</p>
+                  <p className="label">exp</p>
+                  <p className="text-[12px]" style={{ color: "var(--text-secondary)" }}>
+                    {revealed ? "08/29" : "••/••"}
+                  </p>
                 </div>
                 <div>
-                  <p className="text-[9px] uppercase tracking-widest text-white/40">CVV</p>
-                  <p className="text-xs font-mono text-white/80">{revealed ? "418" : "•••"}</p>
+                  <p className="label">cvv</p>
+                  <p className="text-[12px]" style={{ color: "var(--text-secondary)" }}>
+                    {revealed ? "418" : "•••"}
+                  </p>
                 </div>
               </div>
-              <span className="text-xs font-semibold text-white/60 tracking-widest">VISA</span>
+              <div className="flex items-center gap-1.5">
+                <span className="dot dot-ok" />
+                <span className="text-[11px] font-light" style={{ color: "var(--status-ok)" }}>shielded</span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Card actions */}
-        <div className="mt-3 flex items-center justify-between text-[11px]">
+        <div className="mt-3 flex items-center justify-between">
           <button
             onClick={tryReveal}
-            className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition pressable"
+            className="pressable flex items-center gap-1.5 text-[12px] font-light transition-colors"
+            style={{ color: "var(--text-secondary)" }}
           >
-            {revealed ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-            {revealed ? "Hide details" : "Reveal card details"}
+            {revealed ? <EyeOff className="size-3" /> : <Eye className="size-3" />}
+            {revealed ? "hide details" : "reveal details"}
           </button>
-          <span className="text-muted-foreground font-mono flex items-center gap-1">
-            <Lock className="size-3" /> Face ID required
-          </span>
+          <button
+            onClick={() => setOpenWallet(true)}
+            className="pressable text-[12px] font-light transition-colors"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            add to wallet
+          </button>
         </div>
-
-        <button
-          onClick={() => setOpenWallet(true)}
-          className="mt-4 w-full rounded-md bg-black text-white py-3 text-sm font-medium flex items-center justify-center gap-2 border border-white/10 pressable hover:bg-white/5 transition"
-        >
-          <AppleLogo />
-          Add to Apple Wallet
-        </button>
 
         {/* Balance + actions */}
         <div className="mt-5 flex items-center justify-between">
           <div>
-            <p className="text-[11px] uppercase tracking-widest text-muted-foreground">Available</p>
-            <p className="text-2xl font-mono font-semibold mt-1.5 tabular-nums text-foreground">
+            <p className="label mb-1">available</p>
+            <p className="text-[22px]" style={{ color: "var(--text-primary)", fontWeight: 400 }}>
               {hidden ? "•••••" : fmt(balanceUsd)}
             </p>
           </div>
           <div className="flex gap-2">
-            <button className="pressable size-9 rounded-md bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.06)] grid place-items-center text-muted-foreground hover:text-foreground transition">
-              <Snowflake className="size-4" />
+            <button
+              className="pressable flex items-center justify-center transition-colors"
+              style={{
+                width: 36,
+                height: 36,
+                background: "var(--bg-surface)",
+                border: "1px solid var(--border-default)",
+                borderRadius: 4,
+                color: "var(--text-secondary)",
+              }}
+            >
+              <Snowflake className="size-3.5" />
             </button>
-            <button className="pressable h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium flex items-center gap-1.5 hover:bg-primary/90 transition">
-              <Plus className="size-3.5" /> Top up
+            <button
+              className="btn-primary flex items-center gap-1.5 px-4"
+              style={{ height: 36 }}
+            >
+              <Plus className="size-3" /> top up
             </button>
           </div>
         </div>
       </section>
 
       {/* Transactions */}
-      <section className="px-5 mt-6">
+      <section className="px-4 py-4">
         <div className="flex items-center justify-between mb-3">
-          <p className="text-[11px] uppercase tracking-widest text-muted-foreground">Transactions</p>
-          <button onClick={() => setAllHistory(true)} className="text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition pressable">
-            All history <ChevronRight className="size-3" />
+          <p className="label">transactions</p>
+          <button
+            onClick={() => setAllHistory(true)}
+            className="pressable flex items-center gap-0.5 text-[11px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+          >
+            all history <ChevronRight className="size-3" />
           </button>
         </div>
-        <div className="rounded-lg border border-[rgba(255,255,255,0.06)] bg-card divide-y divide-[rgba(255,255,255,0.04)] overflow-hidden">
+        <div style={{ borderTop: "1px solid var(--border-dim)" }}>
           {txns.map((tx) => {
             const incoming = tx.usd > 0;
             return (
               <button
                 key={tx.id}
                 onClick={() => setOpenTx(tx)}
-                className="pressable w-full text-left flex items-center gap-3 px-4 py-3 hover:bg-[rgba(255,255,255,0.02)] transition"
+                className="pressable w-full text-left flex items-center gap-3 py-3 hover:bg-[rgba(255,255,255,0.02)] transition-colors"
+                style={{ borderBottom: "1px solid var(--border-dim)", height: 44 }}
               >
-                <div
-                  className={`size-8 rounded-md grid place-items-center text-xs font-semibold shrink-0 ${
-                    incoming
-                      ? "bg-[rgba(16,185,129,0.12)] text-success"
-                      : "bg-[rgba(255,255,255,0.05)] text-muted-foreground"
-                  }`}
-                >
-                  {tx.m.slice(0, 1)}
-                </div>
+                <span
+                  className="dot shrink-0"
+                  style={{ background: incoming ? "var(--status-ok)" : "var(--text-tertiary)" }}
+                />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-foreground truncate">{tx.m}</p>
-                  <p className="text-[11px] text-muted-foreground">{tx.c} · {tx.t}</p>
+                  <p className="text-[13px] text-[var(--text-primary)] truncate">{tx.m}</p>
+                  <p className="text-[11px] font-light" style={{ color: "var(--text-secondary)" }}>
+                    {tx.c} · {tx.t}
+                  </p>
                 </div>
-                <p className={`text-sm font-mono tabular-nums ${incoming ? "text-success" : "text-foreground"}`}>
+                <p
+                  className="text-[13px]"
+                  style={{ color: incoming ? "var(--status-ok)" : "var(--text-primary)" }}
+                >
                   {signed(tx.usd)}
                 </p>
-                <ChevronRight className="size-3.5 text-muted-foreground" />
+                <ChevronRight className="size-3" style={{ color: "var(--text-tertiary)" }} />
               </button>
             );
           })}
@@ -186,64 +220,53 @@ function SpendPage() {
       <DetailSheet open={!!openTx} onClose={() => setOpenTx(null)} title={openTx?.m}>
         {openTx && (
           <div className="space-y-4">
-            <div className="rounded-lg bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.06)] p-5 text-center">
-              <p className="text-[11px] uppercase tracking-widest text-muted-foreground">{openTx.category}</p>
-              <p className={`text-3xl font-mono font-semibold mt-2 tabular-nums ${openTx.usd > 0 ? "text-success" : "text-foreground"}`}>
+            <div className="p-5 text-center" style={{ background: "var(--bg-raised)", borderRadius: 4 }}>
+              <p className="label mb-2">{openTx.category.toLowerCase()}</p>
+              <p
+                className="text-[22px]"
+                style={{ color: openTx.usd > 0 ? "var(--status-ok)" : "var(--text-primary)" }}
+              >
                 {signed(openTx.usd)}
               </p>
-              <p className="text-xs font-mono text-muted-foreground mt-1">{openTx.c}</p>
+              <p className="text-[12px] font-light mt-1" style={{ color: "var(--text-secondary)" }}>
+                {openTx.c}
+              </p>
             </div>
-            <div className="rounded-lg border border-[rgba(255,255,255,0.06)] divide-y divide-[rgba(255,255,255,0.04)]">
-              <SRow l="When" v={openTx.t} />
-              <SRow l="Status" v={openTx.status} />
-              {openTx.fx && <SRow l="FX" v={openTx.fx} mono />}
-              <SRow l="Funded by" v="ZEC · shielded" />
-              <SRow l="Card" v="•••• 8842" mono />
+            <div style={{ border: "1px solid var(--border-default)", borderRadius: 4 }}>
+              <SRow l="when" v={openTx.t} />
+              <SRow l="status" v={openTx.status} />
+              {openTx.fx && <SRow l="fx" v={openTx.fx} mono />}
+              <SRow l="funded by" v="ZEC · shielded" />
+              <SRow l="card" v="•••• 8842" mono last />
             </div>
             <div className="grid grid-cols-2 gap-2">
-              <button className="pressable rounded-md bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.06)] py-2.5 text-sm font-medium hover:bg-[rgba(255,255,255,0.07)] transition">
-                Dispute
-              </button>
-              <button className="pressable rounded-md bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.06)] py-2.5 text-sm font-medium hover:bg-[rgba(255,255,255,0.07)] transition">
-                Categorize
-              </button>
+              <button className="btn-ghost py-2.5 text-[11px]">dispute</button>
+              <button className="btn-ghost py-2.5 text-[11px]">categorize</button>
             </div>
           </div>
         )}
       </DetailSheet>
 
-      {/* Apple Wallet */}
+      {/* Add to wallet */}
       <DetailSheet open={openWallet} onClose={() => setOpenWallet(false)} title="Add to Apple Wallet">
         <div className="space-y-4">
-          <div className="rounded-lg border border-[rgba(255,255,255,0.06)] bg-card p-4 flex items-start gap-3">
-            <div className="size-9 rounded-md bg-[rgba(16,185,129,0.12)] grid place-items-center">
-              <ShieldCheck className="size-4 text-success" />
-            </div>
-            <div className="text-sm">
-              <p className="font-medium text-foreground">Provision Umbra Card</p>
-              <p className="text-muted-foreground text-xs mt-1">
-                Card number is tokenized — your real PAN never leaves the secure enclave.
-              </p>
-            </div>
-          </div>
-          <div className="rounded-lg border border-[rgba(255,255,255,0.06)] divide-y divide-[rgba(255,255,255,0.04)]">
-            <SRow l="Card" v="•••• 8842" mono />
-            <SRow l="Funding" v="ZEC · shielded" />
-            <SRow l="Region" v="Worldwide" />
+          <div style={{ border: "1px solid var(--border-default)", borderRadius: 4 }}>
+            <SRow l="card" v="•••• 8842" mono />
+            <SRow l="funding" v="ZEC · shielded" />
+            <SRow l="region" v="worldwide" last />
           </div>
           <a
             href="/umbra-card.pkpass"
             download
-            className="w-full rounded-md bg-black text-white py-3 text-sm font-medium flex items-center justify-center gap-2 border border-white/10 pressable"
+            className="btn-ghost w-full py-2.5 flex items-center justify-center gap-2 text-[12px]"
           >
-            <AppleLogo />
-            Add to Apple Wallet
+            <AppleLogo /> add to apple wallet
           </a>
           <button
             onClick={() => navigator.clipboard?.writeText(fullPan)}
-            className="w-full pressable rounded-md bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.06)] py-2.5 text-xs font-medium flex items-center justify-center gap-2 hover:bg-[rgba(255,255,255,0.07)] transition"
+            className="btn-ghost w-full py-2.5 flex items-center justify-center gap-2 text-[12px]"
           >
-            <Copy className="size-3.5" /> Copy card number
+            <Copy className="size-3" /> copy card number
           </button>
         </div>
       </DetailSheet>
@@ -261,18 +284,26 @@ function SpendPage() {
   );
 }
 
-function SRow({ l, v, mono }: { l: string; v: string; mono?: boolean }) {
+function SRow({ l, v, mono, last }: { l: string; v: string; mono?: boolean; last?: boolean }) {
   return (
-    <div className="flex items-center justify-between px-4 py-3">
-      <span className="text-[11px] uppercase tracking-widest text-muted-foreground">{l}</span>
-      <span className={`text-sm text-foreground ${mono ? "font-mono" : ""}`}>{v}</span>
+    <div
+      className="flex items-center justify-between px-4 py-3"
+      style={!last ? { borderBottom: "1px solid var(--border-dim)" } : undefined}
+    >
+      <span className="label">{l}</span>
+      <span
+        className="text-[12px] text-[var(--text-primary)]"
+        style={mono ? { fontFamily: "'JetBrains Mono', monospace" } : undefined}
+      >
+        {v}
+      </span>
     </div>
   );
 }
 
 function AppleLogo() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
       <path d="M16.365 1.43c0 1.14-.42 2.23-1.18 3.06-.83.92-2.18 1.62-3.27 1.54-.13-1.13.43-2.32 1.16-3.08.82-.86 2.22-1.5 3.29-1.52zM20.5 17.06c-.55 1.27-.81 1.84-1.51 2.96-.98 1.55-2.36 3.49-4.07 3.5-1.52.02-1.91-.99-3.97-.98-2.06.01-2.49 1-4.01.98-1.7-.02-3.01-1.77-3.99-3.32C.16 16.04-.32 11.16 1.42 8.62c1.23-1.79 3.18-2.83 5.01-2.83 1.86 0 3.03 1.02 4.57 1.02 1.49 0 2.4-1.02 4.55-1.02 1.62 0 3.34.88 4.57 2.41-4.02 2.2-3.36 7.94.38 8.86z" />
     </svg>
   );

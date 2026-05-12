@@ -6,7 +6,7 @@ import { AllHistorySheet } from "@/components/AllHistorySheet";
 import { PinGate } from "@/components/PinGate";
 import { WalletFlow } from "@/components/flows/WalletFlow";
 import { VaultFlow, type VaultFlowKind } from "@/components/flows/VaultFlow";
-import { Shield, ArrowRight, Lock, ChevronRight, Plus, Settings, KeyRound, ExternalLink } from "lucide-react";
+import { ArrowRight, ChevronRight, ExternalLink } from "lucide-react";
 import { useApp, type VaultActivity } from "@/lib/store";
 import { fmtTime } from "@/lib/markets";
 import { useMoney } from "@/lib/useMoney";
@@ -15,10 +15,10 @@ import { getChain } from "@/lib/chains";
 export const Route = createFileRoute("/vault")({ component: VaultPage });
 
 const flow = [
-  { l: "Customer pays", v: "USDC · ETH" },
-  { l: "Swap to ZEC", v: "Maya · 10 bps" },
-  { l: "Shield to z-addr", v: "Per-merchant" },
-  { l: "Payout", v: "Any currency" },
+  { l: "customer pays", v: "USDC · ETH" },
+  { l: "swap to ZEC", v: "Maya · 10 bps" },
+  { l: "shield z-addr", v: "per-merchant" },
+  { l: "payout", v: "any currency" },
 ];
 
 const ZEC_PRICE = 35;
@@ -39,120 +39,120 @@ function VaultPage() {
     <div className="animate-fade-in">
       <AppHeader subtitle="UmbraVault" />
 
-      {/* Vault balance card */}
-      <section className="px-5">
-        <div className="rounded-lg border border-[rgba(16,185,129,0.15)] bg-card p-6">
-          <div className="flex items-center gap-3">
-            <div className="size-8 rounded-md bg-[rgba(16,185,129,0.12)] text-success grid place-items-center">
-              <Shield className="size-4" />
-            </div>
-            <div>
-              <p className="text-[11px] uppercase tracking-widest text-muted-foreground">
-                Shielded balance
-              </p>
-              <button
-                onClick={() => (pinHashStored ? setPinGate(true) : setVfk("address"))}
-                className="text-xs text-success font-mono flex items-center gap-1 hover:opacity-80 transition"
-              >
-                z-addr · per-merchant <KeyRound className="size-3" />
-              </button>
-            </div>
-          </div>
+      {/* Balance */}
+      <section className="px-4 py-5" style={{ borderBottom: "1px solid var(--border-dim)" }}>
+        <p className="label mb-2">shielded balance</p>
+        <p
+          style={{
+            fontSize: 28,
+            fontWeight: 400,
+            color: "var(--text-primary)",
+            letterSpacing: "0.02em",
+          }}
+        >
+          {hidden ? "••••" : vaultZec.toFixed(2)}{" "}
+          <span style={{ fontSize: 16, color: "var(--status-ok)" }}>ZEC</span>
+        </p>
+        <p className="text-[12px] font-light mt-1" style={{ color: "var(--text-secondary)" }}>
+          ≈ {fmt(balanceUsd)} · 2.00% all-in
+        </p>
+        <div className="mt-1 flex items-center gap-1.5">
+          <span className="dot dot-ok" />
+          <button
+            onClick={() => (pinHashStored ? setPinGate(true) : setVfk("address"))}
+            className="pressable text-[11px] font-light transition-colors hover:opacity-80"
+            style={{ color: "var(--status-ok)" }}
+          >
+            z-addr · per-merchant · view
+          </button>
+        </div>
 
-          <h1 className="mt-5 text-3xl font-mono font-semibold tabular-nums text-foreground">
-            <span className="text-success">ⓩ</span> {hidden ? "••••••" : vaultZec.toFixed(2)}{" "}
-            <span className="text-muted-foreground text-xl">ZEC</span>
-          </h1>
-          <p className="text-xs text-muted-foreground mt-1 font-mono">
-            ≈ {fmt(balanceUsd)} · 2.00% all-in
-          </p>
-
-          <div className="mt-6 grid grid-cols-3 gap-2">
-            <button
-              onClick={() => setShieldFlow(true)}
-              className="pressable rounded-md bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.06)] py-3 text-sm font-medium flex flex-col items-center gap-1.5 hover:bg-[rgba(255,255,255,0.07)] transition"
-            >
-              <Plus className="size-4 text-muted-foreground" /> Add
-            </button>
-            <button
-              onClick={() => setVfk("withdraw")}
-              className="pressable rounded-md bg-success text-black py-3 text-sm font-medium flex flex-col items-center gap-1.5 hover:opacity-90 transition"
-            >
-              <ArrowRight className="size-4" /> Withdraw
-            </button>
-            <button
-              onClick={() => setVfk("settings")}
-              className="pressable rounded-md bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.06)] py-3 text-sm font-medium flex flex-col items-center gap-1.5 hover:bg-[rgba(255,255,255,0.07)] transition"
-            >
-              <Settings className="size-4 text-muted-foreground" /> Settings
-            </button>
-          </div>
+        <div className="mt-5 flex gap-2">
+          <button
+            onClick={() => setShieldFlow(true)}
+            className="btn-ghost flex-1 py-2.5 text-[11px]"
+          >
+            add
+          </button>
+          <button
+            onClick={() => setVfk("withdraw")}
+            className="btn-primary flex-1 py-2.5 text-[11px]"
+          >
+            withdraw
+          </button>
+          <button
+            onClick={() => setVfk("settings")}
+            className="btn-ghost flex-1 py-2.5 text-[11px]"
+          >
+            settings
+          </button>
         </div>
       </section>
 
       {/* Flow diagram */}
-      <section className="px-5 mt-5">
-        <p className="text-[11px] uppercase tracking-widest text-muted-foreground mb-3">Per-payment flow</p>
-        <div className="rounded-lg border border-[rgba(255,255,255,0.06)] bg-card flex items-center overflow-hidden">
+      <section className="px-4 py-4" style={{ borderBottom: "1px solid var(--border-dim)" }}>
+        <p className="label mb-3">per-payment flow</p>
+        <div className="flex items-center overflow-hidden">
           {flow.map((f, i) => (
-            <div key={f.l} className="flex items-center flex-1">
-              <div className="flex-1 px-3 py-4">
-                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Step {i + 1}</p>
-                <p className="text-xs font-medium text-foreground mt-0.5">{f.l}</p>
-                <p className="text-[10px] text-muted-foreground font-mono">{f.v}</p>
+            <div key={f.l} className="flex items-center flex-1 min-w-0">
+              <div className="flex-1 min-w-0">
+                <p className="label">{`step ${i + 1}`}</p>
+                <p className="text-[12px] text-[var(--text-primary)] mt-0.5 truncate">{f.l}</p>
+                <p className="text-[11px] font-light truncate" style={{ color: "var(--text-secondary)" }}>{f.v}</p>
               </div>
-              {i < flow.length - 1 && <ArrowRight className="size-3.5 text-muted-foreground shrink-0" />}
+              {i < flow.length - 1 && (
+                <ArrowRight className="size-3 mx-1 shrink-0" style={{ color: "var(--text-tertiary)" }} />
+              )}
             </div>
           ))}
         </div>
       </section>
 
       {/* Activity */}
-      <section className="px-5 mt-6 pb-32">
+      <section className="px-4 py-4 pb-8">
         <div className="flex items-center justify-between mb-3">
-          <p className="text-[11px] uppercase tracking-widest text-muted-foreground">Activity</p>
-          <button onClick={() => setAllHistory(true)} className="text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition pressable">
-            All history <ChevronRight className="size-3" />
+          <p className="label">activity</p>
+          <button
+            onClick={() => setAllHistory(true)}
+            className="pressable flex items-center gap-0.5 text-[11px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+          >
+            all history <ChevronRight className="size-3" />
           </button>
         </div>
 
         {vaultActivity.length === 0 && (
-          <div className="rounded-lg border border-[rgba(255,255,255,0.06)] bg-card p-8 text-center text-sm text-muted-foreground">
-            No vault activity yet.
+          <div className="py-16 text-center">
+            <p className="label">no vault activity yet</p>
           </div>
         )}
 
-        <div className="rounded-lg border border-[rgba(255,255,255,0.06)] bg-card divide-y divide-[rgba(255,255,255,0.04)] overflow-hidden">
-          {vaultActivity.map((s) => (
-            <button
-              key={s.id}
-              onClick={() => setOpen(s)}
-              className="pressable w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-[rgba(255,255,255,0.02)] transition"
-            >
-              <div className="size-8 rounded-md bg-[rgba(16,185,129,0.12)] text-success grid place-items-center shrink-0">
-                <Shield className="size-3.5" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="text-xs text-muted-foreground">{fmtTime(s.ts)} · {s.kind === "shield" ? "Shield in" : "Payout"}</p>
+        {vaultActivity.length > 0 && (
+          <div style={{ borderTop: "1px solid var(--border-dim)" }}>
+            {vaultActivity.map((s) => (
+              <button
+                key={s.id}
+                onClick={() => setOpen(s)}
+                className="pressable w-full text-left flex items-center gap-3 py-3 hover:bg-[rgba(255,255,255,0.02)] transition-colors"
+                style={{ borderBottom: "1px solid var(--border-dim)", height: 44 }}
+              >
+                <span className="dot dot-ok shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-[12px] text-[var(--text-secondary)] font-light">{fmtTime(s.ts)} · {s.kind === "shield" ? "shield in" : "payout"}</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-[13px] text-[var(--text-primary)]">{fmt(s.fromAmountUsd)}</span>
+                    <ArrowRight className="size-2.5" style={{ color: "var(--text-tertiary)" }} />
+                    <span className="text-[13px]" style={{ color: "var(--status-ok)" }}>
+                      {s.kind === "shield" ? `${s.zecAmount.toFixed(2)} ZEC` : (getChain(s.toChainId ?? "")?.shortName ?? "")}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 text-sm font-mono mt-0.5">
-                  <span className="text-foreground">{fmt(s.fromAmountUsd)}</span>
-                  <ArrowRight className="size-3 text-muted-foreground" />
-                  <span className="text-success">
-                    {s.kind === "shield" ? `ⓩ ${s.zecAmount.toFixed(2)}` : (getChain(s.toChainId ?? "")?.shortName ?? "")}
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono text-success flex items-center gap-1">
-                  <Lock className="size-2.5" /> {s.status}
+                <span className="text-[11px] font-light" style={{ color: "var(--text-tertiary)" }}>
+                  {s.status}
                 </span>
-                <ChevronRight className="size-3.5 text-muted-foreground" />
-              </div>
-            </button>
-          ))}
-        </div>
+              </button>
+            ))}
+          </div>
+        )}
       </section>
 
       <VaultFlow open={!!vfk} kind={vfk} onClose={() => setVfk(null)} />
@@ -170,33 +170,37 @@ function VaultPage() {
       <DetailSheet open={!!open} onClose={() => setOpen(null)} title="Vault entry">
         {open && (
           <div className="space-y-4">
-            <div className="rounded-lg bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.06)] p-5 space-y-3">
-              <div className="flex items-center justify-between text-sm font-mono">
-                <span className="text-foreground">{fmt(open.fromAmountUsd)}</span>
-                <ArrowRight className="size-4 text-muted-foreground" />
-                <span className="text-success">
-                  {open.kind === "shield" ? `ⓩ ${open.zecAmount.toFixed(2)} ZEC` : (getChain(open.toChainId ?? "")?.shortName ?? "")}
+            <div
+              className="p-5"
+              style={{ background: "var(--bg-raised)", borderRadius: 4 }}
+            >
+              <div className="flex items-center justify-between text-[13px]">
+                <span style={{ color: "var(--text-primary)" }}>{fmt(open.fromAmountUsd)}</span>
+                <ArrowRight className="size-3.5" style={{ color: "var(--text-tertiary)" }} />
+                <span style={{ color: "var(--status-ok)" }}>
+                  {open.kind === "shield" ? `${open.zecAmount.toFixed(2)} ZEC` : (getChain(open.toChainId ?? "")?.shortName ?? "")}
                 </span>
               </div>
-              <div className="flex items-center justify-center gap-1.5">
-                <Lock className="size-3 text-success" />
-                <span className="text-xs font-mono text-success">{open.status}</span>
+              <div className="flex items-center gap-1.5 mt-3">
+                <span className="dot dot-ok" />
+                <span className="text-[11px] font-light" style={{ color: "var(--status-ok)" }}>{open.status}</span>
               </div>
             </div>
-            <div className="rounded-lg border border-[rgba(255,255,255,0.06)] divide-y divide-[rgba(255,255,255,0.04)]">
-              <VRow l="Time" v={fmtTime(open.ts)} />
-              <VRow l="Kind" v={open.kind} />
-              <VRow l="All-in fee" v={`${fmt(open.fee)} · 2.00%`} />
-              <VRow l="Tx hash" v={short(open.hash)} mono />
-              {open.toAddress && <VRow l="To" v={short(open.toAddress)} mono />}
+            <div style={{ border: "1px solid var(--border-default)", borderRadius: 4 }}>
+              <VRow l="time" v={fmtTime(open.ts)} />
+              <VRow l="kind" v={open.kind} />
+              <VRow l="all-in fee" v={`${fmt(open.fee)} · 2.00%`} />
+              <VRow l="tx hash" v={short(open.hash)} mono />
+              {open.toAddress && <VRow l="to" v={short(open.toAddress)} mono last />}
+              {!open.toAddress && <VRow l="tx hash" v={short(open.hash)} mono last />}
             </div>
             {open.toChainId && (
               <a
                 href={getChain(open.toChainId)?.explorerTx(open.hash) ?? "#"}
                 target="_blank" rel="noopener"
-                className="w-full pressable rounded-md bg-primary text-primary-foreground py-3 text-sm font-medium flex items-center justify-center gap-2 hover:bg-primary/90 transition"
+                className="btn-ghost w-full py-2.5 flex items-center justify-center gap-2"
               >
-                View on explorer <ExternalLink className="size-4" />
+                explorer <ExternalLink className="size-3" />
               </a>
             )}
           </div>
@@ -211,11 +215,19 @@ function short(s: string) {
   return s.length > 14 ? `${s.slice(0, 8)}…${s.slice(-6)}` : s;
 }
 
-function VRow({ l, v, mono }: { l: string; v: React.ReactNode; mono?: boolean }) {
+function VRow({ l, v, mono, last }: { l: string; v: React.ReactNode; mono?: boolean; last?: boolean }) {
   return (
-    <div className="flex items-center justify-between px-4 py-3 gap-3">
-      <span className="text-[11px] uppercase tracking-widest text-muted-foreground shrink-0">{l}</span>
-      <span className={`text-sm text-right text-foreground ${mono ? "font-mono" : ""}`}>{v}</span>
+    <div
+      className="flex items-center justify-between px-4 py-3 gap-3"
+      style={!last ? { borderBottom: "1px solid var(--border-dim)" } : undefined}
+    >
+      <span className="label shrink-0">{l}</span>
+      <span
+        className="text-[12px] text-right text-[var(--text-primary)]"
+        style={mono ? { fontFamily: "'JetBrains Mono', monospace" } : undefined}
+      >
+        {v}
+      </span>
     </div>
   );
 }

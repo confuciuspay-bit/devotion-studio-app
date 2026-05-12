@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Sheet } from "@/components/Sheet";
 import { CoinPicker, type PickedCoin } from "@/components/CoinPicker";
 import { ChainPicker } from "@/components/ChainPicker";
@@ -7,12 +7,12 @@ import { AmountInput } from "@/components/AmountInput";
 import { StatusTimeline, type Step } from "@/components/StatusTimeline";
 import { QR } from "@/components/QR";
 import { Row } from "@/components/Row";
-import { CHAINS, getChain, vaultRouteLabel, type Chain } from "@/lib/chains";
+import { vaultRouteLabel, type Chain } from "@/lib/chains";
 import { useApp } from "@/lib/store";
 import { deriveAddress, fakeTxHash, shortAddr } from "@/lib/addresses";
 import { swapFee, vaultFee } from "@/lib/fees";
 import { useSimplePrices, fmtUsd } from "@/lib/markets";
-import { Copy, Share2, ExternalLink, ArrowRight, Repeat } from "lucide-react";
+import { Copy, Share2, ExternalLink, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 
 type FlowKind = "receive" | "send" | "swap" | "shield";
@@ -30,6 +30,7 @@ export function WalletFlow({ open, kind, onClose }: { open: boolean; kind: FlowK
 
   const { seedHex, holdings, shieldFunds, addContact } = useApp();
   const prices = useSimplePrices(coin ? [coin.id] : []);
+  const swapPrices = useSimplePrices([coin?.id, coinTo?.id].filter((x): x is string => !!x));
 
   useEffect(() => {
     if (!open) {
@@ -45,71 +46,63 @@ export function WalletFlow({ open, kind, onClose }: { open: boolean; kind: FlowK
     deriveAddress(seedHex, chain).then((d) => setAddress(d.address));
   }, [kind, chain, seedHex]);
 
-  const swapPrices = useSimplePrices(
-    [coin?.id, coinTo?.id].filter((x): x is string => !!x),
-  );
-
   const titles: Record<FlowKind, string[]> = {
-    receive: ["Receive — pick coin", "Pick chain", "Your address"],
-    send:    ["Send — pick coin", "Pick chain", "Amount", "Recipient", "Confirm", "Sending…"],
-    swap:    ["Swap from", "Swap to", "Amount", "Confirm", "Swapping…"],
-    shield:  ["Shield — pick asset", "Pick chain", "Amount", "Confirm", "Shielding to vault…"],
+    receive: ["receive — coin", "network", "your address"],
+    send:    ["send — coin", "network", "amount", "recipient", "review", "sending"],
+    swap:    ["swap from", "swap to", "amount", "review", "swapping"],
+    shield:  ["shield — asset", "network", "amount", "review", "shielding"],
   };
 
-  if (!kind) {
-    return <Sheet open={open} onClose={onClose} title=""><div /></Sheet>;
-  }
+  if (!kind) return <Sheet open={open} onClose={onClose} title=""><div /></Sheet>;
   const title = titles[kind][step] ?? "";
   const back = step > 0 ? () => setStep((s) => s - 1) : undefined;
 
   const userBalance = coin ? holdings.find((h) => h.coinId === coin.id)?.amount : undefined;
   const livePrice = coin ? prices.data?.[coin.id]?.usd ?? coin.price : undefined;
 
-  // ── RECEIVE ──────────────────────────────────────────
   const renderReceive = () => {
     if (step === 0) return <CoinPicker onPick={(c) => { setCoin(c); setStep(1); }} />;
     if (step === 1) return <ChainPicker coinId={coin?.id} onPick={(c) => { setChain(c); setStep(2); }} />;
     return (
       <div className="space-y-4">
         <div className="grid place-items-center">
-          <QR value={`${chain!.symbol.toLowerCase()}:${address}`} size={210} />
+          <QR value={`${chain!.symbol.toLowerCase()}:${address}`} size={200} />
         </div>
-        <div className="rounded-lg border border-[rgba(255,255,255,0.06)] divide-y divide-[rgba(255,255,255,0.04)]">
-          <Row l="Coin" v={<span className="flex items-center gap-2 justify-end">{coin?.symbol}<CoinIcon src={coin?.image} symbol={coin?.symbol ?? ""} size={18} /></span>} />
-          <Row l="Network" v={chain?.name ?? ""} />
-          <Row l="Address" v={<span className="font-mono break-all text-[11px]">{address}</span>} />
+        <div style={{ border: "1px solid var(--border-default)", borderRadius: 4 }}>
+          <Row l="coin" v={<span className="flex items-center gap-2 justify-end">{coin?.symbol}<CoinIcon src={coin?.image} symbol={coin?.symbol ?? ""} size={16} /></span>} />
+          <Row l="network" v={chain?.name ?? ""} />
+          <Row l="address" v={<span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, wordBreak: "break-all" }}>{address}</span>} last />
         </div>
         <div className="grid grid-cols-2 gap-2">
           <button
             onClick={() => { navigator.clipboard?.writeText(address); toast.success("Address copied"); }}
-            className="pressable rounded-md bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.06)] py-3 text-sm font-medium flex items-center justify-center gap-2 hover:bg-[rgba(255,255,255,0.07)] transition"
+            className="btn-ghost py-2.5 flex items-center justify-center gap-2"
           >
-            <Copy className="size-4" /> Copy
+            <Copy className="size-3" /> copy
           </button>
           <button
             onClick={() => { navigator.share?.({ title: "My address", text: address }).catch(() => {}); }}
-            className="pressable rounded-md bg-primary text-primary-foreground py-3 text-sm font-medium flex items-center justify-center gap-2 hover:bg-primary/90 transition"
+            className="btn-primary py-2.5 flex items-center justify-center gap-2"
           >
-            <Share2 className="size-4" /> Share
+            <Share2 className="size-3" /> share
           </button>
         </div>
-        <p className="text-[11px] text-muted-foreground text-center">
-          Send only {coin?.symbol} on {chain?.name}. Other assets will be lost.
+        <p className="text-[11px] font-light text-center" style={{ color: "var(--text-tertiary)" }}>
+          send only {coin?.symbol} on {chain?.name} · other assets will be lost
         </p>
       </div>
     );
   };
 
-  // ── SEND ─────────────────────────────────────────────
   const sendInit = async () => {
     setStep(5);
     const h = await fakeTxHash(coin!.id + recipient);
     setHash(h);
     const baseSteps: Step[] = [
-      { label: "Signing transaction", status: "active" },
-      { label: "Broadcasting to network", status: "pending" },
-      { label: `Confirming · ${chain!.confirmations} blocks`, status: "pending" },
-      { label: "Confirmed", status: "pending" },
+      { label: "signing transaction", status: "active" },
+      { label: "broadcasting to network", status: "pending" },
+      { label: `confirming · ${chain!.confirmations} blocks`, status: "pending" },
+      { label: "confirmed", status: "pending" },
     ];
     setProgress(baseSteps);
     const advance = (i: number) =>
@@ -126,12 +119,8 @@ export function WalletFlow({ open, kind, onClose }: { open: boolean; kind: FlowK
       return (
         <div className="space-y-4">
           <AmountInput symbol={coin!.symbol} price={livePrice} balance={userBalance} onChange={setAmount} />
-          <button
-            disabled={!amount.usd}
-            onClick={() => setStep(3)}
-            className="w-full rounded-md bg-primary text-primary-foreground py-3 text-sm font-medium pressable disabled:opacity-50 hover:bg-primary/90 transition"
-          >
-            Continue
+          <button disabled={!amount.usd} onClick={() => setStep(3)} className="btn-primary w-full py-2.5 disabled:opacity-40">
+            continue
           </button>
         </div>
       );
@@ -139,27 +128,25 @@ export function WalletFlow({ open, kind, onClose }: { open: boolean; kind: FlowK
     if (step === 3) {
       return (
         <div className="space-y-3">
-          <label className="text-xs text-muted-foreground">Recipient address</label>
+          <p className="label">recipient address</p>
           <input
             value={recipient} onChange={(e) => setRecipient(e.target.value)}
             placeholder={`${chain?.addressPrefix ?? ""}…`}
-            className="w-full rounded-md bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.06)] px-4 py-3 text-sm font-mono outline-none focus:border-primary/50 transition text-foreground placeholder:text-muted-foreground"
+            className="w-full"
+            style={{ height: 36 }}
           />
           <button
             onClick={async () => {
               const d = await deriveAddress((seedHex ?? "demo") + "self", chain!);
               setRecipient(d.address);
             }}
-            className="text-xs text-primary hover:opacity-80 transition"
+            className="pressable text-[12px] transition-colors hover:opacity-80"
+            style={{ color: "var(--accent)" }}
           >
-            Use one of my addresses
+            use one of my addresses
           </button>
-          <button
-            disabled={recipient.length < 10}
-            onClick={() => setStep(4)}
-            className="w-full rounded-md bg-primary text-primary-foreground py-3 text-sm font-medium pressable disabled:opacity-50 hover:bg-primary/90 transition"
-          >
-            Review
+          <button disabled={recipient.length < 10} onClick={() => setStep(4)} className="btn-primary w-full py-2.5 disabled:opacity-40">
+            review
           </button>
         </div>
       );
@@ -168,22 +155,26 @@ export function WalletFlow({ open, kind, onClose }: { open: boolean; kind: FlowK
       const fee = chain?.fixedFeeUsd[1] ?? 0;
       return (
         <div className="space-y-4">
-          <div className="rounded-lg bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.06)] p-5 text-center">
-            <p className="text-[11px] uppercase tracking-widest text-muted-foreground">You're sending</p>
-            <p className="text-3xl font-mono font-semibold tabular-nums mt-2 text-foreground">{amount.token.toFixed(amount.token < 1 ? 6 : 4)} {coin?.symbol}</p>
-            <p className="text-xs text-muted-foreground font-mono mt-1">≈ {fmtUsd(amount.usd)}</p>
+          <div className="p-5 text-center" style={{ background: "var(--bg-raised)", borderRadius: 4 }}>
+            <p className="label mb-2">you're sending</p>
+            <p className="text-[22px]" style={{ color: "var(--text-primary)" }}>
+              {amount.token.toFixed(amount.token < 1 ? 6 : 4)} {coin?.symbol}
+            </p>
+            <p className="text-[11px] font-light mt-1" style={{ color: "var(--text-secondary)" }}>
+              ≈ {fmtUsd(amount.usd)}
+            </p>
           </div>
-          <div className="rounded-lg border border-[rgba(255,255,255,0.06)] divide-y divide-[rgba(255,255,255,0.04)]">
-            <Row l="To" v={<span className="font-mono">{shortAddr(recipient)}</span>} />
-            <Row l="Network" v={chain?.name ?? ""} />
-            <Row l="Network fee" v={`~$${fee.toFixed(2)}`} />
-            <Row l="Total" v={fmtUsd(amount.usd + fee)} />
+          <div style={{ border: "1px solid var(--border-default)", borderRadius: 4 }}>
+            <Row l="to" v={<span style={{ fontFamily: "'JetBrains Mono', monospace" }}>{shortAddr(recipient)}</span>} />
+            <Row l="network" v={chain?.name ?? ""} />
+            <Row l="network fee" v={`~$${fee.toFixed(2)}`} />
+            <Row l="total" v={fmtUsd(amount.usd + fee)} last />
           </div>
           <button
             onClick={() => { addContact({ id: `c${Date.now()}`, label: shortAddr(recipient), address: recipient, chainId: chain!.id }); sendInit(); }}
-            className="w-full rounded-md bg-primary text-primary-foreground py-3 text-sm font-medium pressable hover:bg-primary/90 transition"
+            className="btn-primary w-full py-2.5"
           >
-            Slide to send
+            confirm send
           </button>
         </div>
       );
@@ -194,36 +185,26 @@ export function WalletFlow({ open, kind, onClose }: { open: boolean; kind: FlowK
         <StatusTimeline steps={progress} />
         {done && (
           <>
-            <div className="rounded-lg border border-[rgba(255,255,255,0.06)] divide-y divide-[rgba(255,255,255,0.04)]">
-              <Row l="Hash" v={<span className="font-mono">{shortAddr(hash, 8, 6)}</span>} />
-              <Row l="Block" v={<span className="font-mono">21,182,{Math.floor(Math.random() * 999)}</span>} />
+            <div style={{ border: "1px solid var(--border-default)", borderRadius: 4 }}>
+              <Row l="hash" v={<span style={{ fontFamily: "'JetBrains Mono', monospace" }}>{shortAddr(hash, 8, 6)}</span>} last />
             </div>
-            <a
-              href={chain!.explorerTx(hash)} target="_blank" rel="noopener"
-              className="w-full pressable rounded-md bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.06)] py-3 text-sm font-medium flex items-center justify-center gap-2 hover:bg-[rgba(255,255,255,0.07)] transition"
-            >
-              View on explorer <ExternalLink className="size-3.5" />
+            <a href={chain!.explorerTx(hash)} target="_blank" rel="noopener" className="btn-ghost w-full py-2.5 flex items-center justify-center gap-2">
+              explorer <ExternalLink className="size-3" />
             </a>
-            <button
-              onClick={onClose}
-              className="w-full rounded-md bg-primary text-primary-foreground py-3 text-sm font-medium pressable hover:bg-primary/90 transition"
-            >
-              Done
-            </button>
+            <button onClick={onClose} className="btn-primary w-full py-2.5">done</button>
           </>
         )}
       </div>
     );
   };
 
-  // ── SWAP ─────────────────────────────────────────────
   const swapInit = () => {
     setStep(4);
     const steps: Step[] = [
-      { label: "Quote locked", status: "done" },
-      { label: "Routing via " + (chain ? vaultRouteLabel(chain) : "Maya Protocol"), status: "active" },
-      { label: "Streaming swap", status: "pending" },
-      { label: "Settled", status: "pending" },
+      { label: "quote locked", status: "done" },
+      { label: "routing via " + (chain ? vaultRouteLabel(chain) : "Maya Protocol"), status: "active" },
+      { label: "streaming swap", status: "pending" },
+      { label: "settled", status: "pending" },
     ];
     setProgress(steps);
     setTimeout(() => setProgress((p) => p.map((s, k) => k < 2 ? { ...s, status: "done" } : k === 2 ? { ...s, status: "active" } : s)), 1500);
@@ -237,31 +218,27 @@ export function WalletFlow({ open, kind, onClose }: { open: boolean; kind: FlowK
       return (
         <div className="space-y-4">
           <AmountInput symbol={coin!.symbol} price={livePrice} balance={userBalance} onChange={setAmount} />
-          <div className="rounded-lg border border-[rgba(255,255,255,0.06)] bg-card p-4 flex items-center gap-3">
-            <CoinIcon src={coin?.image} symbol={coin?.symbol ?? ""} size={28} />
-            <ArrowRight className="size-3.5 text-muted-foreground" />
-            <CoinIcon src={coinTo?.image} symbol={coinTo?.symbol ?? ""} size={28} />
+          <div className="flex items-center gap-3 px-4 py-3" style={{ background: "var(--bg-raised)", borderRadius: 4 }}>
+            <CoinIcon src={coin?.image} symbol={coin?.symbol ?? ""} size={22} />
+            <ArrowRight className="size-3" style={{ color: "var(--text-tertiary)" }} />
+            <CoinIcon src={coinTo?.image} symbol={coinTo?.symbol ?? ""} size={22} />
             <div className="flex-1 text-right">
-              <p className="text-xs text-muted-foreground">You receive</p>
+              <p className="label">you receive</p>
               {(() => {
                 const fromUsd = amount.usd;
                 const toPrice = swapPrices.data?.[coinTo!.id]?.usd ?? 1;
                 const fee = swapFee(fromUsd);
                 const out = (fromUsd - fee.total) / toPrice;
                 return (
-                  <p className="text-sm font-mono text-foreground">
+                  <p className="text-[13px]" style={{ color: "var(--text-primary)" }}>
                     ≈ {out.toFixed(out < 1 ? 6 : 4)} {coinTo?.symbol}
                   </p>
                 );
               })()}
             </div>
           </div>
-          <button
-            disabled={!amount.usd}
-            onClick={() => setStep(3)}
-            className="w-full rounded-md bg-primary text-primary-foreground py-3 text-sm font-medium pressable disabled:opacity-50 hover:bg-primary/90 transition"
-          >
-            Continue
+          <button disabled={!amount.usd} onClick={() => setStep(3)} className="btn-primary w-full py-2.5 disabled:opacity-40">
+            continue
           </button>
         </div>
       );
@@ -272,37 +249,32 @@ export function WalletFlow({ open, kind, onClose }: { open: boolean; kind: FlowK
       const out = (amount.usd - fee.total) / toPrice;
       return (
         <div className="space-y-4">
-          <div className="rounded-lg bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.06)] p-5">
-            <div className="flex items-center justify-between text-sm">
+          <div className="p-5" style={{ background: "var(--bg-raised)", borderRadius: 4 }}>
+            <div className="flex items-center justify-between text-[13px]">
               <div className="flex items-center gap-2">
-                <CoinIcon src={coin?.image} symbol={coin?.symbol ?? ""} size={32} />
+                <CoinIcon src={coin?.image} symbol={coin?.symbol ?? ""} size={22} />
                 <div>
-                  <p className="text-xs text-muted-foreground">From</p>
-                  <p className="font-mono text-foreground">{amount.token.toFixed(4)} {coin?.symbol}</p>
+                  <p className="label">from</p>
+                  <p style={{ color: "var(--text-primary)" }}>{amount.token.toFixed(4)} {coin?.symbol}</p>
                 </div>
               </div>
-              <Repeat className="size-4 text-primary" />
+              <ArrowRight className="size-3" style={{ color: "var(--text-tertiary)" }} />
               <div className="flex items-center gap-2">
                 <div className="text-right">
-                  <p className="text-xs text-muted-foreground">To</p>
-                  <p className="font-mono text-foreground">{out.toFixed(4)} {coinTo?.symbol}</p>
+                  <p className="label">to</p>
+                  <p style={{ color: "var(--text-primary)" }}>{out.toFixed(4)} {coinTo?.symbol}</p>
                 </div>
-                <CoinIcon src={coinTo?.image} symbol={coinTo?.symbol ?? ""} size={32} />
+                <CoinIcon src={coinTo?.image} symbol={coinTo?.symbol ?? ""} size={22} />
               </div>
             </div>
           </div>
-          <div className="rounded-lg border border-[rgba(255,255,255,0.06)] divide-y divide-[rgba(255,255,255,0.04)]">
-            <Row l="Rate" v={<span className="font-mono">1 {coin?.symbol} = {(livePrice && toPrice ? livePrice / toPrice : 0).toFixed(6)} {coinTo?.symbol}</span>} />
-            <Row l="Spread" v={fee.label} />
-            <Row l="Slippage" v="0.50% max" />
-            <Row l="Route" v="Maya · ZEC bridge" />
+          <div style={{ border: "1px solid var(--border-default)", borderRadius: 4 }}>
+            <Row l="rate" v={`1 ${coin?.symbol} = ${(livePrice && toPrice ? livePrice / toPrice : 0).toFixed(6)} ${coinTo?.symbol}`} mono />
+            <Row l="spread" v={fee.label} />
+            <Row l="slippage" v="0.50% max" />
+            <Row l="route" v="Maya · ZEC bridge" last />
           </div>
-          <button
-            onClick={swapInit}
-            className="w-full rounded-md bg-primary text-primary-foreground py-3 text-sm font-medium pressable hover:bg-primary/90 transition"
-          >
-            Slide to swap
-          </button>
+          <button onClick={swapInit} className="btn-primary w-full py-2.5">confirm swap</button>
         </div>
       );
     }
@@ -310,26 +282,18 @@ export function WalletFlow({ open, kind, onClose }: { open: boolean; kind: FlowK
     return (
       <div className="space-y-4">
         <StatusTimeline steps={progress} />
-        {done && (
-          <button
-            onClick={onClose}
-            className="w-full rounded-md bg-primary text-primary-foreground py-3 text-sm font-medium pressable hover:bg-primary/90 transition"
-          >
-            Done
-          </button>
-        )}
+        {done && <button onClick={onClose} className="btn-primary w-full py-2.5">done</button>}
       </div>
     );
   };
 
-  // ── SHIELD ───────────────────────────────────────────
   const shieldInit = async () => {
     setStep(4);
     const steps: Step[] = [
-      { label: "Generating one-time t-addr", status: "active", detail: "t1abc…" },
-      { label: "Streaming swap to ZEC · Maya", status: "pending" },
-      { label: "Shielding into z-addr (z_sendmany)", status: "pending" },
-      { label: "Shielded — anonymity set joined", status: "pending" },
+      { label: "generating one-time t-addr", status: "active" },
+      { label: "streaming swap to ZEC · Maya", status: "pending" },
+      { label: "shielding into z-addr (z_sendmany)", status: "pending" },
+      { label: "shielded — anonymity set joined", status: "pending" },
     ];
     setProgress(steps);
     const h = await fakeTxHash("shield" + coin!.id);
@@ -364,16 +328,17 @@ export function WalletFlow({ open, kind, onClose }: { open: boolean; kind: FlowK
       return (
         <div className="space-y-4">
           <AmountInput symbol={coin!.symbol} price={livePrice} balance={userBalance} onChange={setAmount} />
-          <div className="rounded-lg border border-[rgba(16,185,129,0.2)] bg-[rgba(16,185,129,0.04)] p-4 text-xs">
-            <p className="text-success font-medium mb-1">UmbraVault · 2.00% all-in</p>
-            <p className="text-muted-foreground">Funds transit one-time t-addr → ZEC z-addr. PSP free. Payout in any currency, any time.</p>
+          <div className="px-3 py-3 text-[12px]" style={{ background: "rgba(74,222,128,0.05)", border: "1px solid rgba(74,222,128,0.2)", borderRadius: 4 }}>
+            <div className="flex items-center gap-1.5 mb-1">
+              <span className="dot dot-ok" />
+              <p className="font-medium" style={{ color: "var(--status-ok)" }}>UmbraVault · 2.00% all-in</p>
+            </div>
+            <p className="font-light" style={{ color: "var(--text-secondary)" }}>
+              funds transit one-time t-addr → ZEC z-addr · payout in any currency, any time
+            </p>
           </div>
-          <button
-            disabled={!amount.usd}
-            onClick={() => setStep(3)}
-            className="w-full rounded-md bg-primary text-primary-foreground py-3 text-sm font-medium pressable disabled:opacity-50 hover:bg-primary/90 transition"
-          >
-            Continue
+          <button disabled={!amount.usd} onClick={() => setStep(3)} className="btn-primary w-full py-2.5 disabled:opacity-40">
+            continue
           </button>
         </div>
       );
@@ -382,23 +347,20 @@ export function WalletFlow({ open, kind, onClose }: { open: boolean; kind: FlowK
       const fee = vaultFee(amount.usd);
       return (
         <div className="space-y-4">
-          <div className="rounded-lg bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.06)] p-5 text-center">
-            <p className="text-[11px] uppercase tracking-widest text-muted-foreground">Shielding</p>
-            <p className="text-3xl font-mono font-semibold mt-2 text-foreground">{fmtUsd(amount.usd)}</p>
-            <p className="text-xs text-success font-mono mt-1">→ ⓩ {(amount.usd / 100).toFixed(4)} ZEC</p>
+          <div className="p-5 text-center" style={{ background: "var(--bg-raised)", borderRadius: 4 }}>
+            <p className="label mb-2">shielding</p>
+            <p className="text-[22px]" style={{ color: "var(--text-primary)" }}>{fmtUsd(amount.usd)}</p>
+            <p className="text-[11px] font-light mt-1" style={{ color: "var(--status-ok)" }}>
+              → {(amount.usd / 100).toFixed(4)} ZEC
+            </p>
           </div>
-          <div className="rounded-lg border border-[rgba(255,255,255,0.06)] divide-y divide-[rgba(255,255,255,0.04)]">
-            <Row l="From" v={`${coin?.symbol} · ${chain?.name}`} />
-            <Row l="Route" v={chain ? vaultRouteLabel(chain) : "Maya"} />
-            <Row l="All-in fee" v={`${fmtUsd(fee.total)} · 2.00%`} />
-            <Row l="You receive in vault" v={fmtUsd(amount.usd - fee.total)} />
+          <div style={{ border: "1px solid var(--border-default)", borderRadius: 4 }}>
+            <Row l="from" v={`${coin?.symbol} · ${chain?.name}`} />
+            <Row l="route" v={chain ? vaultRouteLabel(chain) : "Maya"} />
+            <Row l="all-in fee" v={`${fmtUsd(fee.total)} · 2.00%`} />
+            <Row l="vault receives" v={fmtUsd(amount.usd - fee.total)} last />
           </div>
-          <button
-            onClick={shieldInit}
-            className="w-full rounded-md bg-primary text-primary-foreground py-3 text-sm font-medium pressable hover:bg-primary/90 transition"
-          >
-            Shield now
-          </button>
+          <button onClick={shieldInit} className="btn-primary w-full py-2.5">shield now</button>
         </div>
       );
     }
@@ -406,14 +368,7 @@ export function WalletFlow({ open, kind, onClose }: { open: boolean; kind: FlowK
     return (
       <div className="space-y-4">
         <StatusTimeline steps={progress} />
-        {done && (
-          <button
-            onClick={onClose}
-            className="w-full rounded-md bg-primary text-primary-foreground py-3 text-sm font-medium pressable hover:bg-primary/90 transition"
-          >
-            Done
-          </button>
-        )}
+        {done && <button onClick={onClose} className="btn-primary w-full py-2.5">done</button>}
       </div>
     );
   };

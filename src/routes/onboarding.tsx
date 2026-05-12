@@ -2,8 +2,8 @@ import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useMemo, useState, useEffect } from "react";
 import { useApp, pinHash } from "@/lib/store";
 import { PinPad } from "@/components/PinPad";
-import { generateMnemonic, mnemonicToSeedSync, wordlist as bip39Wordlist } from "@/lib/bip39";
-import { ChevronRight, Eye, EyeOff, Shield, Check, Sparkles, ArrowLeft, Upload } from "lucide-react";
+import { generateMnemonic, mnemonicToSeedSync } from "@/lib/bip39";
+import { Eye, EyeOff, Shield, ArrowLeft, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/onboarding")({ component: OnboardingPage });
@@ -11,12 +11,12 @@ export const Route = createFileRoute("/onboarding")({ component: OnboardingPage 
 type Step = "welcome" | "seed" | "confirm" | "pin" | "merchant" | "done";
 
 const BRAND_PRESETS = [
-  { name: "Violet",  value: "#7c3aed" },
   { name: "Emerald", value: "#10b981" },
   { name: "Amber",   value: "#f59e0b" },
   { name: "Rose",    value: "#f43f5e" },
   { name: "Cyan",    value: "#06b6d4" },
   { name: "Slate",   value: "#64748b" },
+  { name: "Zinc",    value: "#71717a" },
 ];
 
 function OnboardingPage() {
@@ -26,7 +26,6 @@ function OnboardingPage() {
   const setMerchant = useApp((s) => s.setMerchant);
   const setPinHashStored = useApp((s) => s.setPinHashStored);
 
-  // Already onboarded — bounce to home.
   useEffect(() => {
     if (initialised) router.navigate({ to: "/" });
   }, [initialised, router]);
@@ -35,14 +34,11 @@ function OnboardingPage() {
   const [mnemonic, setMnemonic] = useState<string[]>([]);
   const [revealed, setRevealed] = useState(false);
 
-  // Confirm 3 random word indices
   const [confirmIdxs, setConfirmIdxs] = useState<number[]>([]);
   const [confirmInputs, setConfirmInputs] = useState<string[]>(["", "", ""]);
 
-  // PIN
   const [pin1, setPin1] = useState<string | null>(null);
 
-  // Merchant
   const [biz, setBiz] = useState("");
   const [legal, setLegal] = useState("");
   const [country, setCountry] = useState("");
@@ -57,7 +53,6 @@ function OnboardingPage() {
   }
 
   function startConfirm() {
-    // pick 3 distinct random indices
     const set = new Set<number>();
     while (set.size < 3) set.add(Math.floor(Math.random() * 12));
     setConfirmIdxs([...set].sort((a, b) => a - b));
@@ -67,10 +62,7 @@ function OnboardingPage() {
 
   function checkConfirm() {
     const ok = confirmIdxs.every((idx, i) => confirmInputs[i].trim().toLowerCase() === mnemonic[idx]);
-    if (!ok) {
-      toast.error("Words don't match. Check your backup and try again.");
-      return;
-    }
+    if (!ok) { toast.error("Words don't match. Check your backup and try again."); return; }
     setStep("pin");
   }
 
@@ -89,15 +81,10 @@ function OnboardingPage() {
   }
 
   async function finish() {
-    if (!biz.trim()) {
-      toast.error("Business name is required");
-      return;
-    }
-    // derive a stub seedHex + zAddr from mnemonic
+    if (!biz.trim()) { toast.error("Business name is required"); return; }
     const seedBytes = mnemonicToSeedSync(mnemonic.join(" "));
     const seedHex = Array.from(seedBytes.slice(0, 32) as Uint8Array).map((b: number) => b.toString(16).padStart(2, "0")).join("");
     const zAddr = "zs1" + Array.from({ length: 75 }, (_, i) => "qpzry9x8gf2tvdw0s3jn54khce6mua7l"[(seedBytes[i % seedBytes.length] ?? i) % 32]).join("");
-
     init(mnemonic, seedHex, zAddr);
     setMerchant({
       businessName: biz.trim(),
@@ -115,30 +102,22 @@ function OnboardingPage() {
   function onLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 500_000) {
-      toast.error("Logo must be smaller than 500KB");
-      return;
-    }
+    if (file.size > 500_000) { toast.error("Logo must be smaller than 500KB"); return; }
     const reader = new FileReader();
     reader.onload = () => setLogoDataUrl(reader.result as string);
     reader.readAsDataURL(file);
   }
 
   return (
-    <div className="min-h-dvh flex flex-col px-6 py-10 bg-background">
-      <header className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-2">
-          <div className="size-6 rounded-md bg-primary grid place-items-center">
-            <div className="size-2.5 rounded-full bg-white/90" />
-          </div>
-          <span className="text-sm font-semibold tracking-tight text-foreground">umbra</span>
-        </div>
+    <div className="min-h-dvh flex flex-col px-6 py-10" style={{ background: "var(--bg-base)" }}>
+      <header className="flex items-center justify-between mb-10">
+        <span className="text-[13px] font-medium tracking-[0.15em] uppercase" style={{ color: "var(--text-primary)" }}>
+          umbra
+        </span>
         <StepDots step={step} />
       </header>
 
-      {step === "welcome" && (
-        <Welcome onNext={generate} />
-      )}
+      {step === "welcome" && <Welcome onNext={generate} />}
       {step === "seed" && (
         <SeedView
           mnemonic={mnemonic}
@@ -159,11 +138,11 @@ function OnboardingPage() {
       )}
       {step === "pin" && (
         <div className="flex-1 flex flex-col justify-center max-w-sm w-full mx-auto">
-          <h2 className="text-xl font-sans font-semibold text-center mb-1">
-            {pin1 ? "Confirm your PIN" : "Set a 4-digit PIN"}
-          </h2>
-          <p className="text-xs text-muted-foreground text-center mb-6">
-            Used to unlock the app and confirm sensitive actions.
+          <p className="text-[18px] font-medium text-center mb-1" style={{ color: "var(--text-primary)" }}>
+            {pin1 ? "confirm your PIN" : "set a 4-digit PIN"}
+          </p>
+          <p className="text-[11px] font-light text-center mb-8" style={{ color: "var(--text-secondary)" }}>
+            used to unlock the app and confirm sensitive actions
           </p>
           <PinPad key={pin1 ? "confirm" : "set"} onSubmit={commitPin} />
         </div>
@@ -187,11 +166,17 @@ function StepDots({ step }: { step: Step }) {
   const order: Step[] = ["welcome", "seed", "confirm", "pin", "merchant"];
   const idx = order.indexOf(step);
   return (
-    <div className="flex gap-1.5">
+    <div className="flex gap-1.5 items-center">
       {order.map((s, i) => (
         <div
           key={s}
-          className={`h-1 rounded-full transition-all ${i <= idx ? "w-6 bg-primary" : "w-3 bg-foreground/15"}`}
+          className="transition-all"
+          style={{
+            height: 4,
+            borderRadius: 2,
+            width: i <= idx ? 20 : 8,
+            background: i <= idx ? "var(--accent)" : "var(--bg-raised)",
+          }}
         />
       ))}
     </div>
@@ -200,33 +185,27 @@ function StepDots({ step }: { step: Step }) {
 
 function Welcome({ onNext }: { onNext: () => void }) {
   return (
-    <div className="flex-1 flex flex-col justify-center text-center max-w-sm mx-auto animate-fade-in">
-      <div className="size-16 mx-auto rounded-lg bg-primary/15 text-primary grid place-items-center mb-6">
-        <Sparkles className="size-7" />
-      </div>
-      <h1 className="text-3xl font-sans font-semibold tracking-tight">
-        Set up your merchant account
-      </h1>
-      <p className="mt-3 text-sm text-muted-foreground">
-        Umbra is a non-custodial, privacy-first PSP. Your seed never leaves this device.
+    <div className="flex-1 flex flex-col justify-center max-w-sm mx-auto w-full">
+      <p className="text-[24px] font-medium mb-2" style={{ color: "var(--text-primary)" }}>
+        set up your account
       </p>
-      <ul className="mt-8 space-y-3 text-left text-sm">
+      <p className="text-[13px] font-light mb-8" style={{ color: "var(--text-secondary)" }}>
+        umbra is a non-custodial, privacy-first PSP. your seed never leaves this device.
+      </p>
+      <div className="space-y-3 mb-10">
         {[
-          "Generate a 12-word recovery phrase",
-          "Set a 4-digit PIN to lock the app",
-          "Brand UmbraPay with your business",
+          "generate a 12-word recovery phrase",
+          "set a 4-digit PIN to lock the app",
+          "brand UmbraPay with your business",
         ].map((t) => (
-          <li key={t} className="flex items-start gap-2">
-            <Check className="size-4 text-shield mt-0.5 shrink-0" />
-            <span className="text-muted-foreground">{t}</span>
-          </li>
+          <div key={t} className="flex items-center gap-3">
+            <span className="dot" style={{ background: "var(--status-ok)", flexShrink: 0 }} />
+            <span className="text-[12px] font-light" style={{ color: "var(--text-secondary)" }}>{t}</span>
+          </div>
         ))}
-      </ul>
-      <button
-        onClick={onNext}
-        className="mt-10 pressable rounded-lg bg-primary text-primary-foreground py-4 text-sm font-semibold flex items-center justify-center gap-2"
-      >
-        Get started <ChevronRight className="size-4" />
+      </div>
+      <button onClick={onNext} className="btn-primary w-full py-3">
+        get started
       </button>
     </div>
   );
@@ -239,56 +218,55 @@ function SeedView({
   onReveal: () => void; onBack: () => void; onNext: () => void;
 }) {
   return (
-    <div className="flex-1 flex flex-col max-w-sm mx-auto w-full animate-fade-in">
-      <button onClick={onBack} className="self-start text-xs text-muted-foreground flex items-center gap-1 mb-4 pressable">
-        <ArrowLeft className="size-3.5" /> Back
+    <div className="flex-1 flex flex-col max-w-sm mx-auto w-full">
+      <button onClick={onBack} className="pressable self-start flex items-center gap-1 text-[11px] mb-6" style={{ color: "var(--text-secondary)" }}>
+        <ArrowLeft className="size-3" /> back
       </button>
-      <h2 className="text-xl font-sans font-semibold">Your recovery phrase</h2>
-      <p className="mt-2 text-xs text-muted-foreground">
-        Write these 12 words down on paper — in order. Anyone with them controls your funds.
+      <p className="text-[18px] font-medium mb-1" style={{ color: "var(--text-primary)" }}>your recovery phrase</p>
+      <p className="text-[12px] font-light mb-5" style={{ color: "var(--text-secondary)" }}>
+        write these 12 words down on paper — in order. anyone with them controls your funds.
       </p>
 
-      <div className="mt-5 relative rounded-lg border border-[rgba(255,255,255,0.06)] bg-card p-4">
+      <div className="relative mb-4" style={{ border: "1px solid var(--border-default)", borderRadius: 4, padding: 16 }}>
         <div className={`grid grid-cols-3 gap-2 ${revealed ? "" : "blur-md select-none"}`}>
           {mnemonic.map((w, i) => (
-            <div key={i} className="flex items-baseline gap-1.5 px-2 py-2 rounded-lg bg-foreground/5">
-              <span className="text-[10px] font-mono text-muted-foreground tabular-nums w-4">{i + 1}</span>
-              <span className="text-sm font-mono">{w}</span>
+            <div key={i} className="flex items-baseline gap-1.5 px-2 py-2" style={{ background: "var(--bg-raised)", borderRadius: 4 }}>
+              <span className="text-[10px] tabular-nums w-4 shrink-0" style={{ color: "var(--text-tertiary)" }}>{i + 1}</span>
+              <span className="text-[12px]" style={{ color: "var(--text-primary)" }}>{w}</span>
             </div>
           ))}
         </div>
         {!revealed && (
           <button
             onClick={onReveal}
-            className="absolute inset-0 grid place-items-center text-sm font-medium text-primary"
+            className="absolute inset-0 grid place-items-center"
           >
-            <span className="flex items-center gap-2 pressable px-4 py-2 rounded-full bg-background border border-[rgba(255,255,255,0.06)]">
-              <Eye className="size-4" /> Tap to reveal
+            <span className="pressable flex items-center gap-2 px-4 py-2 text-[12px]" style={{ background: "var(--bg-overlay)", border: "1px solid var(--border-default)", borderRadius: 4, color: "var(--accent)" }}>
+              <Eye className="size-3.5" /> tap to reveal
             </span>
           </button>
         )}
       </div>
 
       {revealed && (
-        <button
-          onClick={onReveal}
-          className="self-end mt-2 text-[11px] text-muted-foreground flex items-center gap-1"
-        >
-          <EyeOff className="size-3" /> Hide
+        <button onClick={onReveal} className="self-end mb-3 pressable flex items-center gap-1 text-[11px]" style={{ color: "var(--text-secondary)" }}>
+          <EyeOff className="size-3" /> hide
         </button>
       )}
 
-      <div className="mt-5 rounded-md bg-destructive/10 border border-destructive/30 p-3 text-[11px] text-destructive flex gap-2">
-        <Shield className="size-3.5 shrink-0 mt-0.5" />
-        <span>Never share these words. Umbra support will never ask for them.</span>
+      <div className="flex gap-2 mb-6 px-3 py-3" style={{ background: "rgba(248,113,113,0.05)", border: "1px solid rgba(248,113,113,0.2)", borderRadius: 4 }}>
+        <Shield className="size-3.5 shrink-0 mt-0.5" style={{ color: "var(--status-err)" }} />
+        <span className="text-[11px] font-light" style={{ color: "var(--status-err)" }}>
+          never share these words. umbra support will never ask for them.
+        </span>
       </div>
 
       <button
         onClick={onNext}
         disabled={!revealed}
-        className="mt-auto pressable rounded-lg bg-primary text-primary-foreground py-4 text-sm font-semibold disabled:opacity-40 disabled:pointer-events-none"
+        className="mt-auto btn-primary w-full py-3 disabled:opacity-40"
       >
-        I've written them down
+        i've written them down
       </button>
     </div>
   );
@@ -301,20 +279,18 @@ function ConfirmView({
   setInputs: (i: string[]) => void; onBack: () => void; onNext: () => void;
 }) {
   return (
-    <div className="flex-1 flex flex-col max-w-sm mx-auto w-full animate-fade-in">
-      <button onClick={onBack} className="self-start text-xs text-muted-foreground flex items-center gap-1 mb-4 pressable">
-        <ArrowLeft className="size-3.5" /> Back
+    <div className="flex-1 flex flex-col max-w-sm mx-auto w-full">
+      <button onClick={onBack} className="pressable self-start flex items-center gap-1 text-[11px] mb-6" style={{ color: "var(--text-secondary)" }}>
+        <ArrowLeft className="size-3" /> back
       </button>
-      <h2 className="text-xl font-sans font-semibold">Confirm your phrase</h2>
-      <p className="mt-2 text-xs text-muted-foreground">
-        Type the requested words from your backup.
+      <p className="text-[18px] font-medium mb-1" style={{ color: "var(--text-primary)" }}>confirm your phrase</p>
+      <p className="text-[12px] font-light mb-6" style={{ color: "var(--text-secondary)" }}>
+        type the requested words from your backup
       </p>
-      <div className="mt-6 space-y-3">
+      <div className="space-y-4 mb-6">
         {idxs.map((idx, i) => (
           <div key={idx}>
-            <label className="text-[11px] uppercase tracking-wider text-muted-foreground">
-              Word #{idx + 1}
-            </label>
+            <p className="label mb-1.5">word #{idx + 1}</p>
             <input
               autoComplete="off"
               autoCapitalize="none"
@@ -325,7 +301,8 @@ function ConfirmView({
                 next[i] = e.target.value;
                 setInputs(next);
               }}
-              className="mt-1 w-full rounded-md bg-foreground/5 border border-[rgba(255,255,255,0.06)] px-3 py-3 font-mono text-sm focus:outline-none focus:border-primary"
+              className="w-full"
+              style={{ height: 36 }}
             />
           </div>
         ))}
@@ -333,9 +310,9 @@ function ConfirmView({
       <button
         onClick={onNext}
         disabled={inputs.some((x) => !x.trim())}
-        className="mt-auto pressable rounded-lg bg-primary text-primary-foreground py-4 text-sm font-semibold disabled:opacity-40 disabled:pointer-events-none"
+        className="mt-auto btn-primary w-full py-3 disabled:opacity-40"
       >
-        Continue
+        continue
       </button>
     </div>
   );
@@ -350,48 +327,56 @@ function MerchantView(props: {
   logoDataUrl?: string; onLogoUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onFinish: () => void;
 }) {
-  const initials = (props.biz || "U").trim().split(/\s+/).map((s) => s[0]).slice(0, 2).join("").toUpperCase();
+  const initials = useMemo(
+    () => (props.biz || "U").trim().split(/\s+/).map((s) => s[0]).slice(0, 2).join("").toUpperCase(),
+    [props.biz],
+  );
+
   return (
-    <div className="flex-1 flex flex-col max-w-sm mx-auto w-full animate-fade-in pb-6">
-      <h2 className="text-xl font-sans font-semibold">Brand your account</h2>
-      <p className="mt-2 text-xs text-muted-foreground">
-        Customers will see this on checkout pages and invoices.
+    <div className="flex-1 flex flex-col max-w-sm mx-auto w-full pb-6">
+      <p className="text-[18px] font-medium mb-1" style={{ color: "var(--text-primary)" }}>brand your account</p>
+      <p className="text-[12px] font-light mb-5" style={{ color: "var(--text-secondary)" }}>
+        customers will see this on checkout pages and invoices
       </p>
 
-      <div className="mt-6 flex items-center gap-3 p-4 rounded-lg border border-[rgba(255,255,255,0.06)] bg-card">
-        <label className="size-12 rounded-md grid place-items-center cursor-pointer overflow-hidden relative" style={{ backgroundColor: props.brandColor }}>
+      <div className="flex items-center gap-3 px-4 py-3 mb-5" style={{ border: "1px solid var(--border-default)", borderRadius: 4 }}>
+        <label className="shrink-0 grid place-items-center cursor-pointer overflow-hidden relative" style={{ width: 40, height: 40, borderRadius: 4, backgroundColor: props.brandColor }}>
           {props.logoDataUrl ? (
             <img src={props.logoDataUrl} alt="" className="absolute inset-0 size-full object-cover" />
           ) : (
-            <span className="text-background font-sans font-semibold text-base">{initials}</span>
+            <span className="text-[13px] font-medium" style={{ color: "#fff" }}>{initials}</span>
           )}
           <input type="file" accept="image/*" onChange={props.onLogoUpload} className="hidden" />
-          <span className="absolute -bottom-1 -right-1 size-5 rounded-full bg-foreground text-background grid place-items-center">
-            <Upload className="size-3" />
+          <span className="absolute -bottom-0.5 -right-0.5 grid place-items-center" style={{ width: 16, height: 16, borderRadius: "50%", background: "var(--text-primary)" }}>
+            <Upload className="size-2.5" style={{ color: "var(--bg-base)" }} />
           </span>
         </label>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold truncate">{props.biz || "Your business"}</p>
-          <p className="text-[11px] text-muted-foreground truncate">{props.website || "umbrapay.preview"}</p>
+          <p className="text-[13px] font-medium truncate" style={{ color: "var(--text-primary)" }}>{props.biz || "your business"}</p>
+          <p className="text-[11px] font-light truncate" style={{ color: "var(--text-secondary)" }}>{props.website || "umbrapay.preview"}</p>
         </div>
       </div>
 
-      <div className="mt-5 space-y-3">
-        <Field label="Business name" value={props.biz} onChange={props.setBiz} placeholder="Acme Inc." required />
-        <Field label="Legal name" value={props.legal} onChange={props.setLegal} placeholder="Acme Holdings LLC" />
+      <div className="space-y-3 mb-5">
+        <MField label="business name *" value={props.biz} onChange={props.setBiz} placeholder="Acme Inc." />
+        <MField label="legal name" value={props.legal} onChange={props.setLegal} placeholder="Acme Holdings LLC" />
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Country" value={props.country} onChange={props.setCountry} placeholder="US" />
-          <Field label="Website" value={props.website} onChange={props.setWebsite} placeholder="acme.com" />
+          <MField label="country" value={props.country} onChange={props.setCountry} placeholder="US" />
+          <MField label="website" value={props.website} onChange={props.setWebsite} placeholder="acme.com" />
         </div>
         <div>
-          <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Brand color</label>
-          <div className="mt-2 grid grid-cols-6 gap-2">
+          <p className="label mb-2">brand color</p>
+          <div className="grid grid-cols-6 gap-2">
             {BRAND_PRESETS.map((c) => (
               <button
                 key={c.value}
                 onClick={() => props.setBrandColor(c.value)}
-                className={`aspect-square rounded-md border-2 transition ${props.brandColor === c.value ? "border-foreground" : "border-transparent"}`}
-                style={{ backgroundColor: c.value }}
+                className="pressable aspect-square transition"
+                style={{
+                  borderRadius: 4,
+                  backgroundColor: c.value,
+                  border: `2px solid ${props.brandColor === c.value ? "var(--text-primary)" : "transparent"}`,
+                }}
                 aria-label={c.name}
               />
             ))}
@@ -399,32 +384,28 @@ function MerchantView(props: {
         </div>
       </div>
 
-      <button
-        onClick={props.onFinish}
-        className="mt-8 pressable rounded-lg bg-primary text-primary-foreground py-4 text-sm font-semibold"
-      >
-        Open Umbra
+      <button onClick={props.onFinish} className="mt-auto btn-primary w-full py-3">
+        open umbra
       </button>
     </div>
   );
 }
 
-function Field({
-  label, value, onChange, placeholder, required,
+function MField({
+  label, value, onChange, placeholder,
 }: {
   label: string; value: string; onChange: (s: string) => void;
-  placeholder?: string; required?: boolean;
+  placeholder?: string;
 }) {
   return (
     <div>
-      <label className="text-[11px] uppercase tracking-wider text-muted-foreground">
-        {label} {required && <span className="text-destructive">*</span>}
-      </label>
+      <p className="label mb-1.5">{label}</p>
       <input
         value={value}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1 w-full rounded-md bg-foreground/5 border border-[rgba(255,255,255,0.06)] px-3 py-3 text-sm focus:outline-none focus:border-primary"
+        className="w-full"
+        style={{ height: 36 }}
       />
     </div>
   );

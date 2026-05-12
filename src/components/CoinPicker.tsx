@@ -25,38 +25,56 @@ export function CoinPicker({ onPick }: { onPick: (c: PickedCoin) => void }) {
       }));
 
   return (
-    <div>
-      <div className="flex items-center gap-2 rounded-md border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.04)] px-3 py-2 mb-3">
-        <Search className="size-3.5 text-muted-foreground shrink-0" />
+    <div className="space-y-3">
+      <div
+        className="flex items-center gap-2 px-3"
+        style={{
+          background: "var(--bg-base)",
+          border: "1px solid var(--border-default)",
+          borderRadius: 4,
+          height: 36,
+        }}
+      >
+        <Search className="size-3.5 shrink-0" style={{ color: "var(--text-tertiary)" }} />
         <input
           autoFocus
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search coins…"
-          className="bg-transparent outline-none text-sm flex-1 placeholder:text-muted-foreground text-foreground"
+          placeholder="search"
+          style={{ border: "none", height: "auto", padding: 0, background: "transparent", outline: "none" }}
+          className="flex-1 text-[13px]"
         />
-        {isFetching && <Loader2 className="size-3.5 animate-spin text-muted-foreground" />}
+        {isFetching && (
+          <span className="animate-pulse text-[10px]" style={{ color: "var(--accent)" }}>_</span>
+        )}
       </div>
-      <div className="rounded-lg border border-[rgba(255,255,255,0.06)] bg-card divide-y divide-[rgba(255,255,255,0.04)] max-h-[55vh] overflow-y-auto scrollbar-none">
+      <div
+        className="max-h-[55vh] overflow-y-auto scrollbar-none"
+        style={{ borderTop: "1px solid var(--border-dim)" }}
+      >
         {list.map((c) => {
           const t = top?.find((x) => x.id === c.id);
           return (
             <button
               key={c.id}
               onClick={() => onPick({ ...c, price: t?.current_price ?? c.price })}
-              className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-[rgba(255,255,255,0.02)] transition text-left"
+              className="pressable w-full flex items-center gap-3 py-3 hover:bg-[rgba(255,255,255,0.02)] transition-colors text-left"
+              style={{ borderBottom: "1px solid var(--border-dim)", height: 44 }}
             >
-              <CoinIcon src={c.image} symbol={c.symbol} size={30} />
+              <CoinIcon src={c.image} symbol={c.symbol} size={22} />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">{c.name}</p>
-                <p className="text-[11px] uppercase tracking-widest text-muted-foreground font-mono">
+                <p className="text-[13px] text-[var(--text-primary)] truncate">{c.name}</p>
+                <p className="text-[11px] font-light uppercase" style={{ color: "var(--text-secondary)" }}>
                   {c.symbol}
                 </p>
               </div>
               {t && (
                 <div className="text-right">
-                  <p className="text-xs font-mono text-foreground">{fmtUsd(t.current_price)}</p>
-                  <p className={`text-[10px] font-mono ${(t.price_change_percentage_24h ?? 0) >= 0 ? "text-success" : "text-destructive"}`}>
+                  <p className="text-[12px]" style={{ color: "var(--text-primary)" }}>{fmtUsd(t.current_price)}</p>
+                  <p
+                    className="text-[11px] font-light"
+                    style={{ color: (t.price_change_percentage_24h ?? 0) >= 0 ? "var(--status-ok)" : "var(--status-err)" }}
+                  >
                     {fmtPct(t.price_change_percentage_24h)}
                   </p>
                 </div>
@@ -65,7 +83,9 @@ export function CoinPicker({ onPick }: { onPick: (c: PickedCoin) => void }) {
           );
         })}
         {!list.length && !isFetching && (
-          <p className="text-center text-sm text-muted-foreground py-8">No matches</p>
+          <div className="py-16 text-center">
+            <p className="label">no matches</p>
+          </div>
         )}
       </div>
     </div>

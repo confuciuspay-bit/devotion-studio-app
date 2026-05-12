@@ -80,117 +80,133 @@ function SettingsPage() {
   }
 
   return (
-    <div className="animate-fade-in pb-32">
-      <header className="px-5 pt-5 pb-4 flex items-center gap-3">
+    <div className="animate-fade-in pb-24">
+      <header
+        className="px-4 flex items-center gap-3"
+        style={{ height: 48, borderBottom: "1px solid var(--border-dim)" }}
+      >
         <button
           onClick={() => router.history.back()}
-          className="size-8 grid place-items-center rounded-md border border-[rgba(255,255,255,0.06)] bg-card text-muted-foreground hover:text-foreground transition pressable"
+          className="pressable text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
         >
           <ArrowLeft className="size-4" />
         </button>
-        <h1 className="text-base font-medium text-foreground">Settings</h1>
+        <h1 className="text-[15px] font-medium text-[var(--text-primary)]">settings</h1>
       </header>
 
-      <Section title="Merchant">
+      <Sect title="merchant">
         <button
           onClick={() => setEditMerchant(true)}
-          className="w-full pressable rounded-lg border border-[rgba(255,255,255,0.06)] bg-card p-4 flex items-center gap-3 hover:bg-[rgba(255,255,255,0.02)] transition"
+          className="pressable w-full flex items-center gap-3 px-4 py-3 hover:bg-[rgba(255,255,255,0.02)] transition-colors"
+          style={{ borderBottom: "1px solid var(--border-dim)" }}
         >
           <div
-            className="size-10 rounded-md grid place-items-center overflow-hidden relative shrink-0"
-            style={{ backgroundColor: merchant?.brandColor ?? BRAND_PRESETS[0].value }}
+            className="size-8 grid place-items-center overflow-hidden relative shrink-0"
+            style={{ backgroundColor: merchant?.brandColor ?? BRAND_PRESETS[0].value, borderRadius: 4 }}
           >
             {merchant?.logoDataUrl ? (
               <img src={merchant.logoDataUrl} alt="" className="absolute inset-0 size-full object-cover" />
             ) : (
-              <span className="text-white text-sm font-semibold">
+              <span className="text-white text-[11px] font-medium">
                 {(merchant?.businessName ?? "U").trim().split(/\s+/).map((s) => s[0]).slice(0, 2).join("").toUpperCase()}
               </span>
             )}
           </div>
           <div className="flex-1 min-w-0 text-left">
-            <p className="text-sm font-medium text-foreground truncate">
-              {merchant?.businessName ?? "Set up merchant profile"}
+            <p className="text-[13px] text-[var(--text-primary)] truncate">
+              {merchant?.businessName ?? "set up merchant profile"}
             </p>
-            <p className="text-[11px] text-muted-foreground truncate">
-              {merchant?.website ?? merchant?.country ?? "Tap to edit"}
+            <p className="text-[11px] font-light text-[var(--text-secondary)] truncate">
+              {merchant?.website ?? merchant?.country ?? "tap to edit"}
             </p>
           </div>
-          <ChevronRight className="size-4 text-muted-foreground" />
+          <ChevronRight className="size-3.5" style={{ color: "var(--text-tertiary)" }} />
         </button>
-      </Section>
+      </Sect>
 
-      <Section title="Security">
+      <Sect title="security">
         <Group>
-          <RowButton icon={KeyRound} label="Change PIN" onClick={() => setChangePin("gate")} />
-          <RowToggle icon={Shield} label="Biometric unlock" checked={biometricsEnabled} onChange={(v) => setSecurity({ biometricsEnabled: v })} />
-          <RowSelect icon={Lock} label="Auto-lock" value={String(autoLockMinutes)} options={LOCK_OPTIONS.map((o) => ({ label: o === "never" ? "Never" : `${o} min`, value: String(o) }))} onChange={(v) => setSecurity({ autoLockMinutes: v === "never" ? "never" : (Number(v) as AutoLock) })} />
-          <RowButton icon={Lock} label="Lock now" onClick={() => { setLocked(true); toast.success("Locked"); }} />
+          <RowBtn icon={KeyRound} label="change PIN" onClick={() => setChangePin("gate")} />
+          <RowToggle icon={Shield} label="biometric unlock" checked={biometricsEnabled} onChange={(v) => setSecurity({ biometricsEnabled: v })} />
+          <RowSel icon={Lock} label="auto-lock" value={String(autoLockMinutes)} options={LOCK_OPTIONS.map((o) => ({ label: o === "never" ? "never" : `${o} min`, value: String(o) }))} onChange={(v) => setSecurity({ autoLockMinutes: v === "never" ? "never" : (Number(v) as AutoLock) })} />
+          <RowBtn icon={Lock} label="lock now" onClick={() => { setLocked(true); toast.success("Locked"); }} last />
         </Group>
-      </Section>
+      </Sect>
 
-      <Section title="Backup">
+      <Sect title="backup">
         <Group>
-          <RowButton icon={Eye} label="Reveal recovery phrase" onClick={() => setRevealSeed("gate")} />
+          <RowBtn icon={Eye} label="reveal recovery phrase" onClick={() => setRevealSeed("gate")} last />
         </Group>
-      </Section>
+      </Sect>
 
-      <Section title="Privacy & network">
+      <Sect title="privacy & network">
         <Group>
-          <RowToggle icon={Globe} label="Tor routing" checked={torEnabled} onChange={(v) => setSecurity({ torEnabled: v })} />
-          <RowSelect icon={Network} label="Network" value={network} options={[{ label: "Mainnet", value: "mainnet" }, { label: "Testnet", value: "testnet" }]} onChange={(v) => setSecurity({ network: v as "mainnet" | "testnet" })} />
+          <RowToggle icon={Globe} label="tor routing" checked={torEnabled} onChange={(v) => setSecurity({ torEnabled: v })} />
+          <RowSel icon={Network} label="network" value={network} options={[{ label: "mainnet", value: "mainnet" }, { label: "testnet", value: "testnet" }]} onChange={(v) => setSecurity({ network: v as "mainnet" | "testnet" })} last />
         </Group>
-      </Section>
+      </Sect>
 
-      <Section title="Danger zone">
+      <Sect title="danger zone">
         <button
           onClick={() => setWipeGate(true)}
-          className="w-full pressable rounded-lg border border-destructive/20 bg-destructive/5 p-4 flex items-center gap-3 text-destructive hover:bg-destructive/8 transition"
+          className="pressable w-full flex items-center gap-3 px-4 py-3 transition-colors"
+          style={{
+            border: "1px solid rgba(248,113,113,0.2)",
+            borderRadius: 4,
+            color: "var(--status-err)",
+          }}
         >
-          <Trash2 className="size-4" />
-          <span className="text-sm font-medium flex-1 text-left">Clear all data</span>
-          <ChevronRight className="size-4 opacity-60" />
+          <Trash2 className="size-3.5" />
+          <span className="text-[13px] flex-1 text-left">clear all data</span>
+          <ChevronRight className="size-3.5 opacity-50" />
         </button>
-      </Section>
+      </Sect>
 
       {/* Edit merchant */}
       <DetailSheet open={editMerchant} onClose={() => setEditMerchant(false)} title="Merchant profile">
         <div className="space-y-4">
-          <div className="flex items-center gap-3 p-3 rounded-lg border border-[rgba(255,255,255,0.06)] bg-card">
+          <div className="flex items-center gap-3 p-3" style={{ background: "var(--bg-raised)", borderRadius: 4 }}>
             <label
-              className="size-10 rounded-md grid place-items-center cursor-pointer overflow-hidden relative"
-              style={{ backgroundColor: brandColor }}
+              className="size-9 grid place-items-center cursor-pointer overflow-hidden relative"
+              style={{ backgroundColor: brandColor, borderRadius: 4 }}
             >
               {logoDataUrl ? (
                 <img src={logoDataUrl} className="absolute inset-0 size-full object-cover" alt="" />
               ) : (
-                <Building2 className="size-4 text-white/90" />
+                <Building2 className="size-3.5 text-white/90" />
               )}
               <input type="file" accept="image/*" onChange={onLogoUpload} className="hidden" />
-              <span className="absolute -bottom-0.5 -right-0.5 size-4 rounded-full bg-foreground text-background grid place-items-center">
-                <Upload className="size-2.5" />
+              <span
+                className="absolute -bottom-0.5 -right-0.5 size-4 rounded-sm grid place-items-center"
+                style={{ background: "var(--text-primary)", color: "var(--bg-base)" }}
+              >
+                <Upload className="size-2" />
               </span>
             </label>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">{biz || "Your business"}</p>
-              <p className="text-[11px] text-muted-foreground">{website || "—"}</p>
+              <p className="text-[13px] text-[var(--text-primary)] truncate">{biz || "your business"}</p>
+              <p className="text-[11px] font-light text-[var(--text-secondary)]">{website || "—"}</p>
             </div>
           </div>
-          <FormInput label="Business name *" value={biz} onChange={setBiz} />
-          <FormInput label="Legal name" value={legal} onChange={setLegal} />
+          <FormInput label="business name *" value={biz} onChange={setBiz} />
+          <FormInput label="legal name" value={legal} onChange={setLegal} />
           <div className="grid grid-cols-2 gap-3">
-            <FormInput label="Country" value={country} onChange={setCountry} />
-            <FormInput label="Website" value={website} onChange={setWebsite} />
+            <FormInput label="country" value={country} onChange={setCountry} />
+            <FormInput label="website" value={website} onChange={setWebsite} />
           </div>
           <div>
-            <label className="text-[11px] uppercase tracking-widest text-muted-foreground">Brand color</label>
-            <div className="mt-2 flex gap-2">
+            <p className="label mb-2">brand color</p>
+            <div className="flex gap-2">
               {BRAND_PRESETS.map((c) => (
                 <button
                   key={c.value}
                   onClick={() => setBrandColor(c.value)}
-                  className={`size-7 rounded-md border-2 transition pressable ${brandColor === c.value ? "border-white/80" : "border-transparent"}`}
-                  style={{ backgroundColor: c.value }}
+                  className="pressable size-7 transition-all"
+                  style={{
+                    backgroundColor: c.value,
+                    borderRadius: 4,
+                    border: `2px solid ${brandColor === c.value ? "var(--text-primary)" : "transparent"}`,
+                  }}
                   aria-label={c.name}
                 />
               ))}
@@ -198,9 +214,9 @@ function SettingsPage() {
           </div>
           <button
             onClick={saveMerchant}
-            className="w-full pressable rounded-md bg-primary text-primary-foreground py-3 text-sm font-medium hover:bg-primary/90 transition"
+            className="btn-primary w-full py-2.5"
           >
-            Save changes
+            save changes
           </button>
         </div>
       </DetailSheet>
@@ -212,23 +228,43 @@ function SettingsPage() {
         )}
         {revealSeed === "show" && seed && (
           <div>
-            <div className="rounded-md bg-destructive/8 border border-destructive/20 p-3 text-xs text-destructive flex gap-2 mb-4">
+            <div
+              className="p-3 flex gap-2 mb-4 text-[12px]"
+              style={{
+                background: "rgba(248,113,113,0.06)",
+                border: "1px solid rgba(248,113,113,0.2)",
+                borderRadius: 4,
+                color: "var(--status-err)",
+              }}
+            >
               <Shield className="size-3.5 shrink-0 mt-0.5" />
               <span>Never share these words. Anyone with them controls your funds.</span>
             </div>
-            <div className="grid grid-cols-3 gap-2 rounded-lg border border-[rgba(255,255,255,0.06)] bg-card p-3">
+            <div
+              className="grid grid-cols-3 gap-1.5 p-3"
+              style={{ background: "var(--bg-raised)", borderRadius: 4 }}
+            >
               {seed.map((w, i) => (
-                <div key={i} className="flex items-baseline gap-1.5 px-2 py-2 rounded-md bg-[rgba(255,255,255,0.03)]">
-                  <span className="text-[10px] font-mono text-muted-foreground tabular-nums w-4">{i + 1}</span>
-                  <span className="text-xs font-mono text-foreground">{w}</span>
+                <div
+                  key={i}
+                  className="flex items-baseline gap-1.5 px-2 py-1.5"
+                  style={{ background: "var(--bg-surface)", borderRadius: 4 }}
+                >
+                  <span
+                    className="text-[10px] tabular-nums"
+                    style={{ color: "var(--text-tertiary)", width: 14 }}
+                  >
+                    {i + 1}
+                  </span>
+                  <span className="text-[12px] text-[var(--text-primary)]">{w}</span>
                 </div>
               ))}
             </div>
             <button
               onClick={() => setRevealSeed(null)}
-              className="mt-4 w-full pressable rounded-md bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.06)] py-3 text-sm font-medium flex items-center justify-center gap-2 hover:bg-[rgba(255,255,255,0.07)] transition"
+              className="btn-ghost w-full mt-4 py-2.5 flex items-center justify-center gap-2"
             >
-              <EyeOff className="size-4" /> Hide
+              <EyeOff className="size-3" /> hide
             </button>
           </div>
         )}
@@ -257,10 +293,10 @@ function SettingsPage() {
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Sect({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="px-5 mt-6">
-      <p className="text-[11px] uppercase tracking-widest text-muted-foreground mb-2">{title}</p>
+    <section className="px-4 mt-6">
+      <p className="label mb-2">{title}</p>
       {children}
     </section>
   );
@@ -268,50 +304,87 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function Group({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-lg border border-[rgba(255,255,255,0.06)] bg-card divide-y divide-[rgba(255,255,255,0.04)] overflow-hidden">
+    <div style={{ border: "1px solid var(--border-default)", borderRadius: 4, overflow: "hidden" }}>
       {children}
     </div>
   );
 }
 
-function RowButton({ icon: Icon, label, onClick }: { icon: React.ComponentType<{ className?: string }>; label: string; onClick: () => void }) {
+function RowBtn({ icon: Icon, label, onClick, last }: { icon: React.ComponentType<{ className?: string }>; label: string; onClick: () => void; last?: boolean }) {
   return (
-    <button onClick={onClick} className="w-full pressable flex items-center gap-3 px-4 py-3.5 hover:bg-[rgba(255,255,255,0.02)] transition">
-      <Icon className="size-4 text-muted-foreground" />
-      <span className="text-sm flex-1 text-left text-foreground">{label}</span>
-      <ChevronRight className="size-4 text-muted-foreground" />
+    <button
+      onClick={onClick}
+      className="pressable w-full flex items-center gap-3 px-4 py-3 hover:bg-[rgba(255,255,255,0.02)] transition-colors"
+      style={!last ? { borderBottom: "1px solid var(--border-dim)" } : undefined}
+    >
+      <Icon className="size-3.5" style={{ color: "var(--text-tertiary)" }} />
+      <span className="text-[13px] flex-1 text-left text-[var(--text-primary)]">{label}</span>
+      <ChevronRight className="size-3.5" style={{ color: "var(--text-tertiary)" }} />
     </button>
   );
 }
 
 function RowToggle({ icon: Icon, label, checked, onChange }: { icon: React.ComponentType<{ className?: string }>; label: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
-    <div className="flex items-center gap-3 px-4 py-3.5">
-      <Icon className="size-4 text-muted-foreground" />
-      <span className="text-sm flex-1 text-foreground">{label}</span>
+    <div
+      className="flex items-center gap-3 px-4 py-3"
+      style={{ borderBottom: "1px solid var(--border-dim)" }}
+    >
+      <Icon className="size-3.5" style={{ color: "var(--text-tertiary)" }} />
+      <span className="text-[13px] flex-1 text-[var(--text-primary)]">{label}</span>
       <button
         onClick={() => onChange(!checked)}
-        className={`relative w-9 h-5 rounded-full transition-colors ${checked ? "bg-primary" : "bg-[rgba(255,255,255,0.12)]"}`}
+        className="pressable relative transition-colors"
+        style={{
+          width: 36,
+          height: 20,
+          borderRadius: 10,
+          background: checked ? "var(--accent-dim)" : "var(--bg-raised)",
+          border: `1px solid ${checked ? "var(--accent)" : "var(--border-default)"}`,
+        }}
       >
         <span
-          className={`absolute top-0.5 size-4 rounded-full bg-white transition-transform ${checked ? "translate-x-4" : "translate-x-0.5"}`}
+          className="absolute top-0.5 transition-transform"
+          style={{
+            width: 14,
+            height: 14,
+            borderRadius: "50%",
+            background: checked ? "var(--accent)" : "var(--text-tertiary)",
+            transform: checked ? "translateX(18px)" : "translateX(2px)",
+          }}
         />
       </button>
     </div>
   );
 }
 
-function RowSelect({ icon: Icon, label, value, options, onChange }: { icon: React.ComponentType<{ className?: string }>; label: string; value: string; options: { label: string; value: string }[]; onChange: (v: string) => void }) {
+function RowSel({ icon: Icon, label, value, options, onChange, last }: { icon: React.ComponentType<{ className?: string }>; label: string; value: string; options: { label: string; value: string }[]; onChange: (v: string) => void; last?: boolean }) {
   return (
-    <div className="flex items-center gap-3 px-4 py-3.5">
-      <Icon className="size-4 text-muted-foreground" />
-      <span className="text-sm flex-1 text-foreground">{label}</span>
+    <div
+      className="flex items-center gap-3 px-4 py-3"
+      style={!last ? { borderBottom: "1px solid var(--border-dim)" } : undefined}
+    >
+      <Icon className="size-3.5" style={{ color: "var(--text-tertiary)" }} />
+      <span className="text-[13px] flex-1 text-[var(--text-primary)]">{label}</span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="bg-[rgba(255,255,255,0.05)] text-xs border border-[rgba(255,255,255,0.08)] rounded-md px-2 py-1.5 focus:outline-none text-foreground"
+        className="text-[12px]"
+        style={{
+          background: "var(--bg-raised)",
+          border: "1px solid var(--border-default)",
+          borderRadius: 4,
+          padding: "3px 8px",
+          color: "var(--text-secondary)",
+          height: "auto",
+          outline: "none",
+        }}
       >
-        {options.map((o) => <option key={o.value} value={o.value} className="bg-popover">{o.label}</option>)}
+        {options.map((o) => (
+          <option key={o.value} value={o.value} style={{ background: "var(--bg-overlay)" }}>
+            {o.label}
+          </option>
+        ))}
       </select>
     </div>
   );
@@ -320,11 +393,12 @@ function RowSelect({ icon: Icon, label, value, options, onChange }: { icon: Reac
 function FormInput({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
     <div>
-      <label className="text-[11px] uppercase tracking-widest text-muted-foreground">{label}</label>
+      <p className="label mb-1.5">{label}</p>
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1.5 w-full rounded-md bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.06)] px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition"
+        className="w-full"
+        style={{ height: 36 }}
       />
     </div>
   );

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Sheet } from "@/components/Sheet";
 import { CoinPicker, type PickedCoin } from "@/components/CoinPicker";
 import { ChainPicker } from "@/components/ChainPicker";
@@ -11,7 +11,7 @@ import { type Chain } from "@/lib/chains";
 import { useApp, type PaymentRecord } from "@/lib/store";
 import { deriveAddress, fakeTxHash, shortAddr } from "@/lib/addresses";
 import { useSimplePrices, fmtUsd, fmtTime } from "@/lib/markets";
-import { Copy, Share2, ExternalLink, Link2, QrCode, Check } from "lucide-react";
+import { Copy, Share2, Link2, QrCode, Check } from "lucide-react";
 import { toast } from "sonner";
 
 export type PayFlowKind = "new" | "qr" | "link";
@@ -66,18 +66,16 @@ export function PayFlow({
     payments[0] ??
     null;
 
-  if (!kind) {
-    return <Sheet open={open} onClose={onClose} title=""><div /></Sheet>;
-  }
+  if (!kind) return <Sheet open={open} onClose={onClose} title=""><div /></Sheet>;
 
   const paymentLink = (p: PaymentRecord) =>
     `${typeof window !== "undefined" ? window.location.origin : ""}/pay/${p.id}`;
 
-  const titles = ["New payment — asset", "Network", "Amount", "Details", "Review", "Live"];
+  const titles = ["new payment — asset", "network", "amount", "details", "review", "live"];
   const title =
     kind === "new" ? titles[step]
-    : kind === "qr" ? "Payment QR"
-    : "Share payment link";
+    : kind === "qr" ? "payment QR"
+    : "share payment link";
   const back = kind === "new" && step > 0 ? () => setStep((s) => s - 1) : undefined;
 
   const finalize = async () => {
@@ -97,10 +95,10 @@ export function PayFlow({
     addPayment(rec);
     setCreated(rec);
     const steps: Step[] = [
-      { label: "Address generated", status: "done", detail: shortAddr(addr.address) },
-      { label: "Listening for funding", status: "active" },
-      { label: vault ? "Shielding to vault z-addr" : "Settling to wallet", status: "pending" },
-      { label: "Released", status: "pending" },
+      { label: "address generated", status: "done", detail: shortAddr(addr.address) },
+      { label: "listening for funding", status: "active" },
+      { label: vault ? "shielding to vault z-addr" : "settling to wallet", status: "pending" },
+      { label: "released", status: "pending" },
     ];
     setProgress(steps);
     setTimeout(async () => {
@@ -129,86 +127,94 @@ export function PayFlow({
         <div className="space-y-4">
           <AmountInput symbol={coin.symbol} price={livePrice} onChange={setAmount} />
           <div>
-            <p className="text-[11px] text-muted-foreground mb-2">Expires in</p>
-            <div className="grid grid-cols-4 gap-2">
+            <p className="label mb-2">expires in</p>
+            <div className="grid grid-cols-4 gap-1.5">
               {EXPIRIES.map((e) => (
                 <button
                   key={e.l}
                   onClick={() => setExpiryMs(e.v)}
-                  className={`pressable rounded-md border py-2 text-xs font-medium transition ${expiryMs === e.v ? "bg-primary text-primary-foreground border-primary" : "bg-[rgba(255,255,255,0.04)] border-[rgba(255,255,255,0.06)] text-muted-foreground hover:text-foreground"}`}
+                  className="pressable py-1.5 text-[11px] uppercase tracking-widest transition-colors"
+                  style={{
+                    borderRadius: 4,
+                    border: "1px solid",
+                    borderColor: expiryMs === e.v ? "var(--accent)" : "var(--border-default)",
+                    background: expiryMs === e.v ? "var(--accent-dim)" : "var(--bg-base)",
+                    color: expiryMs === e.v ? "var(--accent)" : "var(--text-secondary)",
+                  }}
                 >
                   {e.l}
                 </button>
               ))}
             </div>
           </div>
-          <button
-            disabled={!amount.usd}
-            onClick={() => setStep(3)}
-            className="w-full rounded-md bg-primary text-primary-foreground py-3 text-sm font-medium pressable disabled:opacity-50 hover:bg-primary/90 transition"
-          >
-            Continue
+          <button disabled={!amount.usd} onClick={() => setStep(3)} className="btn-primary w-full py-2.5 disabled:opacity-40">
+            continue
           </button>
         </div>
       )}
       {kind === "new" && step === 3 && (
         <div className="space-y-3">
-          <Field label="Reference" value={reference} onChange={setReference} placeholder="PO-552 / order #" />
-          <Field label="Customer" value={customer} onChange={setCustomer} placeholder="name or 0x… address (optional)" />
-          <Field label="Description" value={description} onChange={setDescription} placeholder="Invoice line / memo" />
-          <Field label="Webhook URL" value={webhook} onChange={setWebhook} placeholder="https://… (optional)" mono />
+          <Field label="reference" value={reference} onChange={setReference} placeholder="PO-552 / order #" />
+          <Field label="customer" value={customer} onChange={setCustomer} placeholder="name or 0x… (optional)" />
+          <Field label="description" value={description} onChange={setDescription} placeholder="invoice line / memo" />
+          <Field label="webhook URL" value={webhook} onChange={setWebhook} placeholder="https://… (optional)" mono />
 
-          <div className="rounded-lg border border-[rgba(255,255,255,0.06)] p-4 flex items-start gap-3">
+          <div className="flex items-start gap-3 px-4 py-3" style={{ border: "1px solid var(--border-default)", borderRadius: 4 }}>
             <button
               onClick={() => setVault((v) => !v)}
-              className={`mt-0.5 size-5 rounded grid place-items-center border transition ${vault ? "bg-success border-success text-black" : "bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.08)]"}`}
+              className="pressable mt-0.5 shrink-0 transition-colors"
+              style={{
+                width: 18,
+                height: 18,
+                borderRadius: 4,
+                border: `1px solid ${vault ? "var(--status-ok)" : "var(--border-default)"}`,
+                background: vault ? "rgba(74,222,128,0.15)" : "var(--bg-base)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
               aria-pressed={vault}
             >
-              {vault && <Check className="size-3.5" />}
+              {vault && <Check className="size-3" style={{ color: "var(--status-ok)" }} />}
             </button>
             <div className="flex-1">
-              <p className="text-sm font-medium text-foreground">Settle to UmbraVault</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
+              <p className="text-[13px] font-medium" style={{ color: "var(--text-primary)" }}>
+                settle to UmbraVault
+              </p>
+              <p className="text-[11px] font-light mt-0.5" style={{ color: "var(--text-secondary)" }}>
                 {vault
-                  ? "2.00% all-in. PSP fee waived. Funds shielded into ZEC z-addr."
-                  : `${(0.5).toFixed(2)}% PSP fee (min $0.05). Funds settle to wallet.`}
+                  ? "2.00% all-in · PSP fee waived · funds shielded into ZEC z-addr"
+                  : "0.50% PSP fee (min $0.05) · funds settle to wallet"}
               </p>
               {!vaultEnabled && vault && (
-                <p className="text-[11px] text-destructive mt-1">Vault disabled in settings — enable to use.</p>
+                <p className="text-[11px] mt-1" style={{ color: "var(--status-err)" }}>
+                  vault disabled in settings — enable to use
+                </p>
               )}
             </div>
           </div>
-
-          <button
-            onClick={() => setStep(4)}
-            className="w-full rounded-md bg-primary text-primary-foreground py-3 text-sm font-medium pressable hover:bg-primary/90 transition"
-          >
-            Review
-          </button>
+          <button onClick={() => setStep(4)} className="btn-primary w-full py-2.5">review</button>
         </div>
       )}
       {kind === "new" && step === 4 && coin && chain && (
         <div className="space-y-4">
-          <div className="rounded-lg bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.06)] p-5 text-center">
-            <p className="text-[11px] uppercase tracking-widest text-muted-foreground">Request</p>
-            <p className="text-3xl font-mono font-semibold mt-2 tabular-nums text-foreground">{fmtUsd(amount.usd)}</p>
-            <p className="text-xs text-muted-foreground font-mono mt-1">≈ {amount.token.toFixed(amount.token < 1 ? 6 : 4)} {coin.symbol}</p>
+          <div className="p-5 text-center" style={{ background: "var(--bg-raised)", borderRadius: 4 }}>
+            <p className="label mb-2">request</p>
+            <p className="text-[22px]" style={{ color: "var(--text-primary)" }}>{fmtUsd(amount.usd)}</p>
+            <p className="text-[11px] font-light mt-1" style={{ color: "var(--text-secondary)" }}>
+              ≈ {amount.token.toFixed(amount.token < 1 ? 6 : 4)} {coin.symbol}
+            </p>
           </div>
-          <div className="rounded-lg border border-[rgba(255,255,255,0.06)] divide-y divide-[rgba(255,255,255,0.04)]">
-            <Row l="Asset" v={<span className="flex items-center gap-1.5 justify-end"><CoinIcon src={coin.image} symbol={coin.symbol} size={16} /> {coin.symbol}</span>} />
-            <Row l="Network" v={chain.name} />
-            <Row l="Expires" v={fmtTime(Date.now() + expiryMs)} />
-            <Row l="Settlement" v={vault ? "Vault · 2.00% all-in" : "Wallet · 0.50% PSP"} />
-            {reference && <Row l="Reference" v={reference} />}
-            {customer && <Row l="Customer" v={customer} />}
-            {webhook && <Row l="Webhook" v={<span className="font-mono text-[10px] truncate max-w-[180px] inline-block">{webhook}</span>} />}
+          <div style={{ border: "1px solid var(--border-default)", borderRadius: 4 }}>
+            <Row l="asset" v={<span className="flex items-center gap-1.5 justify-end"><CoinIcon src={coin.image} symbol={coin.symbol} size={14} /> {coin.symbol}</span>} />
+            <Row l="network" v={chain.name} />
+            <Row l="expires" v={fmtTime(Date.now() + expiryMs)} />
+            <Row l="settlement" v={vault ? "vault · 2.00% all-in" : "wallet · 0.50% PSP"} />
+            {reference && <Row l="reference" v={reference} />}
+            {customer && <Row l="customer" v={customer} />}
+            {webhook && <Row l="webhook" v={<span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10 }} className="truncate max-w-[180px] inline-block">{webhook}</span>} last={!reference && !customer && !webhook} />}
           </div>
-          <button
-            onClick={finalize}
-            className="w-full rounded-md bg-primary text-primary-foreground py-3 text-sm font-medium pressable hover:bg-primary/90 transition"
-          >
-            Create payment
-          </button>
+          <button onClick={finalize} className="btn-primary w-full py-2.5">create payment</button>
         </div>
       )}
       {kind === "new" && step === 5 && created && coin && chain && (
@@ -216,34 +222,38 @@ export function PayFlow({
           <div className="grid place-items-center">
             <QR value={`${chain.symbol.toLowerCase()}:${created.address}?amount=${created.amountToken}`} size={200} />
           </div>
-          <div className="rounded-lg border border-[rgba(255,255,255,0.06)] divide-y divide-[rgba(255,255,255,0.04)]">
+          <div style={{ border: "1px solid var(--border-default)", borderRadius: 4 }}>
             <Row l="ID" v={created.id} mono />
-            <Row l="Address" v={<span className="font-mono break-all text-[11px]">{created.address}</span>} />
-            <Row l="Amount" v={`${created.amountToken.toFixed(4)} ${created.token}`} />
+            <Row l="address" v={<span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, wordBreak: "break-all" }}>{created.address}</span>} />
+            <Row l="amount" v={`${created.amountToken.toFixed(4)} ${created.token}`} last />
           </div>
           <StatusTimeline steps={progress} />
           <div className="grid grid-cols-3 gap-2">
             <button
               onClick={() => { navigator.clipboard?.writeText(created.address); toast.success("Address copied"); }}
-              className="pressable rounded-md bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.06)] py-3 text-xs font-medium flex flex-col items-center gap-1 hover:bg-[rgba(255,255,255,0.07)] transition"
+              className="btn-ghost py-3 flex flex-col items-center gap-1 text-[11px]"
             >
-              <Copy className="size-4" /> Address
+              <Copy className="size-3.5" /> address
             </button>
             <button
               onClick={() => { navigator.clipboard?.writeText(paymentLink(created)); toast.success("Link copied"); }}
-              className="pressable rounded-md bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.06)] py-3 text-xs font-medium flex flex-col items-center gap-1 hover:bg-[rgba(255,255,255,0.07)] transition"
+              className="btn-ghost py-3 flex flex-col items-center gap-1 text-[11px]"
             >
-              <Link2 className="size-4" /> Link
+              <Link2 className="size-3.5" /> link
             </button>
             <button
               onClick={() => navigator.share?.({ title: created.id, text: paymentLink(created) }).catch(() => {})}
-              className="pressable rounded-md bg-primary text-primary-foreground py-3 text-xs font-medium flex flex-col items-center gap-1 hover:bg-primary/90 transition"
+              className="btn-primary py-3 flex flex-col items-center gap-1 text-[11px]"
             >
-              <Share2 className="size-4" /> Share
+              <Share2 className="size-3.5" /> share
             </button>
           </div>
-          <button onClick={onClose} className="w-full text-sm text-muted-foreground pressable py-2 hover:text-foreground transition">
-            Done
+          <button
+            onClick={onClose}
+            className="pressable w-full py-2 text-[12px] text-center transition-colors"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            done
           </button>
         </div>
       )}
@@ -256,12 +266,17 @@ function Field({
 }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; mono?: boolean }) {
   return (
     <div>
-      <label className="text-[11px] text-muted-foreground">{label}</label>
+      <p className="label mb-1.5">{label}</p>
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className={`mt-1 w-full rounded-md bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.06)] px-4 py-3 text-sm outline-none focus:border-primary/50 transition text-foreground placeholder:text-muted-foreground ${mono ? "font-mono text-xs" : ""}`}
+        className="w-full"
+        style={{
+          height: 36,
+          fontFamily: mono ? "'JetBrains Mono', monospace" : undefined,
+          fontSize: mono ? 11 : undefined,
+        }}
       />
     </div>
   );
@@ -272,22 +287,24 @@ function QrFlow({ target }: { target: PaymentRecord | null }) {
   return (
     <div className="space-y-4">
       <div className="text-center">
-        <p className="text-xs text-muted-foreground">{target.id}</p>
-        <p className="text-2xl font-mono font-semibold tabular-nums mt-0.5 text-foreground">{fmtUsd(target.amountUsd)}</p>
-        <p className="text-[11px] text-muted-foreground">{target.token} · {target.chainId}</p>
+        <p className="label mb-1">{target.id}</p>
+        <p className="text-[22px]" style={{ color: "var(--text-primary)" }}>{fmtUsd(target.amountUsd)}</p>
+        <p className="text-[11px] font-light" style={{ color: "var(--text-secondary)" }}>
+          {target.token} · {target.chainId}
+        </p>
       </div>
       <div className="grid place-items-center">
-        <QR value={`${target.token.toLowerCase()}:${target.address}?amount=${target.amountToken}`} size={220} />
+        <QR value={`${target.token.toLowerCase()}:${target.address}?amount=${target.amountToken}`} size={200} />
       </div>
-      <div className="rounded-lg border border-[rgba(255,255,255,0.06)] divide-y divide-[rgba(255,255,255,0.04)]">
-        <Row l="Address" v={<span className="font-mono break-all text-[11px]">{target.address}</span>} />
-        <Row l="Status" v={target.status} />
+      <div style={{ border: "1px solid var(--border-default)", borderRadius: 4 }}>
+        <Row l="address" v={<span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, wordBreak: "break-all" }}>{target.address}</span>} />
+        <Row l="status" v={target.status.toLowerCase()} last />
       </div>
       <button
         onClick={() => { navigator.clipboard?.writeText(target.address); toast.success("Address copied"); }}
-        className="w-full pressable rounded-md bg-primary text-primary-foreground py-3 text-sm font-medium flex items-center justify-center gap-2 hover:bg-primary/90 transition"
+        className="btn-primary w-full py-2.5 flex items-center justify-center gap-2"
       >
-        <Copy className="size-4" /> Copy address
+        <Copy className="size-3" /> copy address
       </button>
     </div>
   );
@@ -300,27 +317,32 @@ function LinkFlow({
   const link = buildLink(target);
   return (
     <div className="space-y-4">
-      <div className="rounded-lg border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.03)] p-4">
-        <p className="text-[11px] text-muted-foreground mb-1">Hosted checkout link</p>
-        <p className="font-mono text-xs break-all text-foreground">{link}</p>
+      <div className="px-3 py-3" style={{ background: "var(--bg-raised)", borderRadius: 4 }}>
+        <p className="label mb-1">hosted checkout link</p>
+        <p
+          className="text-[11px] leading-relaxed"
+          style={{ fontFamily: "'JetBrains Mono', monospace", color: "var(--text-primary)", wordBreak: "break-all" }}
+        >
+          {link}
+        </p>
       </div>
-      <div className="rounded-lg border border-[rgba(255,255,255,0.06)] divide-y divide-[rgba(255,255,255,0.04)]">
-        <Row l="Invoice" v={target.id} mono />
-        <Row l="Amount" v={fmtUsd(target.amountUsd)} />
-        <Row l="Status" v={target.status} />
+      <div style={{ border: "1px solid var(--border-default)", borderRadius: 4 }}>
+        <Row l="invoice" v={target.id} mono />
+        <Row l="amount" v={fmtUsd(target.amountUsd)} />
+        <Row l="status" v={target.status.toLowerCase()} last />
       </div>
       <div className="grid grid-cols-2 gap-2">
         <button
           onClick={() => { navigator.clipboard?.writeText(link); toast.success("Link copied"); }}
-          className="pressable rounded-md bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.06)] py-3 text-sm font-medium flex items-center justify-center gap-2 hover:bg-[rgba(255,255,255,0.07)] transition"
+          className="btn-ghost py-2.5 flex items-center justify-center gap-2"
         >
-          <Copy className="size-4" /> Copy
+          <Copy className="size-3" /> copy
         </button>
         <button
           onClick={() => navigator.share?.({ title: target.id, text: link }).catch(() => {})}
-          className="pressable rounded-md bg-primary text-primary-foreground py-3 text-sm font-medium flex items-center justify-center gap-2 hover:bg-primary/90 transition"
+          className="btn-primary py-2.5 flex items-center justify-center gap-2"
         >
-          <Share2 className="size-4" /> Share
+          <Share2 className="size-3" /> share
         </button>
       </div>
     </div>
@@ -329,12 +351,11 @@ function LinkFlow({
 
 function Empty({ kind }: { kind: "qr" | "link" }) {
   return (
-    <div className="py-12 text-center text-sm text-muted-foreground space-y-2">
-      <div className="mx-auto size-10 grid place-items-center rounded-md bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.06)]">
-        {kind === "qr" ? <QrCode className="size-4" /> : <Link2 className="size-4" />}
-      </div>
-      <p>No active payment yet.</p>
-      <p className="text-xs">Tap <b>+ New</b> to create one.</p>
+    <div className="py-16 text-center">
+      <p className="label mb-2">no active payment</p>
+      <p className="text-[12px] font-light" style={{ color: "var(--text-secondary)" }}>
+        {kind === "qr" ? "create a payment to show its QR" : "create a payment to share a link"}
+      </p>
     </div>
   );
 }

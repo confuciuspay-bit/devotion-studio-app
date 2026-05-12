@@ -1,4 +1,3 @@
-// Currency-amount input with USD/token toggle & MAX
 import { useState } from "react";
 
 export function AmountInput({
@@ -8,8 +7,8 @@ export function AmountInput({
   onChange,
 }: {
   symbol: string;
-  price?: number;        // USD per token
-  balance?: number;      // in token units
+  price?: number;
+  balance?: number;
   onChange: (v: { token: number; usd: number }) => void;
 }) {
   const [mode, setMode] = useState<"token" | "usd">("usd");
@@ -36,9 +35,16 @@ export function AmountInput({
   };
 
   return (
-    <div className="rounded-lg border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.03)] p-5">
+    <div
+      className="p-4"
+      style={{
+        background: "var(--bg-raised)",
+        border: "1px solid var(--border-default)",
+        borderRadius: 4,
+      }}
+    >
       <div className="flex items-baseline justify-center gap-2">
-        <span className="text-3xl font-mono font-semibold text-muted-foreground">
+        <span className="text-[22px]" style={{ color: "var(--text-secondary)" }}>
           {mode === "usd" ? "$" : ""}
         </span>
         <input
@@ -47,30 +53,50 @@ export function AmountInput({
           value={v}
           onChange={(e) => update(e.target.value.replace(/[^\d.]/g, ""))}
           placeholder="0"
-          className="bg-transparent outline-none w-1/2 text-center text-5xl font-mono font-semibold tabular-nums placeholder:text-muted-foreground/40"
+          className="bg-transparent w-1/2 text-center"
+          style={{
+            fontSize: 36,
+            fontWeight: 400,
+            color: "var(--text-primary)",
+            outline: "none",
+            border: "none",
+            height: "auto",
+            padding: 0,
+            letterSpacing: "-0.01em",
+          }}
         />
-        <span className="text-3xl font-mono font-semibold text-muted-foreground">
+        <span className="text-[22px]" style={{ color: "var(--text-secondary)" }}>
           {mode === "token" ? symbol : ""}
         </span>
       </div>
-      <p className="text-center text-xs text-muted-foreground font-mono mt-2">
+      <p className="text-center text-[11px] font-light mt-2" style={{ color: "var(--text-secondary)" }}>
         ≈ {mode === "usd" ? `${token.toFixed(token < 1 ? 6 : 4)} ${symbol}` : `$${usd.toFixed(2)}`}
       </p>
       <div className="mt-4 flex items-center justify-between">
         <button
           onClick={() => setMode((m) => (m === "usd" ? "token" : "usd"))}
-          className="text-xs text-primary font-medium"
+          className="pressable text-[12px] transition-colors hover:opacity-80"
+          style={{ color: "var(--accent)" }}
         >
-          Switch to {mode === "usd" ? symbol : "USD"}
+          switch to {mode === "usd" ? symbol : "USD"}
         </button>
         {balance != null && (
-          <div className="flex items-center gap-2 text-[11px] text-muted-foreground font-mono">
+          <div className="flex items-center gap-2 text-[11px] font-light" style={{ color: "var(--text-secondary)" }}>
             <span>
-              Bal: {balance.toFixed(balance < 1 ? 6 : 4)} {symbol}
+              bal: {balance.toFixed(balance < 1 ? 6 : 4)} {symbol}
               {balanceUsd ? ` · $${balanceUsd.toFixed(2)}` : ""}
             </span>
-            <button onClick={setMax} className="px-2 py-0.5 rounded-md bg-primary/15 text-primary font-semibold">
-              MAX
+            <button
+              onClick={setMax}
+              className="pressable px-1.5 py-0.5 text-[11px] uppercase tracking-widest transition-colors"
+              style={{
+                background: "var(--accent-dim)",
+                border: "1px solid var(--accent)",
+                borderRadius: 4,
+                color: "var(--accent)",
+              }}
+            >
+              max
             </button>
           </div>
         )}

@@ -23,19 +23,23 @@ export function PinPad({
 
   return (
     <div className="text-center">
-      <p className="text-sm font-medium text-foreground">{title}</p>
-      {subtitle && <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>}
+      <p className="text-[13px] font-medium" style={{ color: "var(--text-primary)" }}>{title}</p>
+      {subtitle && (
+        <p className="text-[11px] font-light mt-1" style={{ color: "var(--text-secondary)" }}>{subtitle}</p>
+      )}
 
       {/* PIN dots */}
-      <div className="my-6 flex justify-center gap-3">
+      <div className="my-6 flex justify-center gap-4">
         {[0, 1, 2, 3].map((i) => (
           <div
             key={i}
-            className={`size-2.5 rounded-full transition-colors ${
-              pin.length > i
-                ? "bg-primary"
-                : "bg-[rgba(255,255,255,0.15)]"
-            }`}
+            className="transition-colors"
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: "50%",
+              background: pin.length > i ? "var(--accent)" : "var(--text-tertiary)",
+            }}
           />
         ))}
       </div>
@@ -46,7 +50,13 @@ export function PinPad({
           <button
             key={k}
             onClick={() => press(k)}
-            className="pressable rounded-md bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.06)] py-4 text-lg font-medium text-foreground hover:bg-[rgba(255,255,255,0.08)] transition"
+            className="pressable py-4 text-[18px] font-light transition-colors hover:bg-[rgba(255,255,255,0.03)]"
+            style={{
+              background: "var(--bg-surface)",
+              border: "1px solid var(--border-default)",
+              borderRadius: 4,
+              color: "var(--text-primary)",
+            }}
           >
             {k}
           </button>
@@ -54,20 +64,28 @@ export function PinPad({
         {onCancel ? (
           <button
             onClick={onCancel}
-            className="rounded-md py-4 text-xs text-muted-foreground hover:text-foreground transition pressable"
+            className="pressable py-4 text-[11px] uppercase tracking-widest transition-colors"
+            style={{ color: "var(--text-secondary)" }}
           >
-            Cancel
+            cancel
           </button>
         ) : <div />}
         <button
           onClick={() => press("0")}
-          className="pressable rounded-md bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.06)] py-4 text-lg font-medium text-foreground hover:bg-[rgba(255,255,255,0.08)] transition"
+          className="pressable py-4 text-[18px] font-light transition-colors hover:bg-[rgba(255,255,255,0.03)]"
+          style={{
+            background: "var(--bg-surface)",
+            border: "1px solid var(--border-default)",
+            borderRadius: 4,
+            color: "var(--text-primary)",
+          }}
         >
           0
         </button>
         <button
           onClick={() => press("<")}
-          className="pressable rounded-md py-4 text-base text-muted-foreground hover:text-foreground transition"
+          className="pressable py-4 text-[16px] transition-colors"
+          style={{ color: "var(--text-secondary)" }}
         >
           ⌫
         </button>

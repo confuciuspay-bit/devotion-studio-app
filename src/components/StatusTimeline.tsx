@@ -1,5 +1,3 @@
-import { Check, Circle, Loader as Loader2 } from "lucide-react";
-
 export interface Step {
   label: string;
   status: "pending" | "active" | "done";
@@ -8,28 +6,45 @@ export interface Step {
 
 export function StatusTimeline({ steps }: { steps: Step[] }) {
   return (
-    <ol className="space-y-3">
+    <ol className="space-y-4">
       {steps.map((s, i) => (
         <li key={i} className="flex items-start gap-3">
-          <div className="mt-0.5 shrink-0">
-            {s.status === "done" ? (
-              <div className="size-5 rounded bg-[rgba(16,185,129,0.15)] text-success grid place-items-center">
-                <Check className="size-3" />
-              </div>
-            ) : s.status === "active" ? (
-              <div className="size-5 rounded bg-primary/15 text-primary grid place-items-center">
-                <Loader2 className="size-3 animate-spin" />
-              </div>
-            ) : (
-              <div className="size-5 rounded bg-[rgba(255,255,255,0.04)] text-muted-foreground grid place-items-center">
-                <Circle className="size-1.5 fill-current" />
-              </div>
+          <div className="mt-1 shrink-0">
+            <span
+              className="dot"
+              style={{
+                background:
+                  s.status === "done"
+                    ? "var(--status-ok)"
+                    : s.status === "active"
+                    ? "var(--accent)"
+                    : "var(--text-tertiary)",
+                opacity: s.status === "active" ? 1 : undefined,
+              }}
+            />
+          </div>
+          <div className="flex-1">
+            <p
+              className="text-[13px]"
+              style={{
+                color:
+                  s.status === "pending"
+                    ? "var(--text-tertiary)"
+                    : "var(--text-primary)",
+                fontWeight: s.status === "active" ? 500 : 400,
+              }}
+            >
+              {s.label}
+            </p>
+            {s.detail && (
+              <p className="text-[11px] font-light mt-0.5" style={{ color: "var(--text-secondary)" }}>
+                {s.detail}
+              </p>
             )}
           </div>
-          <div className="flex-1 pt-0.5">
-            <p className={`text-sm ${s.status === "pending" ? "text-muted-foreground" : "font-medium"}`}>{s.label}</p>
-            {s.detail && <p className="text-[11px] text-muted-foreground font-mono mt-0.5">{s.detail}</p>}
-          </div>
+          {s.status === "active" && (
+            <span className="animate-pulse text-[var(--accent)] text-[13px] mt-0.5">_</span>
+          )}
         </li>
       ))}
     </ol>

@@ -10,16 +10,17 @@ export function LockScreen() {
   if (!locked) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] bg-background grid place-items-center px-6 animate-fade-in">
+    <div
+      className="fixed inset-0 z-[100] grid place-items-center px-6 animate-fade-in"
+      style={{ background: "var(--bg-base)" }}
+    >
       <div className="w-full max-w-xs">
-        <div className="flex flex-col items-center mb-8 gap-2">
-          <div className="size-12 rounded-lg bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.06)] grid place-items-center">
-            <Lock className="size-5 text-primary" />
-          </div>
-          <p className="text-base font-medium text-foreground mt-1">
-            {merchant?.businessName ?? "Umbra"}
+        <div className="flex flex-col items-center mb-10 gap-2">
+          <Lock className="size-5" style={{ color: "var(--text-tertiary)" }} />
+          <p className="text-[15px] font-medium" style={{ color: "var(--text-primary)", marginTop: 8 }}>
+            {merchant?.businessName ?? "umbra"}
           </p>
-          <p className="text-xs text-muted-foreground">App locked</p>
+          <p className="text-[12px] font-light" style={{ color: "var(--text-secondary)" }}>app locked</p>
         </div>
         <PinGate title="Enter PIN to unlock" onPass={() => setLocked(false)} />
       </div>

@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowLeft, Star, ExternalLink, Loader as Loader2, ArrowDownLeft, ArrowUpRight, Repeat } from "lucide-react";
+import { ArrowLeft, Star, ExternalLink, ArrowDownLeft, ArrowUpRight, Repeat } from "lucide-react";
 import { useCoin, useCoinChart, fmtUsd, fmtPct, fmtCompact } from "@/lib/markets";
 import { CoinIcon } from "@/components/CoinIcon";
 import { Sparkline } from "@/components/Sparkline";
@@ -27,60 +27,78 @@ function CoinDetail() {
   const up = prices.length > 1 ? prices[prices.length - 1] >= prices[0] : true;
 
   return (
-    <div>
-      <header className="px-5 pt-6 pb-2 flex items-center justify-between">
+    <div className="animate-fade-in">
+      <header
+        className="px-4 flex items-center justify-between"
+        style={{ height: 48, borderBottom: "1px solid var(--border-dim)" }}
+      >
         <Link
           to="/markets"
-          className="size-8 grid place-items-center rounded-md bg-card border border-[rgba(255,255,255,0.06)]"
+          className="pressable text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
         >
           <ArrowLeft className="size-4" />
         </Link>
         <div className="flex items-center gap-2">
-          {coin && <CoinIcon src={coin.image.large} symbol={coin.symbol} size={24} />}
-          <span className="font-sans font-medium">
-            {coin?.name ?? "Loading…"}
+          {coin && <CoinIcon src={coin.image.large} symbol={coin.symbol} size={20} />}
+          <span className="text-[14px] font-medium text-[var(--text-primary)]">
+            {coin?.name ?? <span className="animate-pulse text-[var(--accent)]">_</span>}
           </span>
         </div>
-        <button className="size-8 grid place-items-center rounded-md bg-card border border-[rgba(255,255,255,0.06)] text-muted-foreground">
+        <button className="pressable text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
           <Star className="size-4" />
         </button>
       </header>
 
       {isLoading || !coin ? (
-        <div className="grid place-items-center py-20 text-muted-foreground">
-          <Loader2 className="size-5 animate-spin" />
+        <div className="flex items-center justify-center py-20">
+          <span className="animate-pulse text-[var(--accent)] text-[18px]">_</span>
         </div>
       ) : (
         <>
-          <section className="px-5 mt-2">
-            <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-              {coin.symbol.toUpperCase()} · USD
-            </p>
-            <div className="flex items-baseline gap-2 mt-1">
-              <h1 className="text-4xl font-mono font-semibold tabular-nums">
-                {fmtUsd(coin.market_data.current_price.usd)}
-              </h1>
-            </div>
+          <section className="px-4 py-5" style={{ borderBottom: "1px solid var(--border-dim)" }}>
+            <p className="label mb-2">{coin.symbol.toUpperCase()} · USD</p>
             <p
-              className={`text-xs font-mono mt-1 ${(coin.market_data.price_change_percentage_24h ?? 0) >= 0 ? "text-success" : "text-destructive"}`}
+              style={{
+                fontSize: 28,
+                fontWeight: 400,
+                color: "var(--text-primary)",
+                letterSpacing: "0.02em",
+              }}
+            >
+              {fmtUsd(coin.market_data.current_price.usd)}
+            </p>
+            <p
+              className="text-[12px] font-light mt-1"
+              style={{ color: (coin.market_data.price_change_percentage_24h ?? 0) >= 0 ? "var(--status-ok)" : "var(--status-err)" }}
             >
               {fmtPct(coin.market_data.price_change_percentage_24h)} · 24h
             </p>
           </section>
 
-          <section className="px-5 mt-4">
-            <div className="rounded-lg border border-[rgba(255,255,255,0.06)] bg-card p-3 relative overflow-hidden">
-              <Sparkline data={prices} width={500} height={160} positive={up} />
+          <section className="px-4 py-4" style={{ borderBottom: "1px solid var(--border-dim)" }}>
+            <div
+              className="p-3"
+              style={{
+                background: "var(--bg-surface)",
+                border: "1px solid var(--border-default)",
+                borderRadius: 4,
+              }}
+            >
+              <Sparkline data={prices} width={500} height={140} positive={up} />
               <div className="mt-3 flex gap-1">
                 {RANGES.map((r) => (
                   <button
                     key={r.d}
                     onClick={() => setDays(r.d)}
-                    className={`flex-1 py-1.5 rounded-md text-[11px] font-medium transition ${
-                      days === r.d
-                        ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
+                    className="pressable flex-1 py-1.5 text-[11px] uppercase tracking-widest transition-colors"
+                    style={{
+                      borderRadius: 4,
+                      border: "1px solid",
+                      borderColor: days === r.d ? "var(--accent)" : "transparent",
+                      background: days === r.d ? "var(--accent-dim)" : "transparent",
+                      color: days === r.d ? "var(--accent)" : "var(--text-secondary)",
+                      fontWeight: days === r.d ? 400 : 300,
+                    }}
                   >
                     {r.l}
                   </button>
@@ -89,41 +107,49 @@ function CoinDetail() {
             </div>
           </section>
 
-          <section className="px-5 mt-5 grid grid-cols-3 gap-2">
+          <section className="px-4 py-4 flex gap-2" style={{ borderBottom: "1px solid var(--border-dim)" }}>
             {[
-              { l: "Send", i: ArrowUpRight },
-              { l: "Receive", i: ArrowDownLeft },
-              { l: "Swap", i: Repeat },
+              { l: "send", i: ArrowUpRight },
+              { l: "receive", i: ArrowDownLeft },
+              { l: "swap", i: Repeat },
             ].map((a) => (
               <button
                 key={a.l}
-                className="rounded-md bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.06)] py-3 flex flex-col items-center gap-1 pressable hover:bg-[rgba(255,255,255,0.06)] transition"
+                className="pressable flex-1 py-3 flex flex-col items-center gap-1.5 transition-colors"
+                style={{
+                  background: "var(--bg-surface)",
+                  border: "1px solid var(--border-default)",
+                  borderRadius: 4,
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--border-focus)")}
+                onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--border-default)")}
               >
-                <a.i className="size-4 text-primary" />
-                <span className="text-[11px] font-medium">{a.l}</span>
+                <a.i className="size-3.5" style={{ color: "var(--accent)" }} />
+                <span className="label" style={{ textTransform: "lowercase" }}>{a.l}</span>
               </button>
             ))}
           </section>
 
-          <section className="px-5 mt-5">
-            <h2 className="text-sm font-semibold mb-3">Stats</h2>
-            <div className="rounded-lg border border-[rgba(255,255,255,0.06)] bg-card p-4 grid grid-cols-2 gap-y-3 gap-x-4 text-sm">
-              <Stat l="Market cap" v={fmtUsd(coin.market_data.market_cap.usd, { maximumFractionDigits: 0 })} />
-              <Stat l="Volume 24h" v={fmtCompact(coin.market_data.total_volume.usd)} />
-              <Stat l="High 24h" v={fmtUsd(coin.market_data.high_24h.usd)} />
-              <Stat l="Low 24h" v={fmtUsd(coin.market_data.low_24h.usd)} />
-              <Stat l="Supply" v={fmtCompact(coin.market_data.circulating_supply)} />
-              <Stat l="ATH" v={`${fmtUsd(coin.market_data.ath.usd)} · ${fmtPct(coin.market_data.ath_change_percentage.usd)}`} />
-              <Stat l="7d" v={fmtPct(coin.market_data.price_change_percentage_7d)} />
-              <Stat l="30d" v={fmtPct(coin.market_data.price_change_percentage_30d)} />
+          <section className="px-4 py-4" style={{ borderBottom: "1px solid var(--border-dim)" }}>
+            <p className="label mb-3">stats</p>
+            <div className="grid grid-cols-2 gap-x-8 gap-y-0">
+              <Stat l="market cap" v={fmtUsd(coin.market_data.market_cap.usd, { maximumFractionDigits: 0 })} />
+              <Stat l="volume 24h" v={fmtCompact(coin.market_data.total_volume.usd)} />
+              <Stat l="high 24h" v={fmtUsd(coin.market_data.high_24h.usd)} />
+              <Stat l="low 24h" v={fmtUsd(coin.market_data.low_24h.usd)} />
+              <Stat l="supply" v={fmtCompact(coin.market_data.circulating_supply)} />
+              <Stat l="ath" v={`${fmtUsd(coin.market_data.ath.usd)}`} />
+              <Stat l="7d" v={fmtPct(coin.market_data.price_change_percentage_7d)} up={(coin.market_data.price_change_percentage_7d ?? 0) >= 0} />
+              <Stat l="30d" v={fmtPct(coin.market_data.price_change_percentage_30d)} up={(coin.market_data.price_change_percentage_30d ?? 0) >= 0} />
             </div>
           </section>
 
           {coin.description.en && (
-            <section className="px-5 mt-5">
-              <h2 className="text-sm font-semibold mb-2">About {coin.name}</h2>
+            <section className="px-4 py-4">
+              <p className="label mb-2">about {coin.name.toLowerCase()}</p>
               <p
-                className="text-sm text-muted-foreground leading-relaxed line-clamp-6"
+                className="text-[13px] font-light leading-relaxed line-clamp-6"
+                style={{ color: "var(--text-secondary)" }}
                 dangerouslySetInnerHTML={{ __html: coin.description.en }}
               />
               {coin.links.homepage[0] && (
@@ -131,7 +157,8 @@ function CoinDetail() {
                   href={coin.links.homepage[0]}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 mt-3 text-xs text-primary"
+                  className="pressable inline-flex items-center gap-1 mt-3 text-[12px] transition-colors hover:opacity-80"
+                  style={{ color: "var(--accent)" }}
                 >
                   {new URL(coin.links.homepage[0]).hostname} <ExternalLink className="size-3" />
                 </a>
@@ -144,11 +171,18 @@ function CoinDetail() {
   );
 }
 
-function Stat({ l, v }: { l: string; v: string }) {
+function Stat({ l, v, up }: { l: string; v: string; up?: boolean }) {
   return (
-    <div>
-      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{l}</p>
-      <p className="text-sm font-mono tabular-nums mt-0.5">{v}</p>
+    <div className="py-2.5" style={{ borderBottom: "1px solid var(--border-dim)" }}>
+      <p className="label">{l}</p>
+      <p
+        className="text-[13px] mt-0.5"
+        style={{
+          color: up === undefined ? "var(--text-primary)" : up ? "var(--status-ok)" : "var(--status-err)",
+        }}
+      >
+        {v}
+      </p>
     </div>
   );
 }
