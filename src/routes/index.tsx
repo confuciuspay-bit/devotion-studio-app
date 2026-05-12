@@ -3,6 +3,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { CoinIcon } from "@/components/CoinIcon";
 import { Sparkline } from "@/components/Sparkline";
 import { DetailSheet } from "@/components/DetailSheet";
+import { WalletFlow } from "@/components/flows/WalletFlow";
 import { useMarkets, fmtUsd, fmtPct } from "@/lib/markets";
 import {
   ArrowDownLeft,
@@ -77,6 +78,7 @@ const activity: Activity[] = [
 function WalletHome() {
   const { data } = useMarkets();
   const [openTx, setOpenTx] = useState<Activity | null>(null);
+  const [flow, setFlow] = useState<"receive" | "send" | "swap" | "shield" | null>(null);
 
   const assets = useMemo(() => {
     if (!data) return [];
@@ -126,14 +128,15 @@ function WalletHome() {
           <div className="mt-1 text-xs text-shield font-mono">live · CoinGecko</div>
 
           <div className="mt-6 grid grid-cols-4 gap-2">
-            {[
-              { i: ArrowDownLeft, l: "Receive" },
-              { i: ArrowUpRight, l: "Send" },
-              { i: Repeat, l: "Swap" },
-              { i: Shield, l: "Shield" },
-            ].map(({ i: Icon, l }) => (
+            {([
+              { i: ArrowDownLeft, l: "Receive", k: "receive" as const },
+              { i: ArrowUpRight, l: "Send", k: "send" as const },
+              { i: Repeat, l: "Swap", k: "swap" as const },
+              { i: Shield, l: "Shield", k: "shield" as const },
+            ]).map(({ i: Icon, l, k }) => (
               <button
                 key={l}
+                onClick={() => setFlow(k)}
                 className="pressable flex flex-col items-center gap-1.5 rounded-2xl bg-foreground/5 hover:bg-foreground/10 transition py-3 border border-border/60"
               >
                 <Icon className="size-4 text-primary" />
@@ -257,6 +260,8 @@ function WalletHome() {
           </div>
         )}
       </DetailSheet>
+
+      <WalletFlow open={!!flow} kind={flow} onClose={() => setFlow(null)} />
     </div>
   );
 }
