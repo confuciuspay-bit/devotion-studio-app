@@ -3,6 +3,7 @@ import { useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { DetailSheet } from "@/components/DetailSheet";
 import { QrCode, Copy, Link2, Plus, Check, ChevronRight, Download, Share2 } from "lucide-react";
+import { useApp } from "@/lib/store";
 
 export const Route = createFileRoute("/pay")({ component: PayPage });
 
