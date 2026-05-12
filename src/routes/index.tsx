@@ -121,7 +121,7 @@ function WalletHome() {
       <section className="px-5 pt-2">
         <div className="relative overflow-hidden rounded-3xl border border-border bg-[image:var(--gradient-card)] p-6 ring-eclipse grain">
           <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-            <Shield className="size-3.5 text-shield" /> Total balance · shielded
+            Total balance
           </div>
           <div className="mt-3 flex items-baseline gap-2">
             <h1 className="text-5xl font-semibold text-foreground font-display tabular-nums">
