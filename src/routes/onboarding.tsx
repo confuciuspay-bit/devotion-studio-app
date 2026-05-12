@@ -165,7 +165,7 @@ function OnboardingPage() {
           <p className="text-xs text-muted-foreground text-center mb-6">
             Used to unlock the app and confirm sensitive actions.
           </p>
-          <PinPad onSubmit={commitPin} />
+          <PinPad key={pin1 ? "confirm" : "set"} onSubmit={commitPin} />
         </div>
       )}
       {step === "merchant" && (

@@ -18,7 +18,7 @@ export function PinPad({
     if (pin.length >= 4) return;
     const next = pin + k;
     setPin(next);
-    if (next.length === 4) setTimeout(() => onSubmit(next), 120);
+    if (next.length === 4) setTimeout(() => { onSubmit(next); setPin(""); }, 120);
   };
 
   return (
