@@ -3,6 +3,8 @@ import { useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { DetailSheet } from "@/components/DetailSheet";
 import { Shield, ArrowRight, Lock, ChevronRight } from "lucide-react";
+import { useApp } from "@/lib/store";
+import { maskValue } from "@/lib/markets";
 
 export const Route = createFileRoute("/vault")({ component: VaultPage });
 
