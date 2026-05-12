@@ -317,6 +317,7 @@ export const useApp = create<AppState>()(
         batches: s.batches, invoices: s.invoices,
         vaultZec: s.vaultZec, vaultActivity: s.vaultActivity, zAddr: s.zAddr,
         cardSettings: s.cardSettings, cardTxs: s.cardTxs, cardBalanceUsd: s.cardBalanceUsd,
+        hideBalances: s.hideBalances,
       }),
     },
   ),
