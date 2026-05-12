@@ -215,6 +215,7 @@ function PayPage() {
       </section>
 
       <PayFlow open={!!flow} kind={flow} onClose={() => setFlow(null)} />
+      <AllHistorySheet open={allHistory} scope="pay" onClose={() => setAllHistory(false)} title="Pay history" />
 
       {/* Payment detail */}
       <DetailSheet open={!!open} onClose={() => setOpen(null)} title={open?.id}>
