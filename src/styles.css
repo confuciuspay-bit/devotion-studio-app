@@ -77,12 +77,12 @@
   body {
     font-family: var(--font-display);
     background-image:
-      radial-gradient(60% 40% at 50% -10%, oklch(0.25 0.03 85 / 0.25), transparent 70%),
-      radial-gradient(50% 30% at 100% 100%, oklch(0.20 0.05 155 / 0.18), transparent 70%);
+      radial-gradient(60% 40% at 50% -10%, oklch(0.35 0.20 295 / 0.30), transparent 70%),
+      radial-gradient(50% 30% at 100% 100%, oklch(0.25 0.15 285 / 0.20), transparent 70%);
     background-attachment: fixed;
     min-height: 100dvh;
   }
-  h1, h2, h3, h4 { letter-spacing: -0.02em; }
+  h1, h2, h3, h4 { font-family: var(--font-mono); letter-spacing: -0.02em; }
 }
 
 @layer base {
